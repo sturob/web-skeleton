@@ -5,6 +5,7 @@ function kv (k, v) {
   return s;
 }
 
+
 function dump(obj) {
   console.log( JSON.stringify(obj, null, 2) )
 }
