@@ -98,38 +98,27 @@ var sphere = document.getElementById("sphere");
 
 /* 
 
-multiple values input in realtime
+ [√]  multiple values input in realtime
 
-multiple values calculated and output in realtime
+ [ ]  multiple values calculated and output in realtime
 
-all values remember their history and display a sparkleline
+ [ ]  all values remember their history and display a sparkleline
 
-values normalised internally ( 0 - 1.0 )
+ [√]  values normalised internally ( 0 - 1.0 )
 
-autonormalisation based on input extremes
+ [ ]  autonormalisation based on input extremes
 
-all changes bindable
-  outputs.x.bind('change', $('#thing').css({ color: rgba( (this.value() + 1.0) * 127  0,0, 1)}))
+ [√]  all changes bindable
+
+
 
 
 
 
 ----
 
-input range
-auto input
+one-line calculate update
 
-variable
-  history: []
-  
-  
-input
-  set
-  adjust
-
-output
-  calculate
-  
 
   fake.get = function(key) {
     That.adddep(key);
@@ -194,7 +183,11 @@ Model.In = Backbone.Model.extend({
   }
 });
 
-Model.Out = Backbone.Model.extend({});
+Model.Out = Backbone.Model.extend({
+  initialize: function(attr, calculate) {
+    this.calculate = calculate;
+  }
+});
 
 
 var inputs = {
@@ -203,18 +196,30 @@ var inputs = {
 };
 
 
-
-
 var outputs = {
-  color: new Model.Out()
+  color: new Model.Out({}, function(){
+    var color = "rgba(" + Math.floor(inputs.mouseX.value() * 255) + ", " +
+                          Math.floor(inputs.mouseY.value() * 255) + ", 0, 1)";
+
+    this.set({ value: color });
+  })
 };
 
-outputs.color.calculate = function() {
-  var color = "rgba(" + Math.floor(inputs.mouseX.value() * 255) + ", " +
-                        Math.floor(inputs.mouseY.value() * 255) + ", 0, 1)";
 
-  outputs.color.set({ value: color });
-}
+
+inputs.mouseX.bind( 'change:value', function() {
+  outputs.color.calculate();
+});
+
+inputs.mouseY.bind( 'change:value', function() {
+  outputs.color.calculate();
+});
+
+
+outputs.color.bind( 'change:value', function() {
+  $('body').css({ backgroundColor: outputs.color.get('value') })
+});
+
 
 
 
@@ -235,18 +240,12 @@ $(window).mousemove(function(e) {
   inputs.mouseY.value( e.clientY );
 });
 
-
-
-inputs.mouseX.bind( 'change:value', function() {
-  outputs.color.calculate();
-//   var red = Math.floor( this.value() * 255 );
-//   $('body').css({ backgroundColor: "rgba(" + red +", 0, 0, 1)" }) 
+$(window).bind('touchmove', function(e) {
+  inputs.mouseX.value( e.clientX );
+  inputs.mouseY.value( e.clientY );
 });
 
-outputs.color.bind( 'change:value', function() {
-  console.log( outputs.color.get('value')  )
-  $('body').css({ backgroundColor: outputs.color.get('value') })
-});
+
 
 
 
