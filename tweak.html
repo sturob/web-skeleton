@@ -184,23 +184,40 @@ Model.In = Backbone.Model.extend({
     
     v = Math.min(v / max, 1);
     
-    var history = this.get('history');
-    if (history.length > this.get('history_length')) {
-	    history.shift();
+    var h = this.get('history');
+    if (h.length > this.get('history_length')) {
+	    h.shift();
 	  }
-	  history.push( v );
+	  h.push( v );
     
-    this.set({ value: v, history: history });
+    this.set({ value: v });
   }
 });
 
 Model.Out = Backbone.Model.extend({});
-var outputs = { color: new Model.Out() };
+
 
 var inputs = {
   mouseX: new Model.In({ el: '#mouseX', min: 0, max: $(window).width()  }),
   mouseY: new Model.In({ el: '#mouseY', min: 0, max: $(window).height() })
 };
+
+
+
+
+var outputs = {
+  color: new Model.Out()
+};
+
+outputs.color.calculate = function() {
+  var color = "rgba(" + Math.floor(inputs.mouseX.value() * 255) + ", " +
+                        Math.floor(inputs.mouseY.value() * 255) + ", 0, 1)";
+
+  outputs.color.set({ value: color });
+}
+
+
+
 
 function dump_history() {
   console.log(inputs.mouseX.get('history'));
@@ -221,14 +238,21 @@ $(window).mousemove(function(e) {
 
 
 inputs.mouseX.bind( 'change:value', function() {
-  var red = Math.floor( this.value() * 255 );
-  $('body').css({ backgroundColor: "rgba(" + red +", 0, 0, 1)" }) 
+  outputs.color.calculate();
+//   var red = Math.floor( this.value() * 255 );
+//   $('body').css({ backgroundColor: "rgba(" + red +", 0, 0, 1)" }) 
 });
 
-inputs.mouseY.bind( 'change:value', function() {
-  var w = Math.floor( this.value() * 25 );
-  // $('body').css({ border: w + "px solid black" })
+outputs.color.bind( 'change:value', function() {
+  console.log( outputs.color.get('value')  )
+  $('body').css({ backgroundColor: outputs.color.get('value') })
 });
+
+
+
+
+
+
 
 
 
