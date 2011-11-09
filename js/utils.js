@@ -24,7 +24,7 @@ $.ajaxSetup({
   // 'dataType'   : FORMAT,  // auto parse data coming back as JSON
   'beforeSend' : function(xhr) { 
     // xhr.setRequestHeader( "Accept", 'application/json' );
-  }
+  },
   dataFilter: function(data, type) { // deal with rails sending back " " and a 200 - which triggers .error in $.ajax
     if (type == "json" && data == ' ') { return '{}'; } else { return data; }
   }

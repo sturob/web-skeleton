@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Accelerometer Javascript Test</title>
+    <meta name=viewport content="width=device-width,user-scalable=yes"/>
+    <style>
+      body {
+      	font-family: helvetica, arial, sans serif;
+      	margin: 0;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      #sphere {
+      	position: absolute;	
+      	width: 5px;
+      	height: 5px;
+      	border-radius: 5px;
+      	-webkit-radius: 5px;
+      	background-color: blue;
+      }
+      
+      ul { 
+        margin: 4px 12px;
+        list-style: none;
+        font-size: 28px;
+        font-weight: bold;
+        color: #aaa;
+        font-family: "Courier New";
+      }
+      li {
+        margin: 0 0 0px 0;
+      }
+    </style>
+    
+
+    
+    
+    <script type="text/javascript" src="js/lib/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="js/lib/underscore.js"></script>
+    <script type="text/javascript" src="js/lib/backbone.js"></script>
+    <script type="text/javascript" src="js/lib/json2.js"></script>
+    <script type="text/javascript" src="js/lib/dataviz/jquery.sparkline.js"></script>
+
+    <script type="text/javascript" src="js/utils.js"></script>
+    
+  </head>
+
+<body>
+  <div id="content">
+    <div id="sphere"></div>
+      <ul>
+        <li>X: <div id="mouseX"><small></small><strong></strong></div></li>
+        <li>Y: <div id="mouseY"><small></small><strong></strong></div></li>
+        <li>x: <span id="accelerationX"></span>g <span id="ax"></span></li>
+        <li>y: <span id="accelerationY"></span>g <span id="ay"></span></li>
+        <li>z: <span id="accelerationZ"></span>g <span id="az"></span></li>
+        <li>&nbsp;</li>
+        <li>&#x21BA;&#945; <span id="rotationAlpha"></span>&deg;</li>
+        <li>&#x21BA;&#946; <span id="rotationBeta"></span>&deg;</li>
+        <li>&#x21BA;&#947; <span id="rotationGamma"></span>&deg;</li>
+        <li>&nbsp;</li>
+        <li>vx:<span id='vx'></span></li>
+        <li>vy:<span id='vy'></span></li>
+      </ul>
+    </div>
+  </div>
+</body>
+
+<script type="text/javascript">
+
+var x = 0,  y = 0,
+    vx = 0, vy = 0,
+   	ax = 0, ay = 0,
+   	e;
+	
+	
+var trail = {
+  ax: [],
+  ay: [],
+  az: []
+}
+
+
+
+	
+function p (id, num, len) {
+  var pad = (num >= 0) ? ('+' + num) : '' + num,
+      d = pad.substr(0, len || 4);
+      
+	document.getElementById( id ).innerHTML = d;
+}
+
+var sphere = document.getElementById("sphere");
+
+
+
+/* 
+
+multiple values input in realtime
+
+multiple values calculated and output in realtime
+
+all values remember their history and display a sparkleline
+
+values normalised internally ( 0 - 1.0 )
+
+autonormalisation based on input extremes
+
+all changes bindable
+  outputs.x.bind('change', $('#thing').css({ color: rgba( (this.value() + 1.0) * 127  0,0, 1)}))
+
+
+
+
+----
+
+input range
+auto input
+
+variable
+  history: []
+  
+  
+input
+  set
+  adjust
+
+output
+  calculate
+  
+
+  fake.get = function(key) {
+    That.adddep(key);
+  }
+
+  Setcalc: function (how) {
+    this.cleardep();
+    how.call( this, fake, fake );
+    This.listentodepchanges();
+  }
+
+  var calc = function (i, o) {
+    return i.get('x') + i.get('y')
+  };
+
+  out.total.setcalc( calc );
+
+*/
+
+var Model = {
+  
+};
+
+var options = { 
+  normalRangeMin: 0, normalRangeMax: 1, 
+  width: '120px', chartRangeClip: true, spotColor: false, minSpotColor: false, maxSpotColor: false
+};
+
+
+Model.In = Backbone.Model.extend({
+  defaults: { // kind of globals
+    min: 0,
+    max: 100,
+    history_length: 50
+  },
+  initialize: function(attr) {
+    this.bind('change:value', function() {
+      $(this.get('el') + " strong").text( this.value() + "(" + this.get('raw') + ")" );
+      $(this.get('el') + " small").sparkline( this.get('history'), options );
+    });
+    this.set({ history: [] })
+  },
+  value: function(v) {
+    if (! v) {
+      return this.get('value');
+    }
+    
+    this.set({ raw: v });
+    
+    var min = 0,
+        max = this.get('max');
+    
+    v = Math.min(v / max, 1);
+    
+    var history = this.get('history');
+    if (history.length > this.get('history_length')) {
+	    history.shift();
+	  }
+	  history.push( v );
+    
+    this.set({ value: v, history: history });
+  }
+});
+
+Model.Out = Backbone.Model.extend({});
+var outputs = { color: new Model.Out() };
+
+var inputs = {
+  mouseX: new Model.In({ el: '#mouseX', min: 0, max: $(window).width()  }),
+  mouseY: new Model.In({ el: '#mouseY', min: 0, max: $(window).height() })
+};
+
+function dump_history() {
+  console.log(inputs.mouseX.get('history'));
+  console.log(inputs.mouseY.get('history'));
+}
+
+
+
+$(window).click(function(e) {
+  console.log(e)
+})
+
+$(window).mousemove(function(e) {
+  inputs.mouseX.value( e.clientX );
+  inputs.mouseY.value( e.clientY );
+});
+
+
+
+inputs.mouseX.bind( 'change:value', function() {
+  var red = Math.floor( this.value() * 255 );
+  $('body').css({ backgroundColor: "rgba(" + red +", 0, 0, 1)" }) 
+});
+
+inputs.mouseY.bind( 'change:value', function() {
+  var w = Math.floor( this.value() * 25 );
+  // $('body').css({ border: w + "px solid black" })
+});
+
+
+
+
+
+
+function readmouse () {
+  _.delay(function() {
+    readmouse();
+  }, 250);
+}
+// readmouse();
+
+
+
+
+
+
+
+
+//
+
+var Variable = Backbone.Model.extend({
+  defaults: {
+  },
+  change: function() {
+    // console.log('update ' + this.get('dependents'));
+  }
+});
+
+
+
+function capmaker (from, to) {
+  return function(num) {
+    
+  }
+}
+
+
+
+if (window.DeviceMotionEvent != undefined) {
+	window.ondevicemotion = function(ev) {
+		ax = event.accelerationIncludingGravity.x * 5;
+		ay = event.accelerationIncludingGravity.y * 5;
+		
+		e = ev;
+    // p("accelerationX", e.accelerationIncludingGravity.x);
+    // p("accelerationY", e.accelerationIncludingGravity.y);
+    // p("accelerationZ", e.accelerationIncludingGravity.z);
+    // 
+    // if ( e.rotationRate ) {
+    //   p("rotationAlpha", e.rotationRate.alpha);
+    //   p( "rotationBeta", e.rotationRate.beta);
+    //   p("rotationGamma", e.rotationRate.gamma);
+    // }
+	}
+	
+  
+  // $('body').bind('touchstart', function() {
+  //   alert(trail.ax);
+  // });
+
+  var n = 0;
+	setInterval( function() {
+		var landscapeOrientation = window.innerWidth/window.innerHeight > 1;
+		if ( landscapeOrientation) {
+			vx = vx + ay;
+			vy = vy + ax;
+		} else {
+			vy = vy - ay;
+			vx = vx + ax;
+		}
+		vx = vx * 0.98;
+		vy = vy * 0.98;
+		y = parseInt(y + vy / 50);
+		x = parseInt(x + vx / 50);
+		
+		if (n++ % 10 == 0) {
+		  
+		  var tmp = e.accelerationIncludingGravity;
+		  
+		  if (trail.ax.length > 50) {
+		    trail.ax.shift()
+		  }
+      trail.ax.push( tmp.x );
+      
+		  if (trail.ay.length > 50) {
+		    trail.ay.shift()
+		  }
+      trail.ay.push( tmp.y );
+      
+		  if (trail.az.length > 50) {
+		    trail.az.shift()
+		  }
+      trail.az.push( tmp.z );
+      
+      		  
+  		p("accelerationX", tmp.x);
+  		p("accelerationY", tmp.y);
+  		p("accelerationZ", tmp.z);
+
+  		p("rotationAlpha", e.rotationRate.alpha);
+  		p( "rotationBeta", e.rotationRate.beta);
+  		p("rotationGamma", e.rotationRate.gamma);
+  		p("vx", vx, 6);
+  		p("vy", vy, 6);
+  		
+		}
+		boundingBoxCheck();
+		
+		sphere.style.top = y + "px";
+		sphere.style.left = x + "px";
+		
+		var options = { 
+		  normalRangeMin: -10, normalRangeMax: 10, 
+		  width: '120px', chartRangeClip: true, spotColor: false, minSpotColor: false, maxSpotColor: false
+	  };
+		
+		$('#ax').sparkline( trail.ax, options);
+		$('#ay').sparkline( trail.ay, options);
+		$('#az').sparkline( trail.az, options);
+		
+	}, 50);
+} 
+
+
+function boundingBoxCheck(){
+	if (x<0) { x = 0; vx = -vx / 2; }
+	if (y<0) { y = 0; vy = -vy / 2; }
+	if (x>document.documentElement.clientWidth-20) { x = document.documentElement.clientWidth-20; vx = -vx / 2; }
+	if (y>document.documentElement.clientHeight-20) { y = document.documentElement.clientHeight-20; vy = -vy / 2; }
+	
+  // if (vy < 5.5 && vy > -5.5) vy = 0;
+  // if (vx < 5.5 && vx > 5.5 ) vx = 0;
+}
+
+</script>
+
+</html>
