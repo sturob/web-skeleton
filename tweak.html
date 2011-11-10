@@ -26,13 +26,18 @@
       ul { 
         margin: 4px 12px;
         list-style: none;
-        font-size: 28px;
+        font-size: 18px;
         font-weight: bold;
         color: #aaa;
         font-family: "Courier New";
       }
       li {
         margin: 0 0 0px 0;
+      }
+      strong {
+        outline: 1px solid red;
+        width: 100px;
+        overflow: hidden;
       }
     </style>
     
@@ -44,17 +49,20 @@
     <script type="text/javascript" src="js/lib/backbone.js"></script>
     <script type="text/javascript" src="js/lib/json2.js"></script>
     <script type="text/javascript" src="js/lib/dataviz/jquery.sparkline.js"></script>
-
+    
     <script type="text/javascript" src="js/utils.js"></script>
     
   </head>
 
 <body>
   <div id="content">
+    <button id="toggle_random">pause random</button>
     <div id="sphere"></div>
       <ul>
         <li>X: <div id="mouseX"><small></small><strong></strong></div></li>
         <li>Y: <div id="mouseY"><small></small><strong></strong></div></li>
+        <li>random: <div id="random"><small></small><strong></strong></div></li>
+
         <li>color <div id="color"><strong></strong></div></li>
         <li>x: <span id="accelerationX"></span>g <span id="ax"></span></li>
         <li>y: <span id="accelerationY"></span>g <span id="ay"></span></li>
@@ -103,7 +111,7 @@ var sphere = document.getElementById("sphere");
 
  [√]  multiple values input in realtime
 
- [ ]  multiple values calculated and output in realtime
+ [√]  multiple values calculated and output in realtime
 
  [ ]  all values remember their history and display a sparkleline
 
@@ -122,7 +130,6 @@ var sphere = document.getElementById("sphere");
 
 one-line calculate update
 
-
   fake.get = function(key) {
     That.adddep(key);
   }
@@ -138,7 +145,6 @@ one-line calculate update
   };
 
   out.total.setcalc( calc );
-
 */
 
 var Model = {
@@ -147,7 +153,8 @@ var Model = {
 
 var options = { 
   normalRangeMin: 0, normalRangeMax: 1, 
-  width: '120px', chartRangeClip: true, spotColor: false, minSpotColor: false, maxSpotColor: false
+  width: '120px', chartRangeClip: true, spotColor: false,
+  minSpotColor: false, maxSpotColor: false
 };
 
 
@@ -169,13 +176,14 @@ Model.Var = Backbone.Model.extend({
   }
 });
 
+
 Model.In = Model.Var.extend({
-  defaults: { // kind of globals
-    min: 0,
-    max: 100
-  },
-  initialize: function(attr) {
+  defaults: { min: 0, max: 100 },
+  initialize: function(options) {
     this.initHistory();
+    if (options.initial) {
+      this.value( options.initial )
+    }
   },
   value: function(v) {
     if (! v) {
@@ -199,26 +207,51 @@ Model.Out = Model.Var.extend({
   initialize: function(attr, calculate) {
     this.initHistory();
     this.calculate = calculate;
+    // this.setup();
   },
   update: function() {
-    var v = this.calculate();
+    var v = this.calculate.call( window );
     this.addToHistory( v );
     this.set({ value: v });
+  },
+  setup: function() {
+    this.calculate.call( this );
   }
 });
 
 
 var inputs = {
   mouseX: new Model.In({ el: '#mouseX', min: 0, max: $(window).width()  }),
-  mouseY: new Model.In({ el: '#mouseY', min: 0, max: $(window).height() })
+  mouseY: new Model.In({ el: '#mouseY', min: 0, max: $(window).height() }),
+  random: new Model.In({ el: '#random', min: 0, max: 1, initial: 0.5 })
 };
 
 
 var outputs = {
   color: new Model.Out( { el: '#color' }, function() {
-    return "rgba(" + Math.floor(inputs.mouseX.value() * 255) + ", " + Math.floor(inputs.mouseY.value() * 255) + ", 0, 1)";
+    return "rgba(" + Math.floor(this.inputs.mouseX.value() * 255) + ", "
+                   + Math.floor(this.inputs.mouseY.value() * 255) + ", 0, " + this.inputs.random.value() + ")";
+  }),
+  squared: new Model.Out({ }, function() {
+    return this.inputs.mouseY.value() * this.inputs.mouseY.value()
   })
 };
+
+
+// return this.mouseY() + this.mouseX()
+
+// outputs.color.depends_on = []
+// fake: {
+//   mouseX: function() { depends_on.push( 'mouseX' )   }
+// }
+
+// real: {
+//   mouseX: function() { return inputs.mouseX.value() } 
+// }
+
+// Vars.
+
+
 
 
 
@@ -230,34 +263,36 @@ inputs.mouseY.bind( 'change:value', function() {
   outputs.color.update();
 });
 
+inputs.random.bind( 'change:value', function() {
+  outputs.color.update();
+});
+
 
 outputs.color.bind( 'change:value', function() {
-  $('body').css({ backgroundColor: outputs.color.get('value') })
+  $('body > div').css({ backgroundColor: outputs.color.get('value') })
 });
 
 
 
 
-
-function dump_history() {
-  console.log(inputs.mouseX.get('history'));
-  console.log(inputs.mouseY.get('history'));
-}
-
-
-$(window).click(function(e) {
-  console.log(e)
-})
+// $(window).click(function(e) {
+//   console.log(e)
+// })
 
 $(window).mousemove(function(e) {
   inputs.mouseX.value( e.clientX );
   inputs.mouseY.value( e.clientY );
 });
 
-$(window).bind('touchmove', function(e) {
-  inputs.mouseX.value( e.clientX );
-  inputs.mouseY.value( e.clientY );
-});
+$(window).bind('touchstart', touched);
+$(window).bind('touchmove', touched);
+  
+  
+function touched (e) {
+  inputs.mouseX.value( e.originalEvent.pageX );
+  inputs.mouseY.value( e.originalEvent.pageY );
+  return false;
+}
 
 
 
@@ -272,14 +307,21 @@ $(window).bind('touchmove', function(e) {
 
 
 
-function readmouse () {
+
+function set_random () {
   _.delay(function() {
-    readmouse();
+    var now = inputs.random.value();
+    set_random.on && inputs.random.value( now + (Math.random() > 0.5 ? 0.05 : -0.05) );
+    set_random();
   }, 250);
 }
-// readmouse();
 
+set_random.on = true;
+set_random();
 
+$('#toggle_random').click( function() {
+  set_random.on = (! set_random.on);
+})
 
 
 
