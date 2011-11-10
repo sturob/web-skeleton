@@ -2,9 +2,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>Accelerometer Javascript Test</title>
-    <meta name=viewport content="width=device-width,user-scalable=yes"/>
+    <meta name=viewport content="width=device-width,user-scalable=no"/>
     <style>
       body {
+/*        height: 400px;*/
+/*        overflow: hidden;*/
       	font-family: helvetica, arial, sans serif;
       	margin: 0;
       }
@@ -53,6 +55,7 @@
       <ul>
         <li>X: <div id="mouseX"><small></small><strong></strong></div></li>
         <li>Y: <div id="mouseY"><small></small><strong></strong></div></li>
+        <li>color <div id="color"><strong></strong></div></li>
         <li>x: <span id="accelerationX"></span>g <span id="ax"></span></li>
         <li>y: <span id="accelerationY"></span>g <span id="ay"></span></li>
         <li>z: <span id="accelerationZ"></span>g <span id="az"></span></li>
@@ -148,18 +151,31 @@ var options = {
 };
 
 
-Model.In = Backbone.Model.extend({
-  defaults: { // kind of globals
-    min: 0,
-    max: 100,
-    history_length: 50
-  },
-  initialize: function(attr) {
+
+Model.Var = Backbone.Model.extend({
+  initHistory: function() {
     this.bind('change:value', function() {
-      $(this.get('el') + " strong").text( this.value() + "(" + this.get('raw') + ")" );
+      $(this.get('el') + " strong").text( this.get('value') + "(" + this.get('raw') + ")" );
       $(this.get('el') + " small").sparkline( this.get('history'), options );
     });
-    this.set({ history: [] })
+    this.set({ history: [], history_length: 50 })    
+  },
+  addToHistory: function(v) {
+    var h = this.get('history');
+    if (h.length > this.get('history_length')) {
+	    h.shift();
+	  }
+	  h.push( v );
+  }
+});
+
+Model.In = Model.Var.extend({
+  defaults: { // kind of globals
+    min: 0,
+    max: 100
+  },
+  initialize: function(attr) {
+    this.initHistory();
   },
   value: function(v) {
     if (! v) {
@@ -168,24 +184,26 @@ Model.In = Backbone.Model.extend({
     
     this.set({ raw: v });
     
-    var min = 0,
+    var min = this.get('min'),
         max = this.get('max');
     
     v = Math.min(v / max, 1);
     
-    var h = this.get('history');
-    if (h.length > this.get('history_length')) {
-	    h.shift();
-	  }
-	  h.push( v );
+    this.addToHistory( v );
     
     this.set({ value: v });
   }
 });
 
-Model.Out = Backbone.Model.extend({
+Model.Out = Model.Var.extend({
   initialize: function(attr, calculate) {
+    this.initHistory();
     this.calculate = calculate;
+  },
+  update: function() {
+    var v = this.calculate();
+    this.addToHistory( v );
+    this.set({ value: v });
   }
 });
 
@@ -197,22 +215,19 @@ var inputs = {
 
 
 var outputs = {
-  color: new Model.Out({}, function(){
-    var color = "rgba(" + Math.floor(inputs.mouseX.value() * 255) + ", " +
-                          Math.floor(inputs.mouseY.value() * 255) + ", 0, 1)";
-
-    this.set({ value: color });
+  color: new Model.Out( { el: '#color' }, function() {
+    return "rgba(" + Math.floor(inputs.mouseX.value() * 255) + ", " + Math.floor(inputs.mouseY.value() * 255) + ", 0, 1)";
   })
 };
 
 
 
 inputs.mouseX.bind( 'change:value', function() {
-  outputs.color.calculate();
+  outputs.color.update();
 });
 
 inputs.mouseY.bind( 'change:value', function() {
-  outputs.color.calculate();
+  outputs.color.update();
 });
 
 
@@ -228,7 +243,6 @@ function dump_history() {
   console.log(inputs.mouseX.get('history'));
   console.log(inputs.mouseY.get('history'));
 }
-
 
 
 $(window).click(function(e) {
