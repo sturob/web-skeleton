@@ -11,8 +11,9 @@
       	margin: 0;
       }
       div {
-        background-color: white;
+        margin: 4px;
       }
+
       * {
         margin: 0;
         padding: 0;
@@ -26,19 +27,44 @@
       	background-color: blue;
       }
       
-      ul { 
+      h1 {
+        font-size: 12px;
+        background-color: #333;
+        padding: 2px 0 2px 8px;
+        color: white;
+      }
+      .viz {
+        display: inline-block;
+        width: 120px;
+        margin-left: 100px;
+      }
+      .raw {
+        color: #ddd;
+      }
+      
+      ul#vars { 
+        background-color: white;
+        width: 400px;
         margin: 4px 12px;
         list-style: none;
         font-size: 18px;
         font-weight: bold;
         color: #aaa;
-        font-family: "Courier New";
+
+      }
+      h2 {
+        position: absolute;
+        left: 12px;
+        top: 2px;
+        font-size: 16px;
       }
       li {
+        border-bottom: 1px solid #eee;
+        position: relative;
         margin: 0 0 0px 0;
       }
-      strong {
-
+      span {
+        font-family: "Courier New";
       }
     </style>
     
@@ -59,23 +85,21 @@
   <div id="content">
     <button id="toggle_random">pause random</button>
     <div id="sphere"></div>
-      <ul>
-        <li>X: <div id="mouseX"><small></small><strong></strong></div></li>
-        <li>Y: <div id="mouseY"><small></small><strong></strong></div></li>
-        <li>random: <div id="random"><small></small><strong></strong></div></li>
+      <ul id="vars">
+        <h1>inputs</h1>
+        <li id="mouseX"><h2>X:</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        <li id="mouseY"><h2>Y:</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        <li id="random"><h2>random:</h2>  <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        <li id="accX">  <h2>x:</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        <li id="accY">  <h2>y:</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        <li id="accZ">  <h2>z:</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
 
-        <li>color <div id="color"><strong></strong></div></li>
+        <h1>results</h1>
+        <li id="color"> <h2>color</h2>    <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        <li id="squared"><h2>sq</h2>      <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
         
-        <li>squared <div id="squared"><small></small><strong></strong></div></li>
-        
-        <li>x: <span id="accelerationX"></span>g <span id="ax"></span></li>
-        <li>y: <span id="accelerationY"></span>g <span id="ay"></span></li>
-        <li>z: <span id="accelerationZ"></span>g <span id="az"></span></li>
-
-        <li>&nbsp;</li>
-        
-        <li>vx:<span id='vx'></span></li>
-        <li>vy:<span id='vy'></span></li>
+        <!-- <li>vx:<span id='vx'></span></li> -->
+        <!-- <li>vy:<span id='vy'></span></li> -->
       </ul>
     </div>
   </div>
@@ -83,33 +107,8 @@
 
 <script type="text/javascript">
 
-var x = 0,  y = 0,
-    vx = 0, vy = 0,
-   	ax = 0, ay = 0,
-   	e;
-	
-	
-var trail = {
-  ax: [],
-  ay: [],
-  az: []
-}
 
-
-
-	
-function p (id, num, len) {
-  var pad = (num >= 0) ? ('+' + num) : '' + num,
-      d = pad.substr(0, len || 4);
-      
-	document.getElementById( id ).innerHTML = d;
-}
-
-var sphere = document.getElementById("sphere");
-
-
-
-/* 
+/*
 
  [√]  multiple values input in realtime
  [√]  multiple values calculated and output in realtime
@@ -120,17 +119,31 @@ var sphere = document.getElementById("sphere");
 ----
 
  [ ]  ids known so el: not needed
+ 
  [ ]  autonormalisation based on input extremes
- [ ]  bounding works 
+ 
+ [ ]  bounding flag + working
+ 
+ [ ]  vars.set({ 'foobar': 0.5 }) creates foobar, if it doesn't already exist
+ [ ]  proper separate library
+ 
 
+use cases
 
-
-
-addInput( 'mouseX', { min: 0, max: $(window).width() });
-addOutput( );
-
+  faceosc
+    animating faces with paper.js
+    emoticon history
+    logo manip
+  
+  touch
+    logo manip
+    
 
 */
+
+function shorten (f) {
+  return Math.round(f * 10000) / 10000
+}
 
 
 
@@ -146,48 +159,77 @@ var options = {
 
 Model.Var = Backbone.Model.extend({
   initHistory: function() {
-    this.bind('change:value', function() {
-      $(this.get('el') + " strong").text( this.get('value') + "(" + this.get('raw') + ")" );
-      $(this.get('el') + " small").sparkline( this.get('history'), options );
+    this.bind( 'change:value', function() {
+      var el = this.get('el');
+      
+      if (el) {
+        $(el + " span.value").text( shorten( this.value() ) );
+        $(el + " span.raw").text( shorten( this.get('raw') ) );
+        $(el + " span.viz").sparkline( this.get('history'), options );
+      }
     });
-    this.set({ history: [], history_length: 50 })    
+    
+    this.set({ history_length: 50, history: [] });
   },
   addToHistory: function(v) {
     var h = this.get('history');
+    
     if (h.length > this.get('history_length')) {
 	    h.shift();
 	  }
 	  h.push( v );
+	  
+	  this.set({ history: h })
   }
 });
 
 
 Model.In = Model.Var.extend({
-  defaults: { min: 0, max: 100 },
-  initialize: function(options) {
-    this.initHistory();
+  initialize: function (options) {
+    var initial = (typeof options.initial == "undefined" || options.initial == null) ? 0 : options.initial;
     
-    if (typeof options.initial !== "undefined" && options.initial !== null) {
-      this.value( options.initial );
+    this.initHistory();
+    this.set({ raw: initial, value: initial });
+    
+    if (typeof options.range !== "undefined" && options.range !== null) {
+      this.min = options.range.min;
+      this.max = options.range.max;
+    } else {
+      this.min = 0;
+      this.max = 1;
     }
+    
   },
   value: function(v) {
-    var min = this.get('min'),
-        max = this.get('max');
-
     if (typeof v == "undefined" || v == null) {
       return this.get('value');
     }
     
-    this.set({ raw: v });
+    var raw = v;
+  
+    if (v < this.min) {
+      this.min = v;
+    }
+    if (v > this.max) {
+      this.max = v;
+    }
 
-    v = Math.min(v / max, 1);
+    var diff = this.max - this.min;
+    var off = 1 - this.max / diff;
+  
+    v = (v / diff) + off; // coax values to be 0.0 - 1.0
     
     this.addToHistory( v );
         
-    this.set({ value: v });
+    this.set({ 
+      value: v, 
+      raw: raw 
+    });
   }
 });
+
+
+
 
 Model.Out = Model.Var.extend({
   initialize: function(attr, calculate) {
@@ -198,8 +240,14 @@ Model.Out = Model.Var.extend({
     var v = this.calculate.call( vars.reals );
     this.addToHistory( v );
     this.set({ value: v });
+  },
+  value: function() {
+    return this.get('value')
   }
+  
 });
+
+
 
 
 
@@ -227,7 +275,7 @@ var Vars = Backbone.Model.extend({
   },
   recalculate: function() {
     _.each(this.attributes, function(v, k) {
-      if (v.calculate) {
+      if (v.update) {
         v.update()
       }
     });
@@ -236,23 +284,30 @@ var Vars = Backbone.Model.extend({
 
 
 
+// add( 'mouseX', new Model.In({ initial: 0.1 }) )
+
+
+
 var vars = new Vars;
 
 vars.set({ 
-  mouseX: new Model.In({ el: '#mouseX', min: 0, max: $(window).width(),  initial: 0 }),
-  mouseY: new Model.In({ el: '#mouseY', min: 0, max: $(window).height(), initial: 0 }),
-  random: new Model.In({ el: '#random', min: 0, max: 1,                  initial: 0.5 }),
+  mouseX: new Model.In({ el: '#mouseX',  initial: 0.1 }),
+  mouseY: new Model.In({ el: '#mouseY',  initial: 0 }),
+
+  accX: new Model.In({ el: '#accX', min: -10, max: 10,  initial: 0 }),
+  accY: new Model.In({ el: '#accY', min: -10, max: 10,  initial: 0 }),
+  accZ: new Model.In({ el: '#accZ', min: -10, max: 10,  initial: 0 }),
+  
+  random: new Model.In({ el: '#random', range: { min: 0, max: 1 }, initial: 0.5 }),
 
   squared: new Model.Out({ el: "#squared" }, function() {
     return this.mouseX * this.mouseX
   }),
-  color: new Model.Out( { el: '#color' }, function() {
+  color: new Model.Out( { el: "#color" }, function() {
     return "rgba(" + Math.floor(this.mouseX * 255) + ", "
                    + Math.floor(this.mouseY * 255) + ", 0, " + this.random + ")";
   })
 });
-
-
 
 
 
@@ -271,7 +326,7 @@ function tick () {
     vars.recalculate();
     
     tick();
-  }, 10);
+  }, 50);
 }
 
 tick();
@@ -298,8 +353,6 @@ function touched (e) {
 
 
 
-
-
 function set_random () {
   _.delay(function() {
     var now = vars.get('random').value();
@@ -318,109 +371,77 @@ $('#toggle_random').click( function() {
 
 
 
+var acc = {
+  x:  0, y:  0,
+  vx: 0, vy: 0,
+  ax: 0, ay: 0,
+  e: 0
+};
 
-
-//
-
-function capmaker (from, to) {
-  return function(num) {
-    
-  }
+	
+function p (id, num, len) {
+  var pad = (num >= 0) ? ('+' + num) : '' + num,
+      d = pad.substr(0, len || 4);
+      
+	document.getElementById( id ).innerHTML = d;
 }
 
+var sphere = document.getElementById("sphere");
 
 
 if (window.DeviceMotionEvent != undefined) {
 	window.ondevicemotion = function(ev) {
-		ax = event.accelerationIncludingGravity.x * 5;
-		ay = event.accelerationIncludingGravity.y * 5;
-		
-		e = ev;
-    // p("accelerationX", e.accelerationIncludingGravity.x);
-    // p("accelerationY", e.accelerationIncludingGravity.y);
-    // p("accelerationZ", e.accelerationIncludingGravity.z);
-    // 
-    // if ( e.rotationRate ) {
-    //   p("rotationAlpha", e.rotationRate.alpha);
-    //   p( "rotationBeta", e.rotationRate.beta);
-    //   p("rotationGamma", e.rotationRate.gamma);
-    // }
+		acc.ax = event.accelerationIncludingGravity.x;
+		acc.ay = event.accelerationIncludingGravity.y;
+		acc.az = event.accelerationIncludingGravity.z;
+		acc.e = ev;
 	}
 	
-  
-  // $('body').bind('touchstart', function() {
-  //   alert(trail.ax);
-  // });
-
   var n = 0;
 	setInterval( function() {
 		var landscapeOrientation = window.innerWidth/window.innerHeight > 1;
 		if ( landscapeOrientation) {
-			vx = vx + ay;
-			vy = vy + ax;
+			acc.vx = acc.vx + acc.ay;
+			acc.vy = acc.vy + acc.ax;
 		} else {
-			vy = vy - ay;
-			vx = vx + ax;
+			acc.vy = acc.vy - acc.ay;
+			acc.vx = acc.vx + acc.ax;
 		}
-		vx = vx * 0.98;
-		vy = vy * 0.98;
-		y = parseInt(y + vy / 50);
-		x = parseInt(x + vx / 50);
+		acc.vx = acc.vx * 0.98;
+		acc.vy = acc.vy * 0.98;
+		acc.y = parseInt(acc.y + acc.vy / 50);
+		acc.x = parseInt(acc.x + acc.vx / 50);
+		
+		
+		vars.get('accX').value( acc.ax );
+		vars.get('accY').value( acc.ay );		
+    vars.get('accZ').value( acc.az );
 		
 		if (n++ % 10 == 0) {
+//		  var tmp = e.accelerationIncludingGravity;
 		  
-		  var tmp = e.accelerationIncludingGravity;
-		  
-		  if (trail.ax.length > 50) {
-		    trail.ax.shift()
-		  }
-      trail.ax.push( tmp.x );
-      
-		  if (trail.ay.length > 50) {
-		    trail.ay.shift()
-		  }
-      trail.ay.push( tmp.y );
-      
-		  if (trail.az.length > 50) {
-		    trail.az.shift()
-		  }
-      trail.az.push( tmp.z );
-      
-      		  
-  		p("accelerationX", tmp.x);
-  		p("accelerationY", tmp.y);
-  		p("accelerationZ", tmp.z);
-
-  		p("rotationAlpha", e.rotationRate.alpha);
+          		  
+/*		p("rotationAlpha", e.rotationRate.alpha);
   		p( "rotationBeta", e.rotationRate.beta);
-  		p("rotationGamma", e.rotationRate.gamma);
-  		p("vx", vx, 6);
-  		p("vy", vy, 6);
+  		p("rotationGamma", e.rotationRate.gamma); */
+  		p("vx", acc.vx, 6);
+  		p("vy", acc.vy, 6);
   		
 		}
 		boundingBoxCheck();
 		
-		sphere.style.top = y + "px";
-		sphere.style.left = x + "px";
-		
-		var options = { 
-		  normalRangeMin: -10, normalRangeMax: 10, 
-		  width: '120px', chartRangeClip: true, spotColor: false, minSpotColor: false, maxSpotColor: false
-	  };
-		
-		$('#ax').sparkline( trail.ax, options);
-		$('#ay').sparkline( trail.ay, options);
-		$('#az').sparkline( trail.az, options);
+		sphere.style.top = acc.y + "px";
+		sphere.style.left = acc.x + "px";
 		
 	}, 50);
 } 
 
 
 function boundingBoxCheck(){
-	if (x<0) { x = 0; vx = -vx / 2; }
-	if (y<0) { y = 0; vy = -vy / 2; }
-	if (x>document.documentElement.clientWidth-20) { x = document.documentElement.clientWidth-20; vx = -vx / 2; }
-	if (y>document.documentElement.clientHeight-20) { y = document.documentElement.clientHeight-20; vy = -vy / 2; }
+	if (acc.x<0) { acc.x = 0; acc.vx = -acc.vx / 2; }
+	if (acc.y<0) { acc.y = 0; acc.vy = -acc.vy / 2; }
+	if (acc.x>document.documentElement.clientWidth-20) { acc.x = document.documentElement.clientWidth-20; acc.vx = -acc.vx / 2; }
+	if (acc.y>document.documentElement.clientHeight-20) { acc.y = document.documentElement.clientHeight-20; acc.vy = -acc.vy / 2; }
 	
   // if (vy < 5.5 && vy > -5.5) vy = 0;
   // if (vx < 5.5 && vx > 5.5 ) vx = 0;
