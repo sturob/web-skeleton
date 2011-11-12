@@ -10,6 +10,9 @@
       	font-family: helvetica, arial, sans serif;
       	margin: 0;
       }
+      div {
+        background-color: white;
+      }
       * {
         margin: 0;
         padding: 0;
@@ -35,9 +38,7 @@
         margin: 0 0 0px 0;
       }
       strong {
-        outline: 1px solid red;
-        width: 100px;
-        overflow: hidden;
+
       }
     </style>
     
@@ -64,14 +65,15 @@
         <li>random: <div id="random"><small></small><strong></strong></div></li>
 
         <li>color <div id="color"><strong></strong></div></li>
+        
+        <li>squared <div id="squared"><small></small><strong></strong></div></li>
+        
         <li>x: <span id="accelerationX"></span>g <span id="ax"></span></li>
         <li>y: <span id="accelerationY"></span>g <span id="ay"></span></li>
         <li>z: <span id="accelerationZ"></span>g <span id="az"></span></li>
+
         <li>&nbsp;</li>
-        <li>&#x21BA;&#945; <span id="rotationAlpha"></span>&deg;</li>
-        <li>&#x21BA;&#946; <span id="rotationBeta"></span>&deg;</li>
-        <li>&#x21BA;&#947; <span id="rotationGamma"></span>&deg;</li>
-        <li>&nbsp;</li>
+        
         <li>vx:<span id='vx'></span></li>
         <li>vy:<span id='vy'></span></li>
       </ul>
@@ -110,46 +112,29 @@ var sphere = document.getElementById("sphere");
 /* 
 
  [√]  multiple values input in realtime
-
  [√]  multiple values calculated and output in realtime
-
- [ ]  all values remember their history and display a sparkleline
-
+ [√]  all values remember their history and display a sparkleline
  [√]  values normalised internally ( 0 - 1.0 )
-
- [ ]  autonormalisation based on input extremes
-
  [√]  all changes bindable
-
-
-
-
-
 
 ----
 
-one-line calculate update
+ [ ]  ids known so el: not needed
+ [ ]  autonormalisation based on input extremes
+ [ ]  bounding works 
 
-  fake.get = function(key) {
-    That.adddep(key);
-  }
 
-  Setcalc: function (how) {
-    this.cleardep();
-    how.call( this, fake, fake );
-    This.listentodepchanges();
-  }
 
-  var calc = function (i, o) {
-    return i.get('x') + i.get('y')
-  };
 
-  out.total.setcalc( calc );
+addInput( 'mouseX', { min: 0, max: $(window).width() });
+addOutput( );
+
+
 */
 
-var Model = {
-  
-};
+
+
+var Model = {};
 
 var options = { 
   normalRangeMin: 0, normalRangeMax: 1, 
@@ -181,24 +166,25 @@ Model.In = Model.Var.extend({
   defaults: { min: 0, max: 100 },
   initialize: function(options) {
     this.initHistory();
-    if (options.initial) {
-      this.value( options.initial )
+    
+    if (typeof options.initial !== "undefined" && options.initial !== null) {
+      this.value( options.initial );
     }
   },
   value: function(v) {
-    if (! v) {
+    var min = this.get('min'),
+        max = this.get('max');
+
+    if (typeof v == "undefined" || v == null) {
       return this.get('value');
     }
     
     this.set({ raw: v });
-    
-    var min = this.get('min'),
-        max = this.get('max');
-    
+
     v = Math.min(v / max, 1);
     
     this.addToHistory( v );
-    
+        
     this.set({ value: v });
   }
 });
@@ -207,81 +193,97 @@ Model.Out = Model.Var.extend({
   initialize: function(attr, calculate) {
     this.initHistory();
     this.calculate = calculate;
-    // this.setup();
   },
   update: function() {
-    var v = this.calculate.call( window );
+    var v = this.calculate.call( vars.reals );
     this.addToHistory( v );
     this.set({ value: v });
-  },
-  setup: function() {
-    this.calculate.call( this );
   }
 });
 
 
-var inputs = {
-  mouseX: new Model.In({ el: '#mouseX', min: 0, max: $(window).width()  }),
-  mouseY: new Model.In({ el: '#mouseY', min: 0, max: $(window).height() }),
-  random: new Model.In({ el: '#random', min: 0, max: 1, initial: 0.5 })
-};
+
+// .message('x')
+// .listen('x y')
 
 
-var outputs = {
-  color: new Model.Out( { el: '#color' }, function() {
-    return "rgba(" + Math.floor(this.inputs.mouseX.value() * 255) + ", "
-                   + Math.floor(this.inputs.mouseY.value() * 255) + ", 0, " + this.inputs.random.value() + ")";
+// 
+
+
+var Vars = Backbone.Model.extend({
+  initialize: function() {
+    this.bind('change', function() {
+      this.updateReals();
+    });
+    this.updateReals();
+  },
+  updateReals: function() {
+    var that = this;
+    this.reals = {};
+        
+    _.each(this.attributes, function(v, k) {
+      that.reals[k] = v.get('value');
+    });
+  },
+  recalculate: function() {
+    _.each(this.attributes, function(v, k) {
+      if (v.calculate) {
+        v.update()
+      }
+    });
+  }
+});
+
+
+
+var vars = new Vars;
+
+vars.set({ 
+  mouseX: new Model.In({ el: '#mouseX', min: 0, max: $(window).width(),  initial: 0 }),
+  mouseY: new Model.In({ el: '#mouseY', min: 0, max: $(window).height(), initial: 0 }),
+  random: new Model.In({ el: '#random', min: 0, max: 1,                  initial: 0.5 }),
+
+  squared: new Model.Out({ el: "#squared" }, function() {
+    return this.mouseX * this.mouseX
   }),
-  squared: new Model.Out({ }, function() {
-    return this.inputs.mouseY.value() * this.inputs.mouseY.value()
+  color: new Model.Out( { el: '#color' }, function() {
+    return "rgba(" + Math.floor(this.mouseX * 255) + ", "
+                   + Math.floor(this.mouseY * 255) + ", 0, " + this.random + ")";
   })
-};
-
-
-// return this.mouseY() + this.mouseX()
-
-// outputs.color.depends_on = []
-// fake: {
-//   mouseX: function() { depends_on.push( 'mouseX' )   }
-// }
-
-// real: {
-//   mouseX: function() { return inputs.mouseX.value() } 
-// }
-
-// Vars.
-
-
-
-
-
-inputs.mouseX.bind( 'change:value', function() {
-  outputs.color.update();
-});
-
-inputs.mouseY.bind( 'change:value', function() {
-  outputs.color.update();
-});
-
-inputs.random.bind( 'change:value', function() {
-  outputs.color.update();
-});
-
-
-outputs.color.bind( 'change:value', function() {
-  $('body > div').css({ backgroundColor: outputs.color.get('value') })
 });
 
 
 
 
-// $(window).click(function(e) {
-//   console.log(e)
-// })
+
+
+vars.get('color').bind( 'change:value', function() {
+  $('body').css({ backgroundColor: vars.get('color').get('value') })
+});
+
+
+
+
+function tick () {
+  _.delay(function() {
+    
+    vars.updateReals();
+    vars.recalculate();
+    
+    tick();
+  }, 10);
+}
+
+tick();
+
+
+
+
+
 
 $(window).mousemove(function(e) {
-  inputs.mouseX.value( e.clientX );
-  inputs.mouseY.value( e.clientY );
+  vars.get('mouseX').value( e.clientX );
+  vars.get('mouseY').value( e.clientY );
 });
 
 $(window).bind('touchstart', touched);
@@ -289,8 +291,8 @@ $(window).bind('touchmove', touched);
   
   
 function touched (e) {
-  inputs.mouseX.value( e.originalEvent.pageX );
-  inputs.mouseY.value( e.originalEvent.pageY );
+  vars.get('mouseX').value( e.originalEvent.pageX );
+  vars.get('mouseY').value( e.originalEvent.pageY );
   return false;
 }
 
@@ -298,25 +300,15 @@ function touched (e) {
 
 
 
-
-
-
-
-
-
-
-
-
-
 function set_random () {
   _.delay(function() {
-    var now = inputs.random.value();
-    set_random.on && inputs.random.value( now + (Math.random() > 0.5 ? 0.05 : -0.05) );
+    var now = vars.get('random').value();
+    set_random.on && vars.get('random').value( now + (Math.random() > 0.5 ? 0.05 : -0.05) );
     set_random();
   }, 250);
 }
 
-set_random.on = true;
+set_random.on = false;
 set_random();
 
 $('#toggle_random').click( function() {
@@ -329,16 +321,6 @@ $('#toggle_random').click( function() {
 
 
 //
-
-var Variable = Backbone.Model.extend({
-  defaults: {
-  },
-  change: function() {
-    // console.log('update ' + this.get('dependents'));
-  }
-});
-
-
 
 function capmaker (from, to) {
   return function(num) {
