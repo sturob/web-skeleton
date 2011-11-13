@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>Accelerometer Javascript Test</title>
-    <meta name=viewport content="width=device-width,user-scalable=no"/>
+    <meta name="viewport" content="width=device-width,user-scalable=no"/>
     <style>
       body {
 /*        height: 400px;*/
@@ -80,8 +80,6 @@
       }
     </style>
     
-
-    
     
     <script type="text/javascript" src="js/lib/jquery-1.7.min.js"></script>
     <script type="text/javascript" src="js/lib/underscore.js"></script>
@@ -99,23 +97,30 @@
     <div id="sphere"></div>
       <ul id="vars">
         <h1>inputs</h1>
-        <li id="mouseX"><h2>mouseX</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-        <li id="mouseY"><h2>mouseY</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-        <li id="random"><h2>random</h2>  <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-        <li id="accX">  <h2>x</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-        <li id="accY">  <h2>y</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-        <li id="accZ">  <h2>z</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-
-        <h1>results</h1>
-        <li class="result" id="color"> <h2>color</h2>    
-          <span class="viz"></span> <span class="value"></span> <span class="raw"></span> 
-          <input type="text">
-        </li>
-        <li class="result" id="squared"><h2>sq</h2>
-          <span class="viz"></span> <span class="value"></span> <span class="raw"></span>
-          <input type="text">
-        </li>
+        <div id="inputs">
+          <li id="mouseX"><h2>mouseX</h2>  <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+          <li id="mouseY"><h2>mouseY</h2>  <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+          <li id="random"><h2>random</h2>  <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+          <li id="accX">  <h2>x</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+          <li id="accY">  <h2>y</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+          <li id="accZ">  <h2>z</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        </div>
         
+        <h1>results</h1>
+        <div id="results">
+          <li class="result" id="color"> <h2>color</h2>    
+            <span class="viz"></span> <span class="value"></span> <span class="raw"></span> 
+            <input type="text">
+          </li>
+          <li class="result" id="squared"><h2>squared</h2>
+            <span class="viz"></span> <span class="value"></span> <span class="raw"></span>
+            <input type="text">
+          </li>
+          <li class="result" id="output"><h2>output</h2>
+            <span class="viz"></span> <span class="value"></span> <span class="raw"></span>
+            <input type="text">
+          </li>
+        </div>
         <!-- <li>vx:<span id='vx'></span></li> -->
         <!-- <li>vy:<span id='vy'></span></li> -->
       </ul>
@@ -133,15 +138,18 @@
  [√]  all values remember their history and display a sparkleline
  [√]  values normalised internally ( 0 - 1.0 )
  [√]  all changes bindable
-
+ [√]  ids known so el: not needed
+ 
+ [√]  calculate() updatable at runtime
+ 
 
 ----
 
- [ ]  ids known so el: not needed
-
- [ ]  calculate() updatable at runtime
+ [ ]
 
  [ ]  generate html
+
+
 
  [ ]  vars.set({ 'foobar': 0.5 }) creates foobar, if it doesn't already exist
 
@@ -230,7 +238,6 @@ Model.In = Model.Var.extend({
       this.min = 0;
       this.max = 1;
     }
-    
   },
   value: function(v) {
     if (typeof v == "undefined" || v == null) {
@@ -249,10 +256,10 @@ Model.In = Model.Var.extend({
     var diff = this.max - this.min;
     var off = 1 - this.max / diff;
   
-    v = (v / diff) + off; // coax values to be 0.0 - 1.0
+    v = (v / diff) + off; // coax value to be 0.0 - 1.0
     
     this.addToHistory( v );
-        
+
     this.set({ 
       value: v, 
       raw: raw 
@@ -271,13 +278,16 @@ Model.Out = Model.Var.extend({
   },
   setCalculate: function(f) {
     this.calculate = f;
+
+    $('#' + this.id + " input").val( f + "" );
+    
     return this;
   },
   calculateEntered: function(formula) {
     var f, ok = true;
     
     try {
-      eval( "f = function() { return " + formula + " }" );
+      eval( "f = " + formula );
     } catch (e) {
       ok = false;
       // statements to handle any exceptions
@@ -291,7 +301,7 @@ Model.Out = Model.Var.extend({
       ok = false;
     }
 
-    ok && this.setCalculate( f );
+    ok && (this.calculate = f);
   },
   update: function() {
     if (typeof this.calculate == 'function') {
@@ -310,7 +320,7 @@ Model.Out = Model.Var.extend({
 
 
 $('input').keyup( function() {
-  vars.get('squared').calculateEntered( $(this).val() );
+  vars.get( $(this).parents('li').attr('id') ).calculateEntered( $(this).val() )
 });
 
 
@@ -371,7 +381,11 @@ vars.add( 'accZ', Model.In, acc_options );
 vars.add( 'random', Model.In, { range: { min: 0, max: 1 }, initial: 0.5 } ),
 
 vars.add( 'squared', Model.Out, {} ).setCalculate( function() {
-    return this.mouseX * this.mouseX
+  return this.mouseX * this.mouseX
+});
+
+vars.add( 'output', Model.Out, {} ).setCalculate( function() {
+  return (this.accY + this.accX) / 2
 });
 
 
@@ -406,8 +420,8 @@ $(window).mousemove(function(e) {
   vars.get('mouseY').value( e.clientY );
 });
 
-$(window).bind('touchstart', touched);
-$(window).bind('touchmove', touched);
+// $('body').bind('touchstart', touched);
+// $('body').bind('touchmove', touched);
   
   
 function touched (e) {
