@@ -9,6 +9,7 @@
 /*        overflow: hidden;*/
       	font-family: helvetica, arial, sans serif;
       	margin: 0;
+      	background-color: #ddd;
       }
       div {
         margin: 4px;
@@ -42,6 +43,15 @@
         color: #ddd;
       }
       
+      input {
+        font-family: Courier;
+        position: absolute;
+        left: 4px;
+        right: 4px;
+        font-size: 14px;
+        bottom: 4px;
+      }
+      
       ul#vars { 
         background-color: white;
         width: 400px;
@@ -50,7 +60,6 @@
         font-size: 18px;
         font-weight: bold;
         color: #aaa;
-
       }
       h2 {
         position: absolute;
@@ -62,6 +71,9 @@
         border-bottom: 1px solid #eee;
         position: relative;
         margin: 0 0 0px 0;
+      }
+      li.result {
+        padding-bottom: 24px;
       }
       span {
         font-family: "Courier New";
@@ -87,16 +99,22 @@
     <div id="sphere"></div>
       <ul id="vars">
         <h1>inputs</h1>
-        <li id="mouseX"><h2>X:</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-        <li id="mouseY"><h2>Y:</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-        <li id="random"><h2>random:</h2>  <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-        <li id="accX">  <h2>x:</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-        <li id="accY">  <h2>y:</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-        <li id="accZ">  <h2>z:</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        <li id="mouseX"><h2>mouseX</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        <li id="mouseY"><h2>mouseY</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        <li id="random"><h2>random</h2>  <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        <li id="accX">  <h2>x</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        <li id="accY">  <h2>y</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        <li id="accZ">  <h2>z</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
 
         <h1>results</h1>
-        <li id="color"> <h2>color</h2>    <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-        <li id="squared"><h2>sq</h2>      <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+        <li class="result" id="color"> <h2>color</h2>    
+          <span class="viz"></span> <span class="value"></span> <span class="raw"></span> 
+          <input type="text">
+        </li>
+        <li class="result" id="squared"><h2>sq</h2>
+          <span class="viz"></span> <span class="value"></span> <span class="raw"></span>
+          <input type="text">
+        </li>
         
         <!-- <li>vx:<span id='vx'></span></li> -->
         <!-- <li>vy:<span id='vy'></span></li> -->
@@ -116,17 +134,28 @@
  [√]  values normalised internally ( 0 - 1.0 )
  [√]  all changes bindable
 
+
 ----
 
  [ ]  ids known so el: not needed
- 
+
+ [ ]  calculate() updatable at runtime
+
+ [ ]  generate html
+
+ [ ]  vars.set({ 'foobar': 0.5 }) creates foobar, if it doesn't already exist
+
+
  [ ]  autonormalisation based on input extremes
  
  [ ]  bounding flag + working
  
- [ ]  vars.set({ 'foobar': 0.5 }) creates foobar, if it doesn't already exist
- [ ]  proper separate library
  
+ [ ]  proper separate library  -  snorkle.js
+ 
+ [ ]  fix bug: same value()s mean no update to the variable
+
+
 
 use cases
 
@@ -142,6 +171,9 @@ use cases
 */
 
 function shorten (f) {
+  if (typeof f == 'string') {
+    return f
+  }
   return Math.round(f * 10000) / 10000
 }
 
@@ -160,7 +192,7 @@ var options = {
 Model.Var = Backbone.Model.extend({
   initHistory: function() {
     this.bind( 'change:value', function() {
-      var el = this.get('el');
+      var el = '#' + this.id;
       
       if (el) {
         $(el + " span.value").text( shorten( this.value() ) );
@@ -234,12 +266,41 @@ Model.In = Model.Var.extend({
 Model.Out = Model.Var.extend({
   initialize: function(attr, calculate) {
     this.initHistory();
-    this.calculate = calculate;
+    this.setCalculate( calculate );
+    return this;
+  },
+  setCalculate: function(f) {
+    this.calculate = f;
+    return this;
+  },
+  calculateEntered: function(formula) {
+    var f, ok = true;
+    
+    try {
+      eval( "f = function() { return " + formula + " }" );
+    } catch (e) {
+      ok = false;
+      // statements to handle any exceptions
+      console.log('err' + e)
+    }
+    
+    try {
+      f.call( vars.reals );
+    } catch (e) {
+      console.log('err2 ' + e);
+      ok = false;
+    }
+
+    ok && this.setCalculate( f );
   },
   update: function() {
-    var v = this.calculate.call( vars.reals );
-    this.addToHistory( v );
-    this.set({ value: v });
+    if (typeof this.calculate == 'function') {
+      var v = this.calculate.call( vars.reals );
+      this.addToHistory( v );
+      this.set({ value: v });
+    } else {
+      console.log('nah')
+    }
   },
   value: function() {
     return this.get('value')
@@ -248,7 +309,9 @@ Model.Out = Model.Var.extend({
 });
 
 
-
+$('input').keyup( function() {
+  vars.get('squared').calculateEntered( $(this).val() );
+});
 
 
 // .message('x')
@@ -279,41 +342,43 @@ var Vars = Backbone.Model.extend({
         v.update()
       }
     });
+  },
+  add: function(id, type, options) {
+    options.id = id; // very useful
+    var v = new type( options );
+    this.set( kv(id, v) );
+    return v;
   }
 });
 
 
 
-// add( 'mouseX', new Model.In({ initial: 0.1 }) )
+
 
 
 
 var vars = new Vars;
 
-vars.set({ 
-  mouseX: new Model.In({ el: '#mouseX',  initial: 0.1 }),
-  mouseY: new Model.In({ el: '#mouseY',  initial: 0 }),
+vars.add( 'mouseX', Model.In, { initial: 0.1 } );
+vars.add( 'mouseY', Model.In, { initial: 0.1 } );
 
-  accX: new Model.In({ el: '#accX', min: -10, max: 10,  initial: 0 }),
-  accY: new Model.In({ el: '#accY', min: -10, max: 10,  initial: 0 }),
-  accZ: new Model.In({ el: '#accZ', min: -10, max: 10,  initial: 0 }),
-  
-  random: new Model.In({ el: '#random', range: { min: 0, max: 1 }, initial: 0.5 }),
+var acc_options = { min: -10, max: 10,  initial: 0 };
 
-  squared: new Model.Out({ el: "#squared" }, function() {
+vars.add( 'accX', Model.In, acc_options );
+vars.add( 'accY', Model.In, acc_options );
+vars.add( 'accZ', Model.In, acc_options );
+
+vars.add( 'random', Model.In, { range: { min: 0, max: 1 }, initial: 0.5 } ),
+
+vars.add( 'squared', Model.Out, {} ).setCalculate( function() {
     return this.mouseX * this.mouseX
-  }),
-  color: new Model.Out( { el: "#color" }, function() {
-    return "rgba(" + Math.floor(this.mouseX * 255) + ", "
-                   + Math.floor(this.mouseY * 255) + ", 0, " + this.random + ")";
-  })
 });
 
 
-
-
-vars.get('color').bind( 'change:value', function() {
-  $('body').css({ backgroundColor: vars.get('color').get('value') })
+vars.add( 'color', Model.Out, {} ).setCalculate( function() {
+  return "rgba(" + Math.floor(this.mouseX * 255) + ", "  + Math.floor(this.mouseY * 255) + ", 0, " + this.random + ")";
+}).bind( 'change:value', function() {
+  $('#color').css({ backgroundColor: vars.get('color').get('value') })
 });
 
 
