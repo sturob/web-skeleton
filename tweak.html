@@ -54,7 +54,7 @@
       
       ul#vars { 
         background-color: white;
-        width: 400px;
+/*        width: 400px;*/
         margin: 4px 12px;
         list-style: none;
         font-size: 18px;
@@ -98,12 +98,6 @@
       <ul id="vars">
         <h1>inputs</h1>
         <div id="inputs">
-          <li id="mouseX"><h2>mouseX</h2>  <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-          <li id="mouseY"><h2>mouseY</h2>  <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-          <li id="random"><h2>random</h2>  <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-          <li id="accX">  <h2>x</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-          <li id="accY">  <h2>y</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
-          <li id="accZ">  <h2>z</h2>       <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
         </div>
         
         <h1>results</h1>
@@ -128,7 +122,13 @@
   </div>
 </body>
 
+<script type="text/backbone-tmpl" id="input_template">
+  <li id="<%= id %>"><h2><%= id %></h2> <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+</script>
+
 <script type="text/javascript">
+
+
 
 
 /*
@@ -141,13 +141,12 @@
  [√]  ids known so el: not needed
  
  [√]  calculate() updatable at runtime
- 
+ [√]  generate html 
 
 ----
 
- [ ]
 
- [ ]  generate html
+
 
 
 
@@ -353,9 +352,21 @@ var Vars = Backbone.Model.extend({
       }
     });
   },
-  add: function(id, type, options) {
+  addInput: function(id, options) {
     options.id = id; // very useful
-    var v = new type( options );
+    
+    
+    $('ul#vars div#inputs').append( _.template( $('#input_template').html() )({ id: id }) );
+    
+    
+    var v = new Model.In( options );
+    this.set( kv(id, v) );
+    return v;
+  },
+  addOutput: function(id, options) {
+    options.id = id; // very useful
+    
+    var v = new Model.Out( options );
     this.set( kv(id, v) );
     return v;
   }
@@ -368,28 +379,27 @@ var Vars = Backbone.Model.extend({
 
 
 var vars = new Vars;
-
-vars.add( 'mouseX', Model.In, { initial: 0.1 } );
-vars.add( 'mouseY', Model.In, { initial: 0.1 } );
+                         
+vars.addInput( 'mouseX', { initial: 0.1 } );
+vars.addInput( 'mouseY', { initial: 0.1 } );
 
 var acc_options = { min: -10, max: 10,  initial: 0 };
 
-vars.add( 'accX', Model.In, acc_options );
-vars.add( 'accY', Model.In, acc_options );
-vars.add( 'accZ', Model.In, acc_options );
+vars.addInput( 'accX', acc_options );
+vars.addInput( 'accY', acc_options );
+vars.addInput( 'accZ', acc_options );
 
-vars.add( 'random', Model.In, { range: { min: 0, max: 1 }, initial: 0.5 } ),
+vars.addInput( 'random', { range: { min: 0, max: 1 }, initial: 0.5 } ),
 
-vars.add( 'squared', Model.Out, {} ).setCalculate( function() {
+vars.addOutput( 'squared', {} ).setCalculate( function() {
   return this.mouseX * this.mouseX
 });
 
-vars.add( 'output', Model.Out, {} ).setCalculate( function() {
+vars.addOutput( 'output', {} ).setCalculate( function() {
   return (this.accY + this.accX) / 2
 });
 
-
-vars.add( 'color', Model.Out, {} ).setCalculate( function() {
+vars.addOutput( 'color', {} ).setCalculate( function() {
   return "rgba(" + Math.floor(this.mouseX * 255) + ", "  + Math.floor(this.mouseY * 255) + ", 0, " + this.random + ")";
 }).bind( 'change:value', function() {
   $('#color').css({ backgroundColor: vars.get('color').get('value') })
