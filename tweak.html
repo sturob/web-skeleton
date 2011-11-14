@@ -11,7 +11,7 @@
       	margin: 0;
       	background-color: #ddd;
       }
-      div {
+      > div {
         margin: 4px;
       }
 
@@ -19,6 +19,7 @@
         margin: 0;
         padding: 0;
       }
+
       #sphere {
       	position: absolute;	
       	width: 5px;
@@ -54,7 +55,7 @@
       
       ul#vars { 
         background-color: white;
-/*        width: 400px;*/
+        max-width: 500px;
         margin: 4px 12px;
         list-style: none;
         font-size: 18px;
@@ -78,6 +79,17 @@
       span {
         font-family: "Courier New";
       }
+      
+      #output div.CodeMirror {
+        border-left: 1px solid red;
+      }
+      
+      #output.ok div.CodeMirror {
+        border-left: 1px solid green;
+      }
+      
+      
+      
     </style>
     
     
@@ -88,6 +100,14 @@
     <script type="text/javascript" src="js/lib/dataviz/jquery.sparkline.js"></script>
     
     <script type="text/javascript" src="js/utils.js"></script>
+    
+    <script type="text/javascript" src="http://localhost:8339/socket.io/socket.io.js"></script>
+
+    <script type="text/javascript" src="js/lib/codemirror/codemirror.js"></script>
+    <script type="text/javascript" src="js/lib/codemirror/javascript.js"></script>
+
+    <link rel="stylesheet" href="css/codemirror/codemirror.css">
+    <link rel="stylesheet" href="css/codemirror/theme/default.css">
     
   </head>
 
@@ -102,19 +122,31 @@
         
         <h1>results</h1>
         <div id="results">
-          <li class="result" id="color"> <h2>color</h2>    
+          <li class="result" id="a"> <h2>a</h2>    
             <span class="viz"></span> <span class="value"></span> <span class="raw"></span> 
-            <input type="text">
+            <input type="text" value="return 0">
           </li>
-          <li class="result" id="squared"><h2>squared</h2>
+          <li class="result" id="b"><h2>b</h2>
             <span class="viz"></span> <span class="value"></span> <span class="raw"></span>
-            <input type="text">
+            <input type="text" value="return 0">
           </li>
-          <li class="result" id="output"><h2>output</h2>
+          <li class="result" id="c"><h2>c</h2>
             <span class="viz"></span> <span class="value"></span> <span class="raw"></span>
-            <input type="text">
+            <input type="text" value="return 0">
           </li>
         </div>
+        
+        
+        <h1>output</h2>
+          <div id="output">
+<textarea>var t = _.template(
+  'rgba(<%= a %>,<%= b %>,<%= c %>, <%= random %>)'
+);
+
+$('body').css({
+  backgroundColor: t(this)
+});</textarea>
+           </div>
         <!-- <li>vx:<span id='vx'></span></li> -->
         <!-- <li>vy:<span id='vy'></span></li> -->
       </ul>
@@ -123,8 +155,21 @@
 </body>
 
 <script type="text/backbone-tmpl" id="input_template">
-  <li id="<%= id %>"><h2><%= id %></h2> <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </li>
+  <li id="<%= id %>">
+    <h2><%= id %></h2> 
+    <div class="row">
+      <span class="viz"></span> <span class="value"></span> <span class="raw"></span>
+    </div>
+  </li>
 </script>
+
+<script type="text/backbone-tmpl" id="input_row_template">
+  <div class="row">
+    <span class="viz"></span> <span class="value"></span> <span class="raw"></span>
+  </div>
+</script>
+
+
 
 <script type="text/javascript">
 
@@ -142,25 +187,39 @@
  
  [√]  calculate() updatable at runtime
  [√]  generate html 
+ [√]  creates param, if it doesn't already exist
+ [√]  support multi value variables
 
+ [√]  figure out output bit - tick() based block?
+ [√]  code mirror bit for actual work?
+ [√]  remember textareas + inputs values between loads!
+ 
+   
 ----
 
+ [ ]  pump in multitouch
+ 
+ [ ]  global pause button
 
+ 
 
-
-
-
- [ ]  vars.set({ 'foobar': 0.5 }) creates foobar, if it doesn't already exist
-
-
+ apply
+ 
+ [ ]  display maxs + mins
+ 
  [ ]  autonormalisation based on input extremes
- 
  [ ]  bounding flag + working
- 
- 
  [ ]  proper separate library  -  snorkle.js
- 
  [ ]  fix bug: same value()s mean no update to the variable
+
+
+
+dependencies
+  - backbone
+  - underscore
+  - jquery
+  - jquery.sparkleline
+
 
 
 
@@ -173,6 +232,8 @@ use cases
   
   touch
     logo manip
+  
+  accelerometer
     
 
 */
@@ -227,6 +288,8 @@ Model.In = Model.Var.extend({
   initialize: function (options) {
     var initial = (typeof options.initial == "undefined" || options.initial == null) ? 0 : options.initial;
     
+    $('ul#vars div#inputs').append( _.template( $('#input_template').html() )({ id: options.id }) );
+    
     this.initHistory();
     this.set({ raw: initial, value: initial });
     
@@ -269,34 +332,77 @@ Model.In = Model.Var.extend({
 
 
 
+Model.InArray = Model.Var.extend({
+  initialize: function() {
+    this.children = [];
+  },
+  value: function(values) { // takes and array and sets children or returns array of child values
+    if (typeof values == "undefined" || values == null) {
+      var ret = [];
+      _(this.children).each( function(child) {
+        ret.push( child.value() )
+      });
+      return ret
+    }
+    var that = this;
+    _(values).each(function( val, n ) {
+      that.child( n ).value( val );
+    });
+  },
+  child: function(n) {
+    if (this.children[n]) {
+      return this.children[n]
+    } else {
+      var child_attr = _.clone(this.attributes);
+      child_attr.id = this.id + "_" + n;
+      var c = new Model.In( child_attr );
+      this.children[n] = c;
+      return c;
+    }
+  }
+});
+
+
+
 Model.Out = Model.Var.extend({
-  initialize: function(attr, calculate) {
+  initialize: function(attr) {
     this.initHistory();
-    this.setCalculate( calculate );
+
+    var formula = localStorage.getItem('out_' + this.id);
+    
+    if (formula) {
+      this.calculateEntered( formula );
+      this.update();
+      $('li#' + this.id + ' input').val( formula );
+    }
+
     return this;
   },
   setCalculate: function(f) {
     this.calculate = f;
 
-    $('#' + this.id + " input").val( f + "" );
+    // $('#' + this.id + " input").val( f + "" );
     
     return this;
   },
   calculateEntered: function(formula) {
     var f, ok = true;
     
+    localStorage.setItem('out_' + this.id, formula );
+    
+    
     try {
-      eval( "f = " + formula );
+      var f = new Function( formula );
+      f.toString = function() { return formula; }
     } catch (e) {
       ok = false;
-      // statements to handle any exceptions
-      console.log('err' + e)
+      this.set({ error: e });
     }
     
     try {
       f.call( vars.reals );
     } catch (e) {
-      console.log('err2 ' + e);
+      this.set({ error: e });
       ok = false;
     }
 
@@ -308,7 +414,7 @@ Model.Out = Model.Var.extend({
       this.addToHistory( v );
       this.set({ value: v });
     } else {
-      console.log('nah')
+      this.set({ error: 'calculate() is not set'})
     }
   },
   value: function() {
@@ -323,11 +429,7 @@ $('input').keyup( function() {
 });
 
 
-// .message('x')
-// .listen('x y')
 
-
-// 
 
 
 var Vars = Backbone.Model.extend({
@@ -342,7 +444,7 @@ var Vars = Backbone.Model.extend({
     this.reals = {};
         
     _.each(this.attributes, function(v, k) {
-      that.reals[k] = v.get('value');
+      that.reals[k] = v.value();
     });
   },
   recalculate: function() {
@@ -355,20 +457,43 @@ var Vars = Backbone.Model.extend({
   addInput: function(id, options) {
     options.id = id; // very useful
     
-    
-    $('ul#vars div#inputs').append( _.template( $('#input_template').html() )({ id: id }) );
-    
-    
     var v = new Model.In( options );
     this.set( kv(id, v) );
     return v;
   },
   addOutput: function(id, options) {
+    options = options || {};
     options.id = id; // very useful
     
     var v = new Model.Out( options );
     this.set( kv(id, v) );
     return v;
+  },
+  addInputArray: function(id, options) {
+    options.id = id;
+        
+    var v = new Model.InArray( options );
+    
+    this.set( kv(id, v) );
+    return v;
+  },
+  pumpInput: function(data) {
+    var that = this;
+
+    _(data).each(function(v, k) {
+
+      var exists = that.get( k );
+      if (exists) {
+        exists.value( v )
+      } else {
+        if (typeof v == 'object') {
+          that.addInputArray(k, {});
+        } else {
+          that.addInput(k, {});
+        }
+      }
+    })
+
   }
 });
 
@@ -380,8 +505,8 @@ var Vars = Backbone.Model.extend({
 
 var vars = new Vars;
                          
-vars.addInput( 'mouseX', { initial: 0.1 } );
-vars.addInput( 'mouseY', { initial: 0.1 } );
+vars.addInputArray( 'mouse', { initial: 0.1 } );
+// vars.addInput( 'mouseY', { initial: 0.1 } );
 
 var acc_options = { min: -10, max: 10,  initial: 0 };
 
@@ -391,52 +516,97 @@ vars.addInput( 'accZ', acc_options );
 
 vars.addInput( 'random', { range: { min: 0, max: 1 }, initial: 0.5 } ),
 
-vars.addOutput( 'squared', {} ).setCalculate( function() {
-  return this.mouseX * this.mouseX
-});
+vars.addOutput( 'a' );
 
-vars.addOutput( 'output', {} ).setCalculate( function() {
-  return (this.accY + this.accX) / 2
-});
+vars.addOutput( 'b' );
 
-vars.addOutput( 'color', {} ).setCalculate( function() {
-  return "rgba(" + Math.floor(this.mouseX * 255) + ", "  + Math.floor(this.mouseY * 255) + ", 0, " + this.random + ")";
-}).bind( 'change:value', function() {
-  $('#color').css({ backgroundColor: vars.get('color').get('value') })
+vars.addOutput( 'c' ).bind( 'change:value', function() {
+  $('#c').css({ backgroundColor: vars.get('c').get('value') })
 });
 
 
+  // return "rgba(" + Math.floor(this._multi_2[0] * 255)+", "  + Math.floor(this._multi_2[0]  * 255)+"," + Math.floor(this._multi_3[0] * 255)+", " + this._multi_3[1] + ")";
 
+
+var outputter = function() {};
 
 function tick () {
   _.delay(function() {
-    
     vars.updateReals();
     vars.recalculate();
+    outputter.call( vars.reals );
     
     tick();
-  }, 50);
+  }, 100);
 }
 
 tick();
 
-
-
+var myCodeMirror;
+$(function() {
+  var output = localStorage.getItem('outputter');
+  if (output) {
+    $('textarea').text( output );
+    load_code( output );
+  }
+  
+  myCodeMirror = CodeMirror.fromTextArea($('textarea')[0], {
+    onChange: function() {
+      load_code( myCodeMirror.getValue() );
+    }
+  });
+  
+  function load_code( code ) {
+    var f, ok = true;
+    localStorage.setItem( 'outputter', code );
+    
+    try {
+      f = new Function( code );
+      f.call( vars.reals );
+    } catch(err) {
+      ok = false;
+      console.log( "error: " + err );
+      $('#output').removeClass('ok');
+    }
+    if (ok) {
+      $('#output').addClass('ok');
+      outputter = f; 
+    }
+  }
+});
 
 
 
 $(window).mousemove(function(e) {
-  vars.get('mouseX').value( e.clientX );
-  vars.get('mouseY').value( e.clientY );
+  vars.get('mouse').value([ e.clientX, e.clientY ]);
+  // vars.get('mouseY').value( e.clientY );
 });
 
 // $('body').bind('touchstart', touched);
-// $('body').bind('touchmove', touched);
+$('body').bind('touchmove', touched);
   
   
 function touched (e) {
-  vars.get('mouseX').value( e.originalEvent.pageX );
-  vars.get('mouseY').value( e.originalEvent.pageY );
+  vars.pumpInput(
+    
+  );
+  
+  
+  
+  _(e.targetTouches).each(function() {
+    
+  });
+  
+  if (event.targetTouches.length == 1) {
+    var touch = event.targetTouches[0];
+    // Place element where the finger is
+    obj.style.left = touch.pageX + 'px';
+    obj.style.top = touch.pageY + 'px';
+  }
+
+  
+  
+  vars.get('mouse').value([ e.originalEvent.pageX, e.originalEvent.pageY ]);
   return false;
 }
 
@@ -456,6 +626,33 @@ set_random();
 $('#toggle_random').click( function() {
   set_random.on = (! set_random.on);
 })
+
+
+
+// multitouch inputs
+
+
+// osc from node.js
+
+if (typeof io != "undefined") {
+  var socket = io.connect('http://localhost:8339');
+  socket.on('face', function (data) {
+    var id = data.shift(),
+        t  = data.shift(),
+        face = {};
+    
+    _(data).each(function(v) {
+      face[ v[0].replace(/\//g, '_') ] = v.splice(1);
+    });
+      
+    vars.pumpInput( face );
+    
+    // socket.emit('my other event', { my: 'data' });
+  });
+}
+
+
+
 
 
 
