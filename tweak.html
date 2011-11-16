@@ -113,7 +113,10 @@
 
 <body>
   <div id="content">
-    <button id="toggle_random">pause random</button>
+    <button id="toggle_random">random</button>
+    
+    <button id="toggle_pause">pause</button>
+    
     <div id="sphere"></div>
       <ul id="vars">
         <h1>inputs</h1>
@@ -193,20 +196,22 @@ $('body').css({
  [√]  figure out output bit - tick() based block?
  [√]  code mirror bit for actual work?
  [√]  remember textareas + inputs values between loads!
- 
+ [√]  pump in multitouch 
    
 ----
 
- [ ]  pump in multitouch
+
  
  [ ]  global pause button
-
+ 
+ 
+ [ ]  global reset cache button
+ 
  
 
  apply
  
  [ ]  display maxs + mins
- 
  [ ]  autonormalisation based on input extremes
  [ ]  bounding flag + working
  [ ]  proper separate library  -  snorkle.js
@@ -244,6 +249,17 @@ function shorten (f) {
   }
   return Math.round(f * 10000) / 10000
 }
+
+
+function int(f) {
+  return Math.floor( f );
+}
+
+// this.mouse[x].intRange(255)
+
+// Number.prototype.intRange = function(range) {
+//   return this * range
+// }
 
 
 
@@ -471,17 +487,16 @@ var Vars = Backbone.Model.extend({
   },
   addInputArray: function(id, options) {
     options.id = id;
-        
+
     var v = new Model.InArray( options );
-    
+
     this.set( kv(id, v) );
     return v;
   },
-  pumpInput: function(data) {
+  pumpInput: function(data) { // data = hash of values or array values
     var that = this;
 
     _(data).each(function(v, k) {
-
       var exists = that.get( k );
       if (exists) {
         exists.value( v )
@@ -493,7 +508,6 @@ var Vars = Backbone.Model.extend({
         }
       }
     })
-
   }
 });
 
@@ -532,10 +546,11 @@ var outputter = function() {};
 
 function tick () {
   _.delay(function() {
-    vars.updateReals();
-    vars.recalculate();
-    outputter.call( vars.reals );
-    
+    if (! settings.pause) {
+      vars.updateReals();
+      vars.recalculate();
+      outputter.call( vars.reals );
+    }
     tick();
   }, 100);
 }
@@ -582,54 +597,50 @@ $(window).mousemove(function(e) {
   // vars.get('mouseY').value( e.clientY );
 });
 
-// $('body').bind('touchstart', touched);
+$('body').bind('touchstart', touched);
 $('body').bind('touchmove', touched);
   
   
 function touched (e) {
-  vars.pumpInput(
-    
-  );
-  
-  
-  
-  _(e.targetTouches).each(function() {
-    
+  // console.log(e.originalEvent.targetTouches.length);
+  _(e.originalEvent.touches).each( function(touch, n) {
+    vars.pumpInput(
+      kv( 'finger' + n, [ touch.pageX, touch.pageY ] )
+    );
   });
   
-  if (event.targetTouches.length == 1) {
-    var touch = event.targetTouches[0];
-    // Place element where the finger is
-    obj.style.left = touch.pageX + 'px';
-    obj.style.top = touch.pageY + 'px';
-  }
-
-  
-  
-  vars.get('mouse').value([ e.originalEvent.pageX, e.originalEvent.pageY ]);
+//  vars.get('mouse').value([ e.originalEvent.pageX, e.originalEvent.pageY ]);
   return false;
 }
 
+var settings = {
+  random: false,
+  pause: false,
+  toggle: function(s) {
+    settings[s] = (! settings[s]);
+  }
+};
 
-
-function set_random () {
+function set_random() {
   _.delay(function() {
     var now = vars.get('random').value();
-    set_random.on && vars.get('random').value( now + (Math.random() > 0.5 ? 0.05 : -0.05) );
+    settings.random && vars.get('random').value( now + (Math.random() > 0.5 ? 0.05 : -0.05) );
     set_random();
   }, 250);
 }
-
-set_random.on = false;
 set_random();
 
+
 $('#toggle_random').click( function() {
-  set_random.on = (! set_random.on);
+  settings.toggle('random')
+})
+
+$('#toggle_pause').bind('click', function() {
+  settings.toggle('pause')
 })
 
 
 
-// multitouch inputs
 
 
 // osc from node.js
@@ -676,11 +687,11 @@ var sphere = document.getElementById("sphere");
 
 
 if (window.DeviceMotionEvent != undefined) {
-	window.ondevicemotion = function(ev) {
+	window.ondevicemotion = function(event) {
 		acc.ax = event.accelerationIncludingGravity.x;
 		acc.ay = event.accelerationIncludingGravity.y;
 		acc.az = event.accelerationIncludingGravity.z;
-		acc.e = ev;
+		acc.e = event;
 	}
 	
   var n = 0;
@@ -710,8 +721,8 @@ if (window.DeviceMotionEvent != undefined) {
 /*		p("rotationAlpha", e.rotationRate.alpha);
   		p( "rotationBeta", e.rotationRate.beta);
   		p("rotationGamma", e.rotationRate.gamma); */
-  		p("vx", acc.vx, 6);
-  		p("vy", acc.vy, 6);
+      // p("vx", acc.vx, 6);
+      // p("vy", acc.vy, 6);
   		
 		}
 		boundingBoxCheck();
