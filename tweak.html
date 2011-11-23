@@ -49,7 +49,7 @@
         position: absolute;
         left: 4px;
         right: 4px;
-        font-size: 14px;
+        font-size: 12px;
         bottom: 4px;
       }
       
@@ -88,7 +88,16 @@
         border-left: 1px solid green;
       }
       
-      
+      div#mine {
+        position: fixed;
+        top: 0;
+        left: 550px;
+        right: 0;
+        height: 100%;
+        background-color: white;
+        padding: 4px;
+        font-size: 24px;
+      }
       
     </style>
     
@@ -97,6 +106,7 @@
     <script type="text/javascript" src="js/lib/underscore.js"></script>
     <script type="text/javascript" src="js/lib/backbone.js"></script>
     <script type="text/javascript" src="js/lib/json2.js"></script>
+    <script type="text/javascript" src="js/lib/coffee-script.js"></script>
     <script type="text/javascript" src="js/lib/dataviz/jquery.sparkline.js"></script>
     
     <script type="text/javascript" src="js/utils.js"></script>
@@ -109,9 +119,12 @@
     <link rel="stylesheet" href="css/codemirror/codemirror.css">
     <link rel="stylesheet" href="css/codemirror/theme/default.css">
     
+
+    
   </head>
 
 <body>
+  <div id="mine">test</div>
   <div id="content">
     <button id="toggle_random">random</button>
     
@@ -197,29 +210,29 @@ $('body').css({
  [√]  code mirror bit for actual work?
  [√]  remember textareas + inputs values between loads!
  [√]  pump in multitouch 
-   
+ [√]  global pause button
+
+  
 ----
-
-
- 
- [ ]  global pause button
  
  
- [ ]  global reset cache button
- 
- 
-
  apply
+ [ ]  fix initial values being undefined
+ [ ]  fix output box being invalid on launch
  
  [ ]  display maxs + mins
- [ ]  autonormalisation based on input extremes
- [ ]  bounding flag + working
+ [ ]  reset max + min (recalibrate)
+ [ ]  hide variable (and stop processing)
+
+ [ ]  global reset cache button
+ [ ]  find big win optimisations (init() as well as tick())
+ [ ]  bounding flag + working (?)
  [ ]  proper separate library  -  snorkle.js
  [ ]  fix bug: same value()s mean no update to the variable
 
 
 
-dependencies
+dependencies (remove?)
   - backbone
   - underscore
   - jquery
@@ -229,6 +242,8 @@ dependencies
 
 
 use cases
+
+  paper.js
 
   faceosc
     animating faces with paper.js
@@ -255,11 +270,8 @@ function int(f) {
   return Math.floor( f );
 }
 
-// this.mouse[x].intRange(255)
 
-// Number.prototype.intRange = function(range) {
-//   return this * range
-// }
+
 
 
 
@@ -440,10 +452,6 @@ Model.Out = Model.Var.extend({
 });
 
 
-$('input').keyup( function() {
-  vars.get( $(this).parents('li').attr('id') ).calculateEntered( $(this).val() )
-});
-
 
 
 
@@ -493,7 +501,7 @@ var Vars = Backbone.Model.extend({
     this.set( kv(id, v) );
     return v;
   },
-  pumpInput: function(data) { // data = hash of values or array values
+  pumpInput: function(data) { // data = hash of: values or array values
     var that = this;
 
     _(data).each(function(v, k) {
@@ -592,26 +600,10 @@ $(function() {
 
 
 
-$(window).mousemove(function(e) {
-  vars.get('mouse').value([ e.clientX, e.clientY ]);
-  // vars.get('mouseY').value( e.clientY );
-});
 
-$('body').bind('touchstart', touched);
-$('body').bind('touchmove', touched);
   
   
-function touched (e) {
-  // console.log(e.originalEvent.targetTouches.length);
-  _(e.originalEvent.touches).each( function(touch, n) {
-    vars.pumpInput(
-      kv( 'finger' + n, [ touch.pageX, touch.pageY ] )
-    );
-  });
-  
-//  vars.get('mouse').value([ e.originalEvent.pageX, e.originalEvent.pageY ]);
-  return false;
-}
+
 
 var settings = {
   random: false,
@@ -631,13 +623,6 @@ function set_random() {
 set_random();
 
 
-$('#toggle_random').click( function() {
-  settings.toggle('random')
-})
-
-$('#toggle_pause').bind('click', function() {
-  settings.toggle('pause')
-})
 
 
 
@@ -744,6 +729,36 @@ function boundingBoxCheck(){
   // if (vx < 5.5 && vx > 5.5 ) vx = 0;
 }
 
+</script>
+
+
+
+<script type="text/coffeescript">
+  # webkitCompassHeading or webkitCompassAccuracy
+  
+  record = 
+    compass: (e) -> vars.pumpInput compass: e.webkitCompassHeading
+    mouse:   (e) -> vars.get('mouse').value [ e.clientX, e.clientY ]
+    touch:   (e) ->
+      tmp = {}
+      _(e.originalEvent.touches).each (touch, n) -> tmp['finger' + n] = [ touch.pageX, touch.pageY ]
+      vars.pumpInput tmp
+      false
+      
+
+  $ ->
+    $(window).bind 'mousemove',         record.mouse
+    $('body').bind 'touchstart',        record.touch
+    $('body').bind 'touchmove',         record.touch
+
+    window.addEventListener 'deviceorientation', record.compass
+
+    $('input').keyup -> 
+      vars.get( $(@).parents('li').attr('id') ).calculateEntered( $(@).val() )
+
+    $('#toggle_random').click -> settings.toggle 'random'
+    $('#toggle_pause').click  -> settings.toggle 'pause'
+  
 </script>
 
 </html>

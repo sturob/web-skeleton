@@ -47,6 +47,7 @@
 
 
 .rounded (@radius: 5px) {
+  -moz-background-clip: padding-box;
   -webkit-background-clip: padding-box;  /* http://brenelz.com/blog/webkit-border-radius-background-bleed/ */
   -moz-border-radius: @radius;
   -webkit-border-radius: @radius;
@@ -54,6 +55,8 @@
 }
 
 .rounded_corners(@tl: 5px, @tr: 5px, @br: 5px, @bl: 5px) {
+  -moz-background-clip: padding-box;
+  -webkit-background-clip: padding-box;  /* http://brenelz.com/blog/webkit-border-radius-background-bleed/ */
   -moz-border-radius: @tl @tr @br @bl;
   -webkit-border-radius: @tl @tr @br @bl;
   border-radius: @tl @tr @br @bl;
