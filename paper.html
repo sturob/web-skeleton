@@ -1,0 +1,176 @@
+<html>
+
+<head>
+  <title>foo</title>
+
+  <style>
+    body {
+      background: #fff;
+      width: 600px;
+    }
+    
+    #editor {
+      position: absolute;
+      width: 500px;
+      height: 400px;
+      right: 0;
+      top: 0;
+    }
+  </style>
+    
+  <script type="text/javascript" src="js/lib/canvas/paper.js"></script> 
+  <script type="text/javascript" src="js/lib/DAT.GUI.js"></script> 
+</head>
+
+<body>
+  <canvas id="canvas" keepalive="true" width='600' height='600' style='outline: 1px solid black;'></canvas>
+  
+  <div id="meh"></div>
+  
+<div id="editor">
+
+</div>
+  
+  <script src="js/lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/lib/ace/theme-twilight.js" type="text/javascript" charset="utf-8"></script>  
+  <script src="js/lib/ace/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
+
+  <script type='text/javascript'>
+    var editor,
+        mine = new Function('ev', 'n', 'return (n % 2 == 0) * 12 * n + n * 4');
+                
+    var callback = function(ev) {
+      var f_text = editor.getSession().getValue();
+      try {
+        mine = new Function('ev', 'n', f_text);
+      } catch (e) {
+        
+      }
+      localStorage.setItem('mine111', f_text);
+
+    };
+  
+    window.onload = function() {
+      var saved_f = localStorage.getItem('mine111') || 'return 1';
+      editor = ace.edit("editor");
+      editor.setTheme("ace/theme/twilight");
+      var JavaScriptMode = require("ace/mode/javascript").Mode;
+      var session = editor.getSession();
+      session.setValue( saved_f );
+      callback(); // initial setup
+      session.setMode( new JavaScriptMode() );
+      session.on('change', callback);
+    };
+    
+    var p = {}; // share with the tick as this
+  </script>
+
+
+  <script type="text/paperscript" canvas="canvas">
+    p.points = 21;
+    p.smooth = false;
+    p.pause = true;
+    p.mousePos = view.center / 2;
+    p.pathHeight = p.mousePos.y;
+    
+    p.path = new Path();
+    p.path.strokeColor = 'red';
+    p.path.fillColor = 'white';
+    p.path.closed = false;    
+
+    p.initializePath = function (points) {
+      p.points = points || p.points;
+      
+      p.center = view.center;
+      p.width  = view.size.width;
+      p.height = view.size.height / 2;
+      p.path.segments = [];
+      for (var i = 0; i < p.points; i++) {
+        var point = new Point(p.width / p.points * i, p.center.y);
+        p.path.add(point);
+      }
+      p.path.fullySelected = false;
+    }
+
+    p.initializePath();
+
+    function onFrame(event) {
+      if (p.pause) return;
+    
+      p.pathHeight += (p.center.y - p.mousePos.y - p.pathHeight) / 10;
+
+      for (var i = 0; i < p.points; i++) {
+        var pos = mine.call(p, event, i); // call with this set to p
+        p.path.segments[i].point.y = pos.y;
+        p.path.segments[i].point.x = pos.x;
+      }
+    
+      if (p.smooth) { p.path.smooth(); }
+    }
+
+    function onMouseMove(event) {
+      p.mousePos = event.point;
+    }
+
+    function onMouseDown(event) {
+      p.pause = !p.pause;
+      return;
+
+      p.smooth = !p.smooth;
+      if (!p.smooth) {
+        // If smooth has been turned off, we need to reset the handles of the path:
+        for (var i = 0, l = p.path.segments.length; i < l; i++) {
+          var segment = p.path.segments[i];
+          segment.handleIn = segment.handleOut = null;
+        }
+      }
+    }
+
+    // Reposition the path whenever the window is resized:
+    function onResize(event) {
+      p.initializePath();
+    }
+    
+    
+    
+    
+/*    
+    var pos = { x: 0, y: 0 };
+    var odd = n % 2;
+    var sod = odd ? 1 : 0.8;
+
+    //if (n == p.points) {  n = 0; }
+
+    var linear = (this.mousePos.y + this.mousePos.x) / 20; 
+    linear = ev.count;
+
+    var voodoo = 3.141592653589793238462643383279502884197 * 2;
+    var scale = 150;
+    var magic = voodoo / p.points;
+
+    // circle
+    pos.y = 300 + Math.sin(n * magic) * scale;
+    pos.x = 300 + Math.cos(n * magic) * scale;
+
+    //return pos;
+
+    // wobble
+    pos.x += Math.sin(linear * sod * .02) * 120;
+    pos.y += Math.cos(linear * sod * .13) * 40;
+
+    return pos;
+
+    pos.x = Math.min(pos.x, 600)
+    pos.y = Math.min(pos.y, 600)
+
+    pos.y = Math.max(pos.y, 0)
+    pos.x = Math.max(pos.x, 0)
+*/
+    
+    
+    
+    
+  </script>
+</body>
+
+</html>

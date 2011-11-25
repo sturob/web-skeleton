@@ -14,7 +14,7 @@
  * use in the same way as the jQuery css function. Eg:
  *  $("some selector").globalcss("style","value");
  *
- * use the globalsetylesheet.print() function to return a string of the global stylesheet
+ * use the globalstylesheet.print() function to return a string of the global stylesheet
  */
 (function($) {
 
