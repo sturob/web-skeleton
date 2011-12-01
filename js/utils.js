@@ -19,6 +19,47 @@ function ajax_dump (method, url, data) {
   return 'wait for it...'
 }
 
+// adapted http://www.jameswiseman.com/blog/2010/08/24/manually-traverse-a-dom-tree-using-jquery/
+
+function html2less($item, pass) {  
+  var tmp = {};
+  
+  $item = $item ? $item : $('body');
+  pass = pass ? pass : { max: 50, count: 0, less: "" };
+  
+
+  
+  $item.each(function(n, v) {
+    var tagName   = this.tagName.toLowerCase(),
+        className = this.className ? '.' + this.className : '',
+        selector  = tagName + className;
+        var indented = Array(pass.count * 2).join(" ");
+
+    if (tmp[selector]) {
+      return;
+    } else {
+      tmp[selector] = true;
+    }
+    
+    pass.count++;
+    if (pass.count > pass.max) {  
+      pass.max = pass.count;  
+    }
+
+    pass.less += indented + selector + " {\n";
+    html2less( $(this).children(), pass );
+    pass.less += indented + "}\n";
+  });  
+  pass.count--;  
+  return pass.less;  
+}  
+  
+
+
+
+
+
+
 $.ajaxSetup({
   // 'data': {}, // ??
   // 'dataType'   : FORMAT,  // auto parse data coming back as JSON

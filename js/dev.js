@@ -1,3 +1,4 @@
+var CONFIG = {};
 less.watchMode = false;
 CONFIG.imageRefresh = false,
 CONFIG.transitions = false;
