@@ -1,0 +1,431 @@
+<html>
+
+<head>
+  <title>foo</title>
+
+  <style>
+    body {
+      background: #eee;
+      width: 1400px;
+      background: red;
+      outline: 2px solid red;
+    }
+    
+    * {
+      padding: 0;
+      margin: 0;
+    }
+    
+    button#pause {
+      position: absolute;
+      left: 48%;
+      top: 20px;
+      z-index: 2;
+      font-size: 72px;
+    }
+    
+    #fps {
+      font-size: 24px;
+      position: absolute;
+      z-index: 4;
+      left: 0;
+      top: 0;
+    }
+    
+    #t {
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      width: 1400px;
+    }
+    
+    canvas#canvas {
+      margin: 280px 0px 0px 377px;
+      position: relative;
+      z-index: 1;
+      border: 0;
+    }
+    
+    #editor {
+      position: absolute;
+      width: 500px;
+      height: 400px;
+      right: 0;
+      top: 0;
+    }
+    
+    
+    /* snorkle.css */
+    ul#vars { 
+      z-index: 3;
+      float: right;
+      background-color: white;
+      width: 400px;
+/*      margin: 4px 12px;*/
+      list-style: none;
+      font-size: 18px;
+      font-weight: bold;
+      color: #aaa;
+    }
+    ul#vars h1 {
+      font-size: 12px;
+      background-color: #333;
+      padding: 2px 0 2px 8px;
+      color: white;
+    }
+    ul#vars .viz {
+      display: inline-block;
+      width: 120px;
+      margin-left: 100px;
+    }
+    ul#vars .raw {
+      color: #ddd;
+    }
+    ul#vars input {
+      font-family: Courier;
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      font-size: 12px;
+      bottom: 4px;
+    }
+    ul#vars h2 {
+      position: absolute;
+      left: 12px;
+      top: 2px;
+      font-size: 16px;
+    }
+    ul#vars li {
+      background-color: white;
+      border-bottom: 1px solid #eee;
+      position: relative;
+      margin: 0 0 0px 0;
+    }
+    ul#vars li.result {
+      padding-bottom: 24px;
+    }
+    ul#vars span {
+      font-family: "Courier New";
+    }
+    
+  </style>
+    
+    
+  <script type="text/javascript" src="js/lib/canvas/paper.js"></script> 
+
+  <script type="text/javascript" src="js/lib/jquery-1.7.min.js"></script>
+  <script type="text/javascript" src="js/lib/underscore.js"></script>
+  <script type="text/javascript" src="js/lib/backbone.js"></script>
+  <script type="text/javascript" src="js/lib/json2.js"></script>
+  <script type="text/javascript" src="js/lib/dataviz/jquery.sparkline.js"></script>
+
+  <script type="text/javascript" src="js/snorkle.js"></script>
+
+
+  <!-- script type="text/javascript" src="js/lib/meh/MochiKit/MochiKit.js"></script> 
+  <script type="text/javascript" src="js/lib/canvas/SVGKit.js"></script> 
+  <script type="text/javascript" src="js/lib/canvas/SVGCanvas.js"></script --> 
+  <!-- // <script type="text/javascript" src="js/lib/DAT.GUI.js"></script> -->
+</head>
+
+<body>
+  <span id="fps"></span>
+  <button id="pause">||</button>
+  
+  <img src="images/t-black.jpg" id="t">
+  
+  <canvas id="canvas" keepalive="true" width='620' height='870'></canvas>
+
+  <div id="meh"></div>
+  
+<div id="editor">
+</div>
+  
+  <script src="js/lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/lib/ace/theme-twilight.js" type="text/javascript" charset="utf-8"></script>  
+  <script src="js/lib/ace/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
+
+  <script type='text/javascript'>
+  var focused = true;
+  window.onblur  = function() { focused = false; };
+  window.onfocus = function() { focused = true; };
+
+
+  var J = new Snorkle;
+
+  J.addInputArray( 'mouse', { initial: 0.1 } );
+
+  var acc_options = { min: -10, max: 10,  initial: 0 };
+
+  J.addInput( 'accX', acc_options );
+  J.addInput( 'accY', acc_options );
+  J.addInput( 'accZ', acc_options );
+
+  J.addOutput( 'vert' );
+  J.addOutput( 'wiggle' );
+  J.addOutput( 'thick' );
+  
+  var acc = {};
+  
+  if (window.DeviceMotionEvent != undefined) {
+	  window.ondevicemotion = function(event) {
+      acc = event.accelerationIncludingGravity;
+    }
+
+    setInterval( function() {  	
+  	  J.get('accX').value( acc.x );
+  	  J.get('accY').value( acc.y );		
+      J.get('accZ').value( acc.z );
+    }, 100);
+
+  }
+  
+  $(window).bind( 'mousemove', function(e) {
+    J.get('mouse').value([ e.clientX, e.clientY ]);
+  });
+  
+  
+  // https://github.com/paperjs/paper.js/issues/48
+  // SVGCanvas.prototype.transform = SVGCanvas.prototype.translate;
+  // SVGCanvas.prototype.fillText = SVGCanvas.prototype.text;
+  // 
+  // paper.View.prototype.toSVG = function() {
+  //   var svgContext = new SVGCanvas(this.canvas.width, this.canvas.height);
+  // 
+  //   var oldCtx = this._context;
+  // 
+  //   this._context = svgContext;  
+  //   this.draw(false);
+  // 
+  //   this._context = oldCtx;
+  // 
+  //   // Optional serialization of the SVG DOM nodes
+  //   var serializer = new XMLSerializer();
+  //   return serializer.serializeToString(svgContext.svg.htmlElement);
+  // };
+
+
+  // called if we're in simple mode
+  var default_f = function(ev, n) {
+    var i = ev.count;
+    var b = n % 2,
+        c = Math.floor(n / 2) * p.inputs.vert,
+        d = Math.sin(n * 10000) * p.inputs.wiggle,
+        e = 2; // Math.sin(i / 50);
+
+    p.path.strokeWidth = p.inputs.thick;
+    p.path.strokeColor = '#ff0';
+
+    return {   x: 0 + b * p.width,
+               y: 3 + d + c
+    };
+  }
+  
+    var simple_mode = true,
+        editor,
+        mine = default_f;
+
+    if (! simple_mode) {
+      var on_code_change = function(ev) {
+        var f_text = editor.getSession().getValue();
+        try {
+          mine = new Function('ev', 'n', f_text);
+        } catch (e) {
+        }
+        localStorage.setItem('mine111', f_text);
+      };
+    
+      window.onload = function() {
+        var saved_f = localStorage.getItem('mine111') || 'return 1';
+        editor = ace.edit("editor");
+        editor.setTheme("ace/theme/twilight");
+        var JavaScriptMode = require("ace/mode/javascript").Mode;
+        var session = editor.getSession();
+        session.setValue( saved_f );
+        on_code_change(); // initial setup
+        session.setMode( new JavaScriptMode() );
+        session.on('change', on_code_change);
+      };
+    }
+    
+    
+    function toggle_pause () {
+      p.pause = ! p.pause;
+      $('#pause').text( p.pause ? '>' : '||' );
+    }
+    
+    $('#pause').bind('touchstart', toggle_pause);
+    $('#pause').bind('mousedown', toggle_pause);
+    $('body').bind('mousedown', toggle_pause);
+    
+    
+    
+    var p = {
+      pause: false
+    }; // share with the tick as this
+    
+    var $fps = $('#fps');
+  </script>
+
+
+  <script type="text/paperscript" canvas="canvas">
+
+    p.points = 199;
+    p.smooth = false;
+    p.mousePos = view.center / 2;
+    p.pathHeight = p.mousePos.y;
+    p.project = project;
+    
+    p.path = new Path();
+    p.path.strokeColor = 'red';
+    // p.path.fillColor = 'white';
+    p.path.closed = false;    
+
+    p.initializePath = function (points) {
+      p.points = points || p.points;
+      
+      p.center = view.center;
+      p.width  = view.size.width;
+      p.height = view.size.height / 2;
+      p.path.segments = [];
+      for (var i = 0; i < p.points; i++) {
+        var point = new Point(p.width / p.points * i, p.center.y);
+        p.path.add(point);
+      }
+      p.path.fullySelected = false;
+    }
+
+    p.initializePath();
+
+
+    function onFrame(event) {
+
+      if (p.pause || ! focused) return;
+      $fps.text(1/ event.delta);      
+      p.pathHeight += (p.center.y - p.mousePos.y - p.pathHeight) / 10;
+      
+      J.updateReals();
+      J.recalculate();
+      
+      p.inputs = J.reals;
+      
+      for (var i = 0; i < p.points; i++) {
+        var pos = mine.call(p, event, i); // call with this set to p
+        p.path.segments[i].point.y = pos.y;
+        p.path.segments[i].point.x = pos.x;
+      }
+    
+      if (p.smooth) { p.path.smooth(); }
+    }
+
+    // function onMouseMove(event) {
+    //   p.mousePos = event.point;
+    // }
+    // 
+    // function onMouseDown(event) {
+    //   p.pause = !p.pause;
+    //   return;
+    // 
+    //   p.smooth = !p.smooth;
+    //   if (!p.smooth) {
+    //     // If smooth has been turned off, we need to reset the handles of the path:
+    //     for (var i = 0, l = p.path.segments.length; i < l; i++) {
+    //       var segment = p.path.segments[i];
+    //       segment.handleIn = segment.handleOut = null;
+    //     }
+    //   }
+    // }
+
+    // Reposition the path whenever the window is resized:
+    function onResize(event) {
+      p.initializePath();
+    }
+    
+    
+    
+/*
+  var b = n % 5;
+  var c = Math.floor(n / 5) * 5;
+
+  p.path.strokeWidth = 5.8;
+  p.path.strokeColor = '#000000';
+
+  return { x: 10 + b * 145, y: 4 + c * 2.2  }
+*/
+
+
+/*  
+
+var pos = { x: 0, y: 0 };
+var odd = n % 2;
+var sod = odd ? 1 : 0.8;
+
+var linear = (this.mousePos.y + this.mousePos.x) / 2; 
+linear = ev.count;
+
+var voodoo = 3.141592653589793238462643383279502884197 * 2.01;
+var scale = 150;
+var magic = voodoo / p.points * 1;
+
+// circle
+pos.y = 300 + Math.sin(n * magic) * scale;
+pos.x = 300 + Math.cos(n * magic) * scale;
+//return pos;
+
+// wobble
+pos.x += Math.sin(linear * sod * .02) * 120;
+pos.y += Math.cos(linear * sod * .13) * 40;
+
+if (linear % 20 == 0) {   
+  p.path.strokeColor = '#' +
+     Math.round( Math.random() * 0x8 ).toString(16);
+}
+
+pos.x = Math.min(pos.x, 600)
+pos.y = Math.min(pos.y, 600)
+pos.y = Math.max(pos.y, 0)
+pos.x = Math.max(pos.x, 0)
+
+return pos;
+
+
+
+    var pos = { x: 0, y: 0 };
+    var odd = n % 2;
+    var sod = odd ? 1 : 0.8;
+
+    //if (n == p.points) {  n = 0; }
+
+    var linear = (this.mousePos.y + this.mousePos.x) / 20; 
+    linear = ev.count;
+
+    var voodoo = 3.141592653589793238462643383279502884197 * 2;
+    var scale = 150;
+    var magic = voodoo / p.points;
+
+    // circle
+    pos.y = 300 + Math.sin(n * magic) * scale;
+    pos.x = 300 + Math.cos(n * magic) * scale;
+
+    //return pos;
+
+    // wobble
+    pos.x += Math.sin(linear * sod * .02) * 120;
+    pos.y += Math.cos(linear * sod * .13) * 40;
+
+    return pos;
+
+    pos.x = Math.min(pos.x, 600)
+    pos.y = Math.min(pos.y, 600)
+
+    pos.y = Math.max(pos.y, 0)
+    pos.x = Math.max(pos.x, 0)
+*/
+    
+    
+    
+    
+  </script>
+</body>
+
+</html>
