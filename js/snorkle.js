@@ -31,19 +31,13 @@ dependencies :/
    [√]  separate library  -  snorkle.js
    [√]  insert HTML for results/outputs
    [√]  generalise id   
+   [√]  switch off / bypass prod-vs-dev
    
+      
   ----
 
  apply
-
-  
-
-   [ ]  switch off / bypass
-   
-   [ ]  fix initial values being undefined
-
-   [ ]  fix output box being invalid on launch
-
+   [ ]  moving average
    [ ]  display maxs + mins
    [ ]  reset max + min (recalibrate)
    [ ]  edit max + min

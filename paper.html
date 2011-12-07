@@ -5,8 +5,10 @@
 
   <style>
     body {
-      background: #fff;
-      width: 600px;
+      background: #eee;
+      width: 1400px;
+      background: red;
+      outline: 2px solid red;
     }
     
     * {
@@ -14,15 +16,23 @@
       margin: 0;
     }
     
+    button#pause {
+      position: absolute;
+      left: 48%;
+      top: 20px;
+      z-index: 2;
+      font-size: 72px;
+    }
+    
     #t {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 600px;
+      top: -10px;
+      left: -10px;
+      width: 1400px;
     }
     
     canvas#canvas {
-      margin: 120px 0px 0 164px;
+      margin: 280px 0px 0px 377px;
       position: relative;
       z-index: 1;
       border: 0;
@@ -39,16 +49,15 @@
     
     /* snorkle.css */
     ul#vars { 
+      z-index: 3;
+      float: right;
       background-color: white;
       width: 400px;
-      margin: 4px 12px;
+/*      margin: 4px 12px;*/
       list-style: none;
       font-size: 18px;
       font-weight: bold;
       color: #aaa;
-      position: absolute;
-      bottom: 0;
-      right: 0;
     }
     ul#vars h1 {
       font-size: 12px;
@@ -79,6 +88,7 @@
       font-size: 16px;
     }
     ul#vars li {
+      background-color: white;
       border-bottom: 1px solid #eee;
       position: relative;
       margin: 0 0 0px 0;
@@ -111,14 +121,15 @@
 </head>
 
 <body>
+  <button id="pause">||</button>
+  
   <img src="images/t-black.jpg" id="t">
   
-  <canvas id="canvas" keepalive="true" width='270' height='374'></canvas>
+  <canvas id="canvas" keepalive="true" width='620' height='870'></canvas>
 
   <div id="meh"></div>
   
 <div id="editor">
-
 </div>
   
   <script src="js/lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
@@ -179,42 +190,72 @@
   //   var serializer = new XMLSerializer();
   //   return serializer.serializeToString(svgContext.svg.htmlElement);
   // };
-  
-  
-    var editor,
-        mine = new Function('ev', 'n', 'return (n % 2 == 0) * 12 * n + n * 4');
-                
-    var callback = function(ev) {
-      var f_text = editor.getSession().getValue();
-      try {
-        mine = new Function('ev', 'n', f_text);
-      } catch (e) {
-        
-      }
-      localStorage.setItem('mine111', f_text);
 
+
+  // called if we're in simple mode
+  var default_f = function(ev, n) {
+    var i = ev.count;
+    var b = n % 2,
+        c = Math.floor(n / 2) * p.inputs.vert,
+        d = Math.sin(n * 10000) * p.inputs.wiggle,
+        e = 2; // Math.sin(i / 50);
+
+    p.path.strokeWidth = p.inputs.thick;
+    p.path.strokeColor = '#ff0';
+
+    return {   x: 0 + b * p.width,
+               y: 3 + d + c
     };
+  }
   
-    window.onload = function() {
-      var saved_f = localStorage.getItem('mine111') || 'return 1';
-      editor = ace.edit("editor");
-      editor.setTheme("ace/theme/twilight");
-      var JavaScriptMode = require("ace/mode/javascript").Mode;
-      var session = editor.getSession();
-      session.setValue( saved_f );
-      callback(); // initial setup
-      session.setMode( new JavaScriptMode() );
-      session.on('change', callback);
-    };
+    var simple_mode = true,
+        editor,
+        mine = default_f;
+
+    if (! simple_mode) {
+      var on_code_change = function(ev) {
+        var f_text = editor.getSession().getValue();
+        try {
+          mine = new Function('ev', 'n', f_text);
+        } catch (e) {
+        }
+        localStorage.setItem('mine111', f_text);
+      };
     
-    var p = {}; // share with the tick as this
+      window.onload = function() {
+        var saved_f = localStorage.getItem('mine111') || 'return 1';
+        editor = ace.edit("editor");
+        editor.setTheme("ace/theme/twilight");
+        var JavaScriptMode = require("ace/mode/javascript").Mode;
+        var session = editor.getSession();
+        session.setValue( saved_f );
+        on_code_change(); // initial setup
+        session.setMode( new JavaScriptMode() );
+        session.on('change', on_code_change);
+      };
+    }
+    
+    
+    function toggle_pause () {
+      p.pause = ! p.pause;
+      $('#pause').text( p.pause ? '>' : '||' );
+    }
+    
+    $('#pause').bind('touchstart', toggle_pause);
+    $('#pause').bind('mousedown', toggle_pause);
+    
+    
+    
+    
+    var p = {
+      pause: false
+    }; // share with the tick as this
   </script>
 
 
   <script type="text/paperscript" canvas="canvas">
     p.points = 199;
     p.smooth = false;
-    p.pause = true;
     p.mousePos = view.center / 2;
     p.pathHeight = p.mousePos.y;
     p.project = project;
@@ -260,23 +301,23 @@
       if (p.smooth) { p.path.smooth(); }
     }
 
-    function onMouseMove(event) {
-      p.mousePos = event.point;
-    }
-
-    function onMouseDown(event) {
-      p.pause = !p.pause;
-      return;
-
-      p.smooth = !p.smooth;
-      if (!p.smooth) {
-        // If smooth has been turned off, we need to reset the handles of the path:
-        for (var i = 0, l = p.path.segments.length; i < l; i++) {
-          var segment = p.path.segments[i];
-          segment.handleIn = segment.handleOut = null;
-        }
-      }
-    }
+    // function onMouseMove(event) {
+    //   p.mousePos = event.point;
+    // }
+    // 
+    // function onMouseDown(event) {
+    //   p.pause = !p.pause;
+    //   return;
+    // 
+    //   p.smooth = !p.smooth;
+    //   if (!p.smooth) {
+    //     // If smooth has been turned off, we need to reset the handles of the path:
+    //     for (var i = 0, l = p.path.segments.length; i < l; i++) {
+    //       var segment = p.path.segments[i];
+    //       segment.handleIn = segment.handleOut = null;
+    //     }
+    //   }
+    // }
 
     // Reposition the path whenever the window is resized:
     function onResize(event) {
