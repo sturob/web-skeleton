@@ -24,6 +24,14 @@
       font-size: 72px;
     }
     
+    #fps {
+      font-size: 24px;
+      position: absolute;
+      z-index: 4;
+      left: 0;
+      top: 0;
+    }
+    
     #t {
       position: absolute;
       top: -10px;
@@ -121,6 +129,7 @@
 </head>
 
 <body>
+  <span id="fps"></span>
   <button id="pause">||</button>
   
   <img src="images/t-black.jpg" id="t">
@@ -142,7 +151,6 @@
   window.onfocus = function() { focused = true; };
 
 
-
   var J = new Snorkle;
 
   J.addInputArray( 'mouse', { initial: 0.1 } );
@@ -157,14 +165,19 @@
   J.addOutput( 'wiggle' );
   J.addOutput( 'thick' );
   
+  var acc = {};
+  
   if (window.DeviceMotionEvent != undefined) {
 	  window.ondevicemotion = function(event) {
-	    var a = event.accelerationIncludingGravity;
-
-		  J.get('accX').value( a.x );
-		  J.get('accY').value( a.y );		
-      J.get('accZ').value( a.z );
+      acc = event.accelerationIncludingGravity;
     }
+
+    setInterval( function() {  	
+  	  J.get('accX').value( acc.x );
+  	  J.get('accY').value( acc.y );		
+      J.get('accZ').value( acc.z );
+    }, 100);
+
   }
   
   $(window).bind( 'mousemove', function(e) {
@@ -243,17 +256,20 @@
     
     $('#pause').bind('touchstart', toggle_pause);
     $('#pause').bind('mousedown', toggle_pause);
-    
+    $('body').bind('mousedown', toggle_pause);
     
     
     
     var p = {
       pause: false
     }; // share with the tick as this
+    
+    var $fps = $('#fps');
   </script>
 
 
   <script type="text/paperscript" canvas="canvas">
+
     p.points = 199;
     p.smooth = false;
     p.mousePos = view.center / 2;
@@ -283,8 +299,9 @@
 
 
     function onFrame(event) {
+
       if (p.pause || ! focused) return;
-      
+      $fps.text(1/ event.delta);      
       p.pathHeight += (p.center.y - p.mousePos.y - p.pathHeight) / 10;
       
       J.updateReals();
