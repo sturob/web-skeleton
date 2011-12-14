@@ -233,7 +233,7 @@ body .dg .a {
 }
 body .dg li {
   padding: 0 !important;
-  height: 44px !important;
+  height: 88px !important;
 }
 body .dg .cr {
   position: relative;
@@ -264,7 +264,7 @@ body .dg .has-slider input[type=text] {
 body .dg .slider {
   background: #000 !important;
   width: 100%;
-  height: 44px;
+  height: 88px;
   margin: 0;
 }
 body .dg .slider-fg {
