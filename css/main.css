@@ -1,0 +1,269 @@
+/* Css Reset by Eric Meyer */
+/* 
+html5doctor.com Reset Stylesheet
+v1.6.1
+Last Updated: 2010-09-17
+Author: Richard Clark - http://richclarkdesign.com 
+Twitter: @rich_clark
+*/
+html,
+body,
+div,
+span,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+abbr,
+address,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+samp,
+small,
+strong,
+sub,
+sup,
+var,
+b,
+i,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+  background: transparent;
+}
+body {
+  line-height: 1;
+}
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+  display: block;
+}
+nav ul {
+  list-style: none;
+}
+blockquote, q {
+  quotes: none;
+}
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: '';
+  content: none;
+}
+a {
+  margin: 0;
+  padding: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+  background: transparent;
+}
+/* change colours to suit your needs */
+ins {
+  background-color: #ff9;
+  color: #000;
+  text-decoration: none;
+}
+/* change colours to suit your needs */
+mark {
+  background-color: #ff9;
+  color: #000;
+  font-style: italic;
+  font-weight: bold;
+}
+del {
+  text-decoration: line-through;
+}
+abbr[title], dfn[title] {
+  border-bottom: 1px dotted;
+  cursor: help;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+/* change border colour to suit your needs */
+hr {
+  display: block;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid #cccccc;
+  margin: 1em 0;
+  padding: 0;
+}
+input, select {
+  vertical-align: middle;
+}
+/* clearfix */
+.clearfix:after {
+  visibility: hidden;
+  display: block;
+  font-size: 0;
+  content: " ";
+  clear: both;
+  height: 0;
+}
+.clearfix {
+  display: inline-block;
+}
+/* start commented backslash hack */
+* html .clearfix {
+  height: 1%;
+}
+.clearfix {
+  display: block;
+}
+/* close commented backslash hack */
+/*.conceal {
+  border-color: transparent transparent #aaa transparent; top: 9px;
+}
+
+.reveal {
+  position: absolute;
+  content: '';
+  display: block;
+  top: 12px;
+  right: 6px;
+  border-color: #aaa transparent transparent transparent;
+  border-style: solid;
+  border-width: 3px;
+  width: 0;
+  height: 0;        
+}*/
+.wtf {
+  outline: 2px solid red;
+}
+@media only screen and (-webkit-min-device-pixel-ratio: 2) {
+  
+}
+body {
+  background: #888;
+}
+body .dg {
+  width: 100%;
+  margin: 0 auto;
+  opacity: 0.9;
+  /* Auto-placed GUI's */
+
+  /* Line items that don't contain folders. */
+
+  /** Folder names */
+
+  /** Hides closed items */
+
+  /** Controller row */
+  /** Name-half (left) */
+
+  /** Controller-half (right) */
+
+  /** Controller placement */
+
+  /** Shorter number boxes when slider is present. */
+
+}
+body .dg .a {
+  margin-right: 0px;
+}
+body .dg li {
+  padding: 0 !important;
+  height: 44px !important;
+}
+body .dg .cr {
+  position: relative;
+}
+body .dg .property-name {
+  /*    width: 0%;*/
+
+  position: absolute;
+  left: 12px;
+  top: -1px;
+  z-index: 0;
+}
+body .dg .c {
+  opacity: 0.5;
+  margin: 0;
+  position: relative;
+  float: left;
+  z-index: 1;
+  width: 100%;
+}
+body .dg .c > div:first-child {
+  position: absolute;
+  left: 12px;
+  top: 16px;
+  z-index: -1;
+}
+body .dg .has-slider input[type=text] {
+  width: 2.5em;
+}
+body .dg .slider {
+  background: #000 !important;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+}
+body .dg .slider-fg {
+  background: #111 !important;
+  border-right: 1px solid white;
+}
