@@ -4,6 +4,9 @@
 
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
   <title></title>
+  
+  <meta name="viewport" content="width=device-width,user-scalable=no"/>
+  
  
   <!-- <link rel="icon" href="favicon.ico" type="image/ico"> -->
 
@@ -11,7 +14,8 @@
 
   <script type="text/javascript">
     var CONFIG = {
-      devMode: (window.location.hostname == 'localhost' || window.location.origin == "file://")
+      devMode: (window.location.hostname.substr(0,3) == '192' || 
+                window.location.hostname == 'localhost' || window.location.origin == "file://")
     };
     
     if (CONFIG.devMode) { // switch in .less for dev
@@ -27,17 +31,79 @@
     if (CONFIG.devMode) {
       js( 'lib/less.js' );
       js( 'dev.js' );
-
     }
     
     js( 'lib/jquery-1.7.min.js' );
     js( 'lib/underscore.js' );
+    
+    js( 'lib/custom/dat.gui.js' );
+    
     js( 'utils.js' );
     js( 'main.js');
+    
+
   </script>
 
   <script type="text/javascript">
   
+    var foo = {
+      wtf: 0.2,
+      percent: 0.4,
+      counter: 1
+    };
+    
+    var steps = {
+      wtf: 0.01,
+      percent: 0.01,
+      counter: 1
+    };
+    
+    var last_pos = {
+      wtf: 0,
+      percent: 0,
+      counter: 0
+    };
+    
+    $(function() {
+      var gui = new dat.GUI({  });
+      gui.add(foo, 'percent', 0, 1).listen();
+      gui.add(foo, 'counter', 0, 20).step(1).listen();
+      gui.add(foo, 'wtf', 0, 1).listen();
+      
+      $('.slider').bind('touchend', function(e) {
+        var v = $(this).parents( 'li.cr' ).find( '.property-name' ).text();
+        
+        var x = e.originalEvent.changedTouches[0].clientX;
+        window.x = x;
+        
+        if (x < 40) {
+          foo[v] -= steps[v];
+        } else if (x > 280) {
+          foo[v] += steps[v];
+        }
+      })
+      
+      $('.slider').bind('touchmove', function(e) {
+        var v = $(this).parents( 'li.cr' ).find( '.property-name' ).text(),
+            pos = e.originalEvent.pageX,
+            movement = Math.abs(last_pos[v] - pos);
+        
+        if (movement > 2) {
+          if (last_pos[v] < pos) {
+            foo[v] += steps[v];
+          } else {
+            foo[v] -= steps[v];          
+          }
+        }
+        
+        last_pos[v] = pos;
+      });
+      
+      _.delay(function() {
+        $('div.dg.main.a').css({ width: "100%" });
+        // less.watchMode = true;
+      }, 100);
+    })
   </script>
 </head>
 

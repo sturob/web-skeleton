@@ -7,3 +7,132 @@
 @media only screen and (-webkit-min-device-pixel-ratio: 2) { 
   // set background images to @2x ones
 }
+
+body {
+  background: #888;
+}
+
+
+body .dg {
+  width: 100%;
+  margin: 0 auto;
+  opacity: 0.9;
+
+  ul {
+  }
+
+  .ac {
+  }
+
+  .main {
+    .close-button {
+    }
+  }
+
+  /* Auto-placed GUI's */
+  .a {
+    margin-right: 0px;
+
+    .has-save ul {
+      .closed { }
+    }
+
+    .save-row { }
+  }
+
+  li {   
+    padding: 0 !important;
+    height: 44px !important;
+  }
+
+  /* Line items that don't contain folders. */
+  li:not(.folder) {
+  }
+
+  li.folder {     
+  }
+
+  /** Folder names */
+  li.title {
+  }
+
+  /** Hides closed items */
+  .closed li:not(.title),
+  .closed ul li,
+  .closed ul li > * {
+  }
+  
+  /** Controller row */ 
+  .cr {
+    position: relative;
+  }
+
+  /** Name-half (left) */
+  .property-name {
+/*    width: 0%;*/
+    position: absolute;
+    left: 12px;
+    top: -1px;
+    z-index: 0;
+  }
+
+  /** Controller-half (right) */
+  .c  {
+    opacity: 0.5;
+    margin: 0;
+    position: relative;
+    float: left;
+    z-index: 1;
+    width: 100%;
+    
+    > div:first-child {
+      position: absolute;
+      left: 12px;
+      top: 16px;
+      z-index: -1;
+    }
+  }
+
+  /** Controller placement */
+  .c input[type=text] {
+  }
+
+  /** Shorter number boxes when slider is present. */
+  .has-slider input[type=text] {
+    width: 2.5em;
+  }
+
+  .slider {
+    background: #000 !important;
+    width: 100%;
+    height: 44px;
+    margin: 0;
+  }
+
+  .slider-fg {
+    background: #111 !important;
+    border-right: 1px solid white;
+  }
+
+  .c input[type=checkbox] {
+  }
+
+  .c select {
+  }
+  
+  .selector {
+  }
+
+  .c:hover .selector, .selector.drag {
+  }
+
+  li.save-row {
+    .button {
+    }
+  }
+
+  &.dialogue {
+  }
+
+
+}
