@@ -200,6 +200,12 @@ input, select {
 body {
   background: #888;
 }
+canvas {
+  position: absolute;
+  top: 0;
+  background: black;
+}
+/* ---- gui dat ---- */
 body .dg {
   width: 100%;
   margin: 0 auto;
@@ -233,8 +239,6 @@ body .dg .cr {
   position: relative;
 }
 body .dg .property-name {
-  /*    width: 0%;*/
-
   position: absolute;
   left: 12px;
   top: -1px;

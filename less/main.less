@@ -13,30 +13,31 @@ body {
 }
 
 
+canvas {
+  position: absolute;
+  top: 0;
+  background: black;
+}
+
+
+
+
+/* ---- gui dat ---- */
+
 body .dg {
   width: 100%;
   margin: 0 auto;
   opacity: 0.9;
 
-  ul {
-  }
-
-  .ac {
-  }
-
-  .main {
-    .close-button {
-    }
-  }
+  ul { }
+  .ac { }
+  .main { .close-button { } }
 
   /* Auto-placed GUI's */
   .a {
     margin-right: 0px;
 
-    .has-save ul {
-      .closed { }
-    }
-
+    .has-save ul { .closed { } }
     .save-row { }
   }
 
@@ -45,22 +46,12 @@ body .dg {
     height: 44px !important;
   }
 
-  /* Line items that don't contain folders. */
-  li:not(.folder) {
-  }
-
-  li.folder {     
-  }
-
-  /** Folder names */
-  li.title {
-  }
+  li:not(.folder) { }   /* Line items that don't contain folders. */
+  li.folder { }
+  li.title { }    /** Folder names */
 
   /** Hides closed items */
-  .closed li:not(.title),
-  .closed ul li,
-  .closed ul li > * {
-  }
+  .closed li:not(.title), .closed ul li,.closed ul li > * { }
   
   /** Controller row */ 
   .cr {
@@ -69,7 +60,6 @@ body .dg {
 
   /** Name-half (left) */
   .property-name {
-/*    width: 0%;*/
     position: absolute;
     left: 12px;
     top: -1px;
@@ -94,8 +84,7 @@ body .dg {
   }
 
   /** Controller placement */
-  .c input[type=text] {
-  }
+  .c input[type=text] {  }
 
   /** Shorter number boxes when slider is present. */
   .has-slider input[type=text] {
@@ -114,25 +103,12 @@ body .dg {
     border-right: 1px solid white;
   }
 
-  .c input[type=checkbox] {
-  }
-
-  .c select {
-  }
-  
-  .selector {
-  }
-
-  .c:hover .selector, .selector.drag {
-  }
-
-  li.save-row {
-    .button {
-    }
-  }
-
-  &.dialogue {
-  }
+  .c input[type=checkbox] {}
+  .c select {}
+  .selector {}
+  .c:hover .selector, .selector.drag {}
+  li.save-row { .button { } }
+  &.dialogue {}
 
 
 }

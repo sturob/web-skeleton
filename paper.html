@@ -231,49 +231,49 @@
     };
   }
   
-    var simple_mode = true,
-        mine = default_f,
-        editor,
-        p = { // share with the tick as this
-          pause: false
-        };
-
-
-
-    if (! simple_mode) {
-      var on_code_change = function(ev) {
-        var f_text = editor.getSession().getValue();
-        try {
-          mine = new Function('ev', 'n', f_text);
-        } catch (e) {
-        }
-        localStorage.setItem('mine111', f_text);
+  var simple_mode = true,
+      mine = default_f,
+      editor,
+      p = { // share with the tick as this
+        pause: false
       };
-    
-      window.onload = function() {
-        var saved_f = localStorage.getItem('mine111') || 'return 1';
-        editor = ace.edit("editor");
-        editor.setTheme("ace/theme/twilight");
-        var JavaScriptMode = require("ace/mode/javascript").Mode;
-        var session = editor.getSession();
-        session.setValue( saved_f );
-        on_code_change(); // initial setup
-        session.setMode( new JavaScriptMode() );
-        session.on('change', on_code_change);
-      };
-    }
-    
-    
-    function toggle_pause () {
-      p.pause = ! p.pause;
-      $('#pause').text( p.pause ? '>' : '||' );
-    }
-    
-    $('#pause').bind('touchstart', toggle_pause);
-    $('#pause').bind('mousedown', toggle_pause);
-    $('body').bind('mousedown', toggle_pause);
-    
-    var $fps = $('#fps');
+
+
+
+  if (! simple_mode) {
+    var on_code_change = function(ev) {
+      var f_text = editor.getSession().getValue();
+      try {
+        mine = new Function('ev', 'n', f_text);
+      } catch (e) {
+      }
+      localStorage.setItem('mine111', f_text);
+    };
+  
+    window.onload = function() {
+      var saved_f = localStorage.getItem('mine111') || 'return 1';
+      editor = ace.edit("editor");
+      editor.setTheme("ace/theme/twilight");
+      var JavaScriptMode = require("ace/mode/javascript").Mode;
+      var session = editor.getSession();
+      session.setValue( saved_f );
+      on_code_change(); // initial setup
+      session.setMode( new JavaScriptMode() );
+      session.on('change', on_code_change);
+    };
+  }
+  
+  
+  function toggle_pause () {
+    p.pause = ! p.pause;
+    $('#pause').text( p.pause ? '>' : '||' );
+  }
+  
+  $('#pause').bind('touchstart', toggle_pause);
+  $('#pause').bind('mousedown', toggle_pause);
+  $('body').bind('mousedown', toggle_pause);
+  
+  var $fps = $('#fps');
   </script>
 
 
@@ -310,6 +310,7 @@
 
       if (p.pause || ! focused) return;
       $fps.text(1/ event.delta);      
+      
       p.pathHeight += (p.center.y - p.mousePos.y - p.pathHeight) / 10;
       
       J.updateReals();
