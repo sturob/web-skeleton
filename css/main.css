@@ -198,16 +198,60 @@ input, select {
   
 }
 body {
+  /*  position: relative;*/
+
   background: #888;
 }
 canvas {
   position: absolute;
   top: 0;
-  background: black;
+  background: #252525;
+  z-index: 5;
+}
+button.zoom {
+  position: absolute;
+  bottom: 0px;
+  left: 4px;
+  z-index: 100;
+  font-size: 200%;
+}
+button.zoom#out {
+  left: 2em;
+}
+button.tweak {
+  position: absolute;
+  bottom: 0;
+  right: 4px;
+  z-index: 100;
+  font-size: 200%;
+}
+div#main {
+  height: 960px;
+  width: 640px;
+}
+#t {
+  left: -38px;
+  top: -26px;
+  position: absolute;
+  width: 720px;
+  display: none;
+}
+body.tshirt_view canvas {
+  width: 320px;
+  left: 160px;
+  top: 120px;
+}
+body.tshirt_view #t {
+  display: block;
 }
 /* ---- gui dat ---- */
 body .dg {
+  display: none !important;
+}
+body.tweak .dg {
+  display: block !important;
   width: 100%;
+  z-index: 100 !important;
   margin: 0 auto;
   opacity: 0.9;
   /* Auto-placed GUI's */
@@ -228,23 +272,23 @@ body .dg {
   /** Shorter number boxes when slider is present. */
 
 }
-body .dg .a {
+body.tweak .dg .a {
   margin-right: 0px;
 }
-body .dg li {
+body.tweak .dg li {
   padding: 0 !important;
   height: 88px !important;
 }
-body .dg .cr {
+body.tweak .dg .cr {
   position: relative;
 }
-body .dg .property-name {
+body.tweak .dg .property-name {
   position: absolute;
   left: 12px;
   top: -1px;
   z-index: 0;
 }
-body .dg .c {
+body.tweak .dg .c {
   opacity: 0.5;
   margin: 0;
   position: relative;
@@ -252,22 +296,22 @@ body .dg .c {
   z-index: 1;
   width: 100%;
 }
-body .dg .c > div:first-child {
+body.tweak .dg .c > div:first-child {
   position: absolute;
   left: 12px;
   top: 16px;
   z-index: -1;
 }
-body .dg .has-slider input[type=text] {
+body.tweak .dg .has-slider input[type=text] {
   width: 2.5em;
 }
-body .dg .slider {
+body.tweak .dg .slider {
   background: #000 !important;
   width: 100%;
   height: 88px;
   margin: 0;
 }
-body .dg .slider-fg {
+body.tweak .dg .slider-fg {
   background: #111 !important;
   border-right: 1px solid white;
 }

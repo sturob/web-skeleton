@@ -7,7 +7,6 @@
   
   <meta name="viewport" content="width=device-width,user-scalable=no"/>
   
- 
   <!-- <link rel="icon" href="favicon.ico" type="image/ico"> -->
 
   <link id="main_styles" rel="stylesheet" href="css/main.css" type="text/css">
@@ -44,7 +43,7 @@
   <script type="text/javascript">
   
     var current = {
-      vert:   5,
+      vert:   20,
       wiggle: 0,
       thick:  2
     };
@@ -56,7 +55,7 @@
     }
     
     var steps = {
-      vert:   0.1,
+      vert:   1,
       wiggle: 0.25,
       thick:  0.05
     };
@@ -66,6 +65,8 @@
       wiggle: 0,
       thick:  0
     };
+    
+    var last_zoom = 1;
     
     var p = {
       pause: false,
@@ -98,7 +99,7 @@
     
     $(function() {
       var gui = new dat.GUI({  });
-      gui.add(current, 'vert',     0, 10).step(0.1).listen();
+      gui.add(current, 'vert',     0, 40).step(.5).listen();
       gui.add(current, 'wiggle', -10, 10).step(0.25).listen();
       gui.add(current, 'thick',    0,  5).step(0.05).listen();
       
@@ -129,6 +130,25 @@
         last_pos[v] = pos;
       });
       
+      $('button.zoom').click(function() {
+        if (p.view.zoom == 1 && this.id == 'out') {
+          $('body').addClass('tshirt_view');
+          return;
+        }
+        
+        if ($('body').is('.tshirt_view') && this.id == 'in') {
+          $('body').removeClass('tshirt_view');
+          return;
+        }
+      
+        p.view.zoom = p.view.zoom * (this.id == 'in' ? 2 : 0.5);
+      });
+      
+      $('button.tweak').click(function() {
+        $('body').toggleClass('tweak');
+      });
+      
+      
       _.delay(function() {
         $('div.dg.main.a').css({ width: "100%" });
         // less.watchMode = true;
@@ -137,10 +157,16 @@
   </script>
 </head>
 
-<body>
+<body class="tweak">
+  <div id="main">
+    <canvas id="canvas" keepalive="true" width='640' height='910'></canvas>
+    <img src="images/t-black.jpg" id="t">
+  </div>
   
+  <button class="zoom" id="out">-</button>
+  <button class="zoom" id="in">+</button>
   
-  <canvas id="canvas" keepalive="true" width='640' height='960'></canvas>
+  <button class="tweak">%</button>
   
   <!-- <a href="paper.html">yeah</a> -->
 </body>
@@ -151,6 +177,7 @@
   p.mousePos = view.center / 2;
   p.pathHeight = p.mousePos.y;
   p.project = project;
+  p.view = view;
   
   p.path = new Path();
   p.path.strokeColor = 'red';
@@ -175,14 +202,16 @@
 
 
   function onFrame(event) {
+        
     if (p.pause) return;
     // $fps.text(1/ event.delta);      
-    
+
     var no_op = _.isEqual( previous, current );
     
     previous = _.clone( current );
     
-    if (no_op) return;
+    if (no_op && last_zoom == view.zoom) return;
+    last_zoom = view.zoom;
     
     p.pathHeight += (p.center.y - p.mousePos.y - p.pathHeight) / 10;
     
