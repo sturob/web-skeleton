@@ -200,20 +200,38 @@ input, select {
 body {
   /*  position: relative;*/
 
-  background: #888;
+  background: #252525;
+  width: 640px;
+  overflow: hidden;
+  height: 800px;
 }
 canvas {
-  position: absolute;
-  top: 0;
+  position: fixed;
+  left: 16px;
+  top: 16px;
   background: #252525;
+  outline: 1px solid #333;
   z-index: 5;
 }
 div#bar {
   position: fixed;
-  top: 660px;
+  top: 780px;
   z-index: 99;
   left: 0;
   right: 0;
+}
+button {
+  -moz-background-clip: padding-box;
+  -webkit-background-clip: padding-box;
+  /* http://brenelz.com/blog/webkit-border-radius-background-bleed/ */
+
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  padding: 36px 0;
+  width: 108px;
+  background: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#aaaaaa));
+  background: -moz-linear-gradient(-90deg, #ffffff, #aaaaaa);
 }
 button.zoom {
   position: absolute;
@@ -223,7 +241,7 @@ button.zoom {
   font-size: 200%;
 }
 button.zoom#out {
-  left: 3em;
+  left: 128px;
 }
 button.tweak {
   position: absolute;
@@ -235,18 +253,19 @@ button.tweak {
 div#main {
   height: 960px;
   width: 640px;
+  overflow: hidden;
 }
 #t {
-  left: -38px;
-  top: -26px;
-  position: absolute;
-  width: 720px;
+  left: -48px;
+  top: -32px;
+  position: fixed;
+  width: 740px;
   display: none;
 }
 body.tshirt_view canvas {
-  width: 320px;
-  left: 160px;
-  top: 120px;
+  width: 330px;
+  left: 155px;
+  top: 118px;
 }
 body.tshirt_view #t {
   display: block;
@@ -312,6 +331,7 @@ body.tweak .dg .c > div:first-child {
 }
 body.tweak .dg .c input[type=text] {
   font-size: 200%;
+  background: none;
 }
 body.tweak .dg .has-slider input[type=text] {
   width: 2.5em;
