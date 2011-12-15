@@ -131,8 +131,6 @@
             pos = e.originalEvent.pageX,
             movement = Math.abs(last_pos[v] - pos);
             
-
-        
         if (movement > 1) {
           if (last_pos[v] < pos) {
             current[v] += steps[v] * movement / 10;
@@ -144,6 +142,8 @@
         last_pos[v] = pos;
         return false;
       });
+      
+      // p.view.scrollBy(point)
       
       $('button.zoom').click(function() {
         if (p.view.zoom == 1 && this.id == 'out') {
