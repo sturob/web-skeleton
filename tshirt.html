@@ -109,25 +109,40 @@
         
         if (x < 40) {
           current[v] -= steps[v];
-        } else if (x > 280) {
+        } else if (x > 600) {
           current[v] += steps[v];
         }
       })
+
       
+      $('.slider').bind('touchend', function(e) {
+        return false;
+      });
+
+      $('.slider').bind('touchstart', function(e) {
+        var v = $(this).parents( 'li.cr' ).find( '.property-name' ).text();
+        
+        last_pos[v] = e.originalEvent.pageX;
+        return false;
+      });
+
       $('.slider').bind('touchmove', function(e) {
         var v = $(this).parents( 'li.cr' ).find( '.property-name' ).text(),
             pos = e.originalEvent.pageX,
             movement = Math.abs(last_pos[v] - pos);
+            
+
         
         if (movement > 1) {
           if (last_pos[v] < pos) {
-            current[v] += steps[v];
+            current[v] += steps[v] * movement / 10;
           } else {
-            current[v] -= steps[v];          
+            current[v] -= steps[v] * movement / 10;
           }
         }
         
         last_pos[v] = pos;
+        return false;
       });
       
       $('button.zoom').click(function() {
@@ -163,10 +178,12 @@
     <img src="images/t-black.jpg" id="t">
   </div>
   
-  <button class="zoom" id="out">-</button>
-  <button class="zoom" id="in">+</button>
+  <div id="bar">
+    <button class="zoom" id="out">-</button>
+    <button class="zoom" id="in">+</button>
   
-  <button class="tweak">%</button>
+    <button class="tweak">%</button>
+  </div>
   
   <!-- <a href="paper.html">yeah</a> -->
 </body>

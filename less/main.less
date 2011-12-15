@@ -21,6 +21,14 @@ canvas {
   z-index: 5;
 }
 
+div#bar {
+  position: fixed;
+  top: 660px;
+  z-index: 99;
+  left: 0;
+  right: 0;
+}
+
 button.zoom {
   position: absolute;
   bottom: 0px;
@@ -28,7 +36,7 @@ button.zoom {
   z-index: 100;
   font-size: 200%;
   &#out {
-    left: 2em;
+    left: 3em;
   }
 }
 
@@ -104,6 +112,7 @@ body.tweak .dg {
   
   /** Controller row */ 
   .cr {
+    font-size: 200%;
     position: relative;
   }
 
@@ -133,7 +142,9 @@ body.tweak .dg {
   }
 
   /** Controller placement */
-  .c input[type=text] {  }
+  .c input[type=text] { 
+    font-size: 200%;
+  }
 
   /** Shorter number boxes when slider is present. */
   .has-slider input[type=text] {

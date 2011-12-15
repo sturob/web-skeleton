@@ -208,6 +208,13 @@ canvas {
   background: #252525;
   z-index: 5;
 }
+div#bar {
+  position: fixed;
+  top: 660px;
+  z-index: 99;
+  left: 0;
+  right: 0;
+}
 button.zoom {
   position: absolute;
   bottom: 0px;
@@ -216,7 +223,7 @@ button.zoom {
   font-size: 200%;
 }
 button.zoom#out {
-  left: 2em;
+  left: 3em;
 }
 button.tweak {
   position: absolute;
@@ -280,6 +287,7 @@ body.tweak .dg li {
   height: 88px !important;
 }
 body.tweak .dg .cr {
+  font-size: 200%;
   position: relative;
 }
 body.tweak .dg .property-name {
@@ -301,6 +309,9 @@ body.tweak .dg .c > div:first-child {
   left: 12px;
   top: 16px;
   z-index: -1;
+}
+body.tweak .dg .c input[type=text] {
+  font-size: 200%;
 }
 body.tweak .dg .has-slider input[type=text] {
   width: 2.5em;
