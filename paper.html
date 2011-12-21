@@ -7,8 +7,6 @@
     body {
       background: #eee;
       width: 1400px;
-      background: red;
-      outline: 2px solid red;
     }
     
     * {
@@ -25,24 +23,18 @@
     }
     
     #fps {
-      font-size: 24px;
+      font-size: 9px;
       position: absolute;
       z-index: 4;
       left: 0;
       top: 0;
     }
     
-    #t {
-      position: absolute;
-      top: -10px;
-      left: -10px;
-      width: 1400px;
-    }
-    
     canvas#canvas {
-      margin: 280px 0px 0px 377px;
+			margin: 8px;
       position: relative;
       z-index: 1;
+	  	background: #111;
       border: 0;
     }
     
@@ -50,7 +42,7 @@
       position: absolute;
       width: 500px;
       height: 400px;
-      right: 0;
+			left: 640px;
       top: 0;
     }
     
@@ -58,7 +50,10 @@
     /* snorkle.css */
     ul#vars { 
       z-index: 3;
-      float: right;
+/*      float: right;*/
+			position: absolute;
+			left: 640px;
+			top: 420px;
       background-color: white;
       width: 400px;
 /*      margin: 4px 12px;*/
@@ -131,9 +126,7 @@
 <body>
   <span id="fps"></span>
   <button id="pause">||</button>
-  
-  <img src="images/t-black.jpg" id="t">
-  
+    
   <canvas id="canvas" keepalive="true" width='620' height='870'></canvas>
 
   <div id="meh"></div>
@@ -150,17 +143,16 @@
   window.onblur  = function() { focused = false; };
   window.onfocus = function() { focused = true; };
 
-
   var J = new Snorkle;
 
   J.addInputArray( 'mouse', { initial: 0.1 } );
 
   var acc_options = { min: -10, max: 10,  initial: 0 };
 
-  J.addInput( 'accX', acc_options );
-  J.addInput( 'accY', acc_options );
-  J.addInput( 'accZ', acc_options );
-  J.addInput( 'compass', { min: 0, max: 360, initial: 180 } );
+  // J.addInput( 'accX', acc_options );
+  // J.addInput( 'accY', acc_options );
+  // J.addInput( 'accZ', acc_options );
+  // J.addInput( 'compass', { min: 0, max: 360, initial: 180 } );
   
   J.addOutput( 'vert' );
   J.addOutput( 'wiggle' );
@@ -168,27 +160,24 @@
   
   var acc = {};
   
-  if (window.DeviceMotionEvent != undefined) {
-	  window.ondevicemotion = function(event) {
-      acc.x = event.accelerationIncludingGravity.x;
-      acc.y = event.accelerationIncludingGravity.y;
-      acc.z = event.accelerationIncludingGravity.z;
-    }
-    
-    window.addEventListener('deviceorientation', function(e) {
-      acc.compass = e.webkitCompassHeading;
-    });
-    
-    
-    setInterval( function() {  	
-  	  J.get('accX').value( acc.x );
-  	  J.get('accY').value( acc.y );		
-      J.get('accZ').value( acc.z );
-      
-      // J.get('compass').value( acc.compass );
-    }, 100);
-
-  }
+  // if (window.DeviceMotionEvent != undefined) {
+  // 	  window.ondevicemotion = function(event) {
+  //     acc.x = event.accelerationIncludingGravity.x;
+  //     acc.y = event.accelerationIncludingGravity.y;
+  //     acc.z = event.accelerationIncludingGravity.z;
+  //   }
+  //   
+  //   window.addEventListener('deviceorientation', function(e) {
+  //     acc.compass = e.webkitCompassHeading;
+  //   });
+    // setInterval( function() {  	
+    //   	  J.get('accX').value( acc.x );
+    //   	  J.get('accY').value( acc.y );		
+    //   J.get('accZ').value( acc.z );
+    //   
+    //   // J.get('compass').value( acc.compass );
+    // }, 100);
+  // }
   
   $(window).bind( 'mousemove', function(e) {
     J.get('mouse').value([ e.clientX, e.clientY ]);
@@ -231,13 +220,15 @@
     };
   }
   
-  var simple_mode = true,
+  var simple_mode = false,
       mine = default_f,
       editor,
       p = { // share with the tick as this
+				inputs: J.reals,
         pause: false
       };
 
+			console.log(J.reals);
 
 
   if (! simple_mode) {
@@ -271,21 +262,24 @@
   
   $('#pause').bind('touchstart', toggle_pause);
   $('#pause').bind('mousedown', toggle_pause);
-  $('body').bind('mousedown', toggle_pause);
+  // $('body').bind('mousedown', toggle_pause);
   
   var $fps = $('#fps');
+	
+	window.previous = {};
+			
   </script>
 
 
   <script type="text/paperscript" canvas="canvas">
-    p.points = 199;
+    p.points = 200;
     p.smooth = false;
     p.mousePos = view.center / 2;
     p.pathHeight = p.mousePos.y;
     p.project = project;
     
     p.path = new Path();
-    p.path.strokeColor = 'red';
+    // p.path.strokeColor = 'red';
     // p.path.fillColor = 'white';
     p.path.closed = false;    
 
@@ -306,17 +300,25 @@
     p.initializePath();
 
 
+		
     function onFrame(event) {
+			
+      J.updateReals();
+			
+      var no_op = _.isEqual( previous, p.inputs ); // && function has not changed
+
+      if (no_op) return;
+
+			previous = _.clone( p.inputs );
 
       if (p.pause || ! focused) return;
       $fps.text(1/ event.delta);      
       
       p.pathHeight += (p.center.y - p.mousePos.y - p.pathHeight) / 10;
       
-      J.updateReals();
       J.recalculate();
       
-      p.inputs = J.reals;
+
       
       for (var i = 0; i < p.points; i++) {
         var pos = mine.call(p, event, i); // call with this set to p
@@ -349,89 +351,6 @@
     function onResize(event) {
       p.initializePath();
     }
-    
-    
-    
-/*
-  var b = n % 5;
-  var c = Math.floor(n / 5) * 5;
-
-  p.path.strokeWidth = 5.8;
-  p.path.strokeColor = '#000000';
-
-  return { x: 10 + b * 145, y: 4 + c * 2.2  }
-*/
-
-
-/*  
-
-var pos = { x: 0, y: 0 };
-var odd = n % 2;
-var sod = odd ? 1 : 0.8;
-
-var linear = (this.mousePos.y + this.mousePos.x) / 2; 
-linear = ev.count;
-
-var voodoo = 3.141592653589793238462643383279502884197 * 2.01;
-var scale = 150;
-var magic = voodoo / p.points * 1;
-
-// circle
-pos.y = 300 + Math.sin(n * magic) * scale;
-pos.x = 300 + Math.cos(n * magic) * scale;
-//return pos;
-
-// wobble
-pos.x += Math.sin(linear * sod * .02) * 120;
-pos.y += Math.cos(linear * sod * .13) * 40;
-
-if (linear % 20 == 0) {   
-  p.path.strokeColor = '#' +
-     Math.round( Math.random() * 0x8 ).toString(16);
-}
-
-pos.x = Math.min(pos.x, 600)
-pos.y = Math.min(pos.y, 600)
-pos.y = Math.max(pos.y, 0)
-pos.x = Math.max(pos.x, 0)
-
-return pos;
-
-
-
-    var pos = { x: 0, y: 0 };
-    var odd = n % 2;
-    var sod = odd ? 1 : 0.8;
-
-    //if (n == p.points) {  n = 0; }
-
-    var linear = (this.mousePos.y + this.mousePos.x) / 20; 
-    linear = ev.count;
-
-    var voodoo = 3.141592653589793238462643383279502884197 * 2;
-    var scale = 150;
-    var magic = voodoo / p.points;
-
-    // circle
-    pos.y = 300 + Math.sin(n * magic) * scale;
-    pos.x = 300 + Math.cos(n * magic) * scale;
-
-    //return pos;
-
-    // wobble
-    pos.x += Math.sin(linear * sod * .02) * 120;
-    pos.y += Math.cos(linear * sod * .13) * 40;
-
-    return pos;
-
-    pos.x = Math.min(pos.x, 600)
-    pos.y = Math.min(pos.y, 600)
-
-    pos.y = Math.max(pos.y, 0)
-    pos.x = Math.max(pos.x, 0)
-*/
-    
-    
     
     
   </script>

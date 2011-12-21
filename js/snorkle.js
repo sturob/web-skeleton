@@ -286,13 +286,13 @@ var Snorkle = Backbone.Model.extend({
     });
     
     $('body').append(templates.frame);
-    
+
+    this.reals = {};
     this.updateReals();
   },
   updateReals: function() {
     var that = this;
-    this.reals = {};
-        
+
     _.each(this.attributes, function(v, k) {
       that.reals[k] = v.value();
     });

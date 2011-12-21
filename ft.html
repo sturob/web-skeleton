@@ -6,7 +6,7 @@
   
   <meta name="viewport" content="width=device-width,user-scalable=no"/>
   
-  <!-- <link rel="icon" href="favicon.ico" type="image/ico"> -->
+  <!-- link rel="icon" href="favicon.ico" type="image/ico"> -->
 
   <link id="main_styles" rel="stylesheet" href="css/main.css" type="text/css">
 
@@ -176,7 +176,6 @@
     
     
     // refactor this to a separate file
-
     var breton_and_on = function() {
       var canvas = document.getElementById('canvas');
       paper.setup(canvas);// Create an empty project and a view for the canvas:
@@ -204,8 +203,6 @@
 
       v.initializePath = function (points) {
         v.points = points || v.points;
-
-        // v.center = view.center;
         v.width  = view.size.width;
         v.height = view.size.height / 2;
 
@@ -219,7 +216,7 @@
 
       v.initializePath();
 
-      view.onFrame = function (event) {     
+      var onFrame = function (event) {     
         if (pause) return;
         // $fps.text(1/ event.delta);      
 
@@ -234,9 +231,7 @@
 
         J.updateReals();
         J.recalculate();
-
-        // inputs = J.reals;
-
+        
         for (var i = 0; i < v.points; i++) {
           var pos = mine.call(v, event, i); // call with this set to p
           v.path.segments[i].point.y = pos.y;
@@ -244,7 +239,8 @@
         }
 
         if (v.smooth) { v.path.smooth(); }
-      }
+      }      
+      view.onFrame = onFrame;      
     };
     
     $(breton_and_on);
