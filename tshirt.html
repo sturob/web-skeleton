@@ -203,6 +203,23 @@
   // p.path.fillColor = 'white';
   p.path.closed = false;    
 
+  var text = new PointText(new Point(50, 50));
+  text.content = 'Hello world.';
+  text.characterStyle = {
+      fontSize: 50,
+      fillColor: 'white',
+      font: 'Helvetica'
+  };
+
+  p.text2 = new PointText(new Point(50, 150));
+  p.text2.content = 'Hello world.';
+  p.text2.characterStyle = {
+      fontSize: 50,
+      fillColor: 'white',
+      font: 'Minion Pro'
+  };
+
+
   p.initializePath = function (points) {
     p.points = points || p.points;
     
