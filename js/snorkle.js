@@ -80,8 +80,8 @@ var templates = {
     '</li>',
   frame:
     '<ul id="vars">' +
-      '<h1>inputs</h1><div id="inputs"></div>' +
       '<h1>results</h1><div id="results"></div>' +
+      '<h1>inputs</h1><div id="inputs"></div>' +
     '</ul>'
 };
   
