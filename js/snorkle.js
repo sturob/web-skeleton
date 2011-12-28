@@ -247,8 +247,10 @@ Model.Out = Model.Var.extend({
     var f, ok = true;
     
     try { // ... to create function with the code entered
-      f = new Function( formula );
-      f.toString = function() { return formula; } // don't return 'function() { ' or ' }'
+      f = new Function( 
+				"with (this) { " + formula + "}"
+	 		);
+    	f.toString = function() { return formula; } // don't return 'function() { ' or ' }'
     } catch (e) { // error if the code was garbage
       ok = false;
       this.set({ error: e });
