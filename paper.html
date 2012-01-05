@@ -167,7 +167,12 @@
   window.onblur  = function() { focused = false; };
   window.onfocus = function() { focused = true; };
 
-  var J = new Snorkle;
+	function changed () {
+		window.previous = {};
+	}
+	
+  var J = new Snorkle();
+		//{ change: changed });
 
   J.addInputArray( 'mouse', { initial: 0.1 } );
 
@@ -236,8 +241,6 @@
 	  });
 	}
 	
-  
-  
   // https://github.com/paperjs/paper.js/issues/48
   // SVGCanvas.prototype.transform = SVGCanvas.prototype.translate;
   // SVGCanvas.prototype.fillText = SVGCanvas.prototype.text;
@@ -256,7 +259,7 @@
   //   var serializer = new XMLSerializer();
   //   return serializer.serializeToString(svgContext.svg.htmlElement);
   // };
-
+	
 
   // called if we're in simple mode
   var default_f = function(ev, n) {
@@ -284,10 +287,16 @@
   if (! simple_mode) {
     var on_code_change = function(ev) {
       var f_text = editor.getSession().getValue();
+			var err = false;
       try {
 				mine = new Function('ev', 'n', 'with(v.inputs) { ' + f_text + ' } ');
       } catch (e) {
+				err = e;
       }
+			
+			if (! err) {
+				window.previous = {};
+			}
       localStorage.setItem('mine111', f_text);
     };
   
@@ -318,11 +327,19 @@
 	
 	window.previous = {};
 	
-
   var breton_and_on = function() {
 		paper.install(window);
     var canvas = document.getElementById('canvas');
     paper.setup(canvas); // Create an empty project and a view for the canvas
+
+		window.context = canvas.getContext("2d");
+		var my_text = ['Breton&', 'On&', "On&", "On&", "Zzzzz..."];
+		context.globalCompositeOperation = "xor";
+		var blank = true;
+		
+    // draw text
+    context.fillStyle="#000";
+		context.font = "Bold 150px Helvetica";
 	
     v = {
 			inputs: J.reals,
@@ -364,22 +381,40 @@
       $fps.text( 1 / event.delta);
       
       // v.pathHeight += (view.center.y - v.mousePos.y - v.pathHeight) / 10;
-      
+
       J.recalculate();
       
       for (var i = 0; i < v.points; i++) {
+				v.inputs.n = i;
         var pos = mine.call(v, event, i); // call with this set to p
         v.path.segments[i].point.y = pos.y;
         v.path.segments[i].point.x = pos.x;
       }
     
       if (v.smooth) { v.path.smooth(); }
+      blank = true; // add postCanvas
     }
 		
     view.onFrame = onFrame;
+
+		function postCanvas() {
+			if (blank) {
+				$(my_text).each(function(n, v) {
+					context.fillText(v, 10, (n + 1) * 146);
+				});
+				
+
+			}
+			blank = false;
+		}
+	
+		setInterval(postCanvas, 100);
+
 	};
 	
 	$(breton_and_on);
+
+
 	
   </script>
 </body>

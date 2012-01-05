@@ -4,7 +4,7 @@ snorkle.js: take a look under the surface
 
   visualise and combine variables in realtime
 
-  ideal for prototyping interfaces with unknown streams of data 
+  ideal for prototyping interfaces with complex multi-variate interplay
 
 
 
@@ -264,7 +264,11 @@ Model.Out = Model.Var.extend({
     }
 
     localStorage.setItem('out_' + this.id, formula );
-    ok && (this.calculate = f); // set the calculate function that tick() will call
+    if (ok) {
+			this.calculate = f; // set the calculate function that tick() will call
+			console.log( this.get('parent').get('change') )
+			//.get('change').call();
+		}
     return this;
   },
   update: function() {
@@ -283,7 +287,7 @@ Model.Out = Model.Var.extend({
 
 
 var Snorkle = Backbone.Model.extend({
-  initialize: function() {
+  initialize: function(options) {
     this.bind('change', function() {
       this.updateReals();
     });
@@ -365,11 +369,15 @@ function int(f) {
   return Math.floor( f );
 }
 
-function clamp (n, min, max) {
+function mod(a,b) {
+	return a - (a % b);
+}
+
+function clamp (n, min, max) { // not used
 	return Math.min(Math.max(n, min), max);
 }
 
-function of () {
+function of () { // return first valid value
 	for(var i=0; i<arguments.length; i++) {
 		if (typeof arguments[i] != "undefined" || arguments[i] != null) {
 			return arguments[i];
@@ -377,25 +385,20 @@ function of () {
 	}
 }
 
+//  (0.1, 10, 110) 			 ->  20
+//  (.1, 5, 10) 				 ->   5.5
+//  (.1, 10, 5) 				 ->   9.5
+//  (20, 10, 110, 0, 20) -> 110
 function coax(val, min, max, d, e) {
-  var in_min = (typeof d == "undefined" || d == null) ? 0 : d,
-			in_max = (typeof e == "undefined" || e == null) ? 1	: e,
+  var in_min  = (typeof d == "undefined" || d == null) ? 0 : d,
+			in_max  = (typeof e == "undefined" || e == null) ? 1 : e,
 			in_diff = in_max - in_min,
-			diff = max - min,
-			ratio = diff / in_diff,
-			result = (val * ratio) + min;
+			diff    = max    - min,
+			ratio   = diff / in_diff,
+			result  = val * ratio;
 
-	//  (0.1, 10, 110) 			 ->  20
-	//  (20, 10, 110, 0, 20) -> 110
-
-
-	return result;
-	// console.log(diff + ":" + off)
-
-  v = (v / diff) + off; // coax value to be 0.0 - 1.0
-	return v;
+	return min + result;
 }
-
 
 
 
