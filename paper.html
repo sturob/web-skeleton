@@ -6,20 +6,20 @@
   <style>
     body {
       background: #eee;
-      width: 1400px;
+/*      width: 1400px;*/
     }
     
     * {
       padding: 0;
       margin: 0;
     }
-    
+
     button#pause {
       position: absolute;
-      left: 48%;
+      left: 640px;
       top: 20px;
       z-index: 2;
-      font-size: 72px;
+      font-size: 16px;
     }
     
     #fps {
@@ -27,7 +27,7 @@
       position: absolute;
       z-index: 4;
       left: 0;
-      top: 0;
+      bottom: 0;
     }
     
     canvas#canvas {
@@ -48,14 +48,24 @@
     
     
     /* snorkle.css */
+		
+		
+		div#results .raw { display: none; }
+		div#results .value {
+			width: 100px;
+			text-align: right;
+			display: inline-block;
+		}
+		
     ul#vars { 
       z-index: 3;
 /*      float: right;*/
 			position: absolute;
-			left: 640px;
+			left: 690px;
+			font-family: Helvetica;
 			top: 420px;
       background-color: white;
-      width: 400px;
+      width: 480px;
 /*      margin: 4px 12px;*/
       list-style: none;
       font-size: 18px;
@@ -71,28 +81,39 @@
     ul#vars .viz {
       display: inline-block;
       width: 120px;
-      margin-left: 100px;
+			vertical-align: top;
+      margin-left: 70px;
+
     }
+    ul#vars .viz canvas {
+			position: absolute;
+			right: 4px;
+		}
     ul#vars .raw {
       color: #ddd;
     }
     ul#vars input {
-      font-family: Courier;
+      font-family: Monaco;
       position: absolute;
       left: 4px;
       right: 4px;
-      font-size: 12px;
-      bottom: 4px;
-    }
+      font-size: 10px;
+      bottom: 2px;
+			border: 0;
+/*			border-bottom: 1px solid #aaa;*/
+			background: #fff;
+			color: #222;
+			padding: 2px 4px;
+		}
     ul#vars h2 {
       position: absolute;
-      left: 12px;
-      top: 2px;
+      left: 6px;
+      top: 6px;
       font-size: 16px;
     }
     ul#vars li {
       background-color: white;
-      border-bottom: 1px solid #eee;
+      border-bottom: 2px solid #eee;
       position: relative;
       margin: 0 0 0px 0;
     }
@@ -100,7 +121,9 @@
       padding-bottom: 24px;
     }
     ul#vars span {
-      font-family: "Courier New";
+			font-size: 14px;
+			font-weight: normal;
+/*      font-family: "Courier New";*/
     }
   </style>
     
@@ -155,12 +178,16 @@
   // J.addInput( 'accZ', acc_options );
   // J.addInput( 'compass', { min: 0, max: 360, initial: 180 } );
   
-  J.addOutput( 'A' );
+  J.addOutput( 'scale' );
+  J.addOutput( 'gap' );
+	J.addOutput( 'A' );
   J.addOutput( 'B' );
   J.addOutput( 'C' );
   J.addOutput( 'D' );
   J.addOutput( 'E' );
-  J.addOutput( 'F' );
+	J.addOutput( 'F' );
+	J.addOutput( 'rand' );
+  J.addOutput( 'wave' );
 	
   var acc = {};
   
@@ -233,34 +260,32 @@
 
   // called if we're in simple mode
   var default_f = function(ev, n) {
-    var i = ev.count;
-    var b = n % 2,
-        c = Math.floor(n / 2) * p.inputs.A,
-        d = Math.sin(n * 10000) * p.inputs.B,
-        e = 2; // Math.sin(i / 50);
+		with(v.inputs) {
+	    var i = ev.count;
+	    var b = n % 2,
+	        c = Math.floor(n / 2) * A,
+	        d = Math.sin(n * 10000) * B,
+	        e = 2; // Math.sin(i / 50);
 
-    p.path.strokeWidth = p.inputs.C;
-    p.path.strokeColor = '#ff0';
+	    v.path.strokeWidth = C;
+	    v.path.strokeColor = '#ff0';
 
-    return {   x: 0 + b * p.width,
-               y: 3 + d + c
-    };
+	    return {   x: 0 + b * v.width,
+	               y: 3 + d + c
+	    };
+		}
   }
   
   var simple_mode = false,
       mine = default_f,
-      editor,
-      p = { // share with the tick as this
-				inputs: J.reals,
-        pause: false
-      };
+      editor;
 
 
   if (! simple_mode) {
     var on_code_change = function(ev) {
       var f_text = editor.getSession().getValue();
       try {
-        mine = new Function('ev', 'n', f_text);
+				mine = new Function('ev', 'n', 'with(v.inputs) { ' + f_text + ' } ');
       } catch (e) {
       }
       localStorage.setItem('mine111', f_text);
@@ -281,8 +306,8 @@
   
   
   function toggle_pause () {
-    p.pause = ! p.pause;
-    $('#pause').text( p.pause ? '>' : '||' );
+    v.pause = ! v.pause;
+    $('#pause').text( v.pause ? '>' : '||' );
   }
   
   $('#pause').bind('touchstart', toggle_pause);
@@ -292,75 +317,70 @@
   var $fps = $('#fps');
 	
 	window.previous = {};
+	
+
+  var breton_and_on = function() {
+		paper.install(window);
+    var canvas = document.getElementById('canvas');
+    paper.setup(canvas); // Create an empty project and a view for the canvas
+	
+    v = {
+			inputs: J.reals,
+      pause: false,
+      points: 800,
+      smooth: false,
+      mousePos: view.center / 2
+    };
+	
+    v.path = new Path();
+		v.path.strokeWidth = 0;
+    v.path.closed = false;
+
+    v.initializePath = function (points) {      
+      v.center = view.center;
+      v.width  = view.size.width;
+      v.height = view.size.height / 2;
 			
-  </script>
-
-
-  <script type="text/paperscript" canvas="canvas">
-    p.points = 200;
-    p.smooth = false;
-    p.mousePos = view.center / 2;
-    p.pathHeight = p.mousePos.y;
-    p.project = project;
-    
-    p.path = new Path();
-    // p.path.strokeColor = 'red';
-    // p.path.fillColor = 'white';
-    p.path.closed = false;    
-
-    p.initializePath = function (points) {
-      p.points = points || p.points;
-      
-      p.center = view.center;
-      p.width  = view.size.width;
-      p.height = view.size.height / 2;
-      p.path.segments = [];
-      for (var i = 0; i < p.points; i++) {
-        var point = new Point(p.width / p.points * i, p.center.y);
-        p.path.add(point);
+      v.path.segments = [];
+      for (var i = 0; i < points; i++) {
+        var point = new Point(v.width / points * i, view.center.y);
+        v.path.add(point);
       }
-      p.path.fullySelected = false;
+      v.path.fullySelected = false;
     }
 
-    p.initializePath();
-
-
+    v.initializePath(v.points);
 		
-    function onFrame(event) {
-			
+    var onFrame = function(event) { // replace with your own
       J.updateReals();
 			
-      var no_op = _.isEqual( previous, p.inputs ); // && function has not changed
+      var no_op = _.isEqual( previous, v.inputs ); // && function has not changed
 
       if (no_op) return;
 
-			previous = _.clone( p.inputs );
+			previous = _.clone( v.inputs );
 
-      if (p.pause || ! focused) return;
-      $fps.text(1/ event.delta);      
+      if (v.pause || ! focused) return;
+      $fps.text( 1 / event.delta);
       
-      p.pathHeight += (p.center.y - p.mousePos.y - p.pathHeight) / 10;
+      // v.pathHeight += (view.center.y - v.mousePos.y - v.pathHeight) / 10;
       
       J.recalculate();
       
-
-      
-      for (var i = 0; i < p.points; i++) {
-        var pos = mine.call(p, event, i); // call with this set to p
-        p.path.segments[i].point.y = pos.y;
-        p.path.segments[i].point.x = pos.x;
+      for (var i = 0; i < v.points; i++) {
+        var pos = mine.call(v, event, i); // call with this set to p
+        v.path.segments[i].point.y = pos.y;
+        v.path.segments[i].point.x = pos.x;
       }
     
-      if (p.smooth) { p.path.smooth(); }
+      if (v.smooth) { v.path.smooth(); }
     }
-
-
-    // Reposition the path whenever the window is resized:
-    function onResize(event) {
-      p.initializePath();
-    }
-    
-    
+		
+    view.onFrame = onFrame;
+	};
+	
+	$(breton_and_on);
+	
   </script>
 </body>
 

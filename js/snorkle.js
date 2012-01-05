@@ -100,9 +100,6 @@ function kv (k, v) {
   return s;
 }
 
-function int(f) {
-  return Math.floor( f );
-}
 
 
 var Model = {};
@@ -110,7 +107,8 @@ var Model = {};
 var options = { 
   normalRangeMin: 0, normalRangeMax: 1, 
   width: '120px', chartRangeClip: true, spotColor: false,
-  minSpotColor: false, maxSpotColor: false
+  minSpotColor: false, maxSpotColor: false, fillColor: false,
+	lineColor: '#777', 
 };
 
 
@@ -146,7 +144,7 @@ Model.In = Model.Var.extend({
   initialize: function (options) {
     var initial = (typeof options.initial == "undefined" || options.initial == null) ? 0 : options.initial;
     
-    $('ul#vars div#inputs').append( _.template( templates.input )({ id: options.id }) );
+    $('ul#vars div#inputs').prepend( _.template( templates.input )({ id: options.id }) );
     
     this.initHistory();
     this.set({ raw: initial, value: initial });
@@ -236,6 +234,7 @@ Model.Out = Model.Var.extend({
     this.set({ raw: initial, value: initial });
 
     this.initHistory();
+
     if (formula) {
       this.calculateEntered( formula ).update();
       $('li#' + this.id + ' input').val( formula );
@@ -245,12 +244,14 @@ Model.Out = Model.Var.extend({
   },
   calculateEntered: function(formula) {
     var f, ok = true;
-    
+
     try { // ... to create function with the code entered
       f = new Function( 
-				"with (this) { " + formula + "}"
+				"with (this) {\nreturn " + formula + "\n}"
 	 		);
-    	f.toString = function() { return formula; } // don't return 'function() { ' or ' }'
+    	// f.toString = function() { return formula; } 
+			// don't return 'function() { ' or ' }'
+			// console.log(f);
     } catch (e) { // error if the code was garbage
       ok = false;
       this.set({ error: e });
@@ -289,6 +290,8 @@ var Snorkle = Backbone.Model.extend({
     
     $('body').append(templates.frame);
 
+		this.$el = $('ul#vars');
+
     this.reals = {};
     this.updateReals();
   },
@@ -314,6 +317,12 @@ var Snorkle = Backbone.Model.extend({
     this.set( kv(id, v) );
     return v;
   },
+	renameOutput: function(id, new_id) {
+		// this.get(id).
+	},
+	removeOutput: function(id) {
+		// meh
+	},
   addOutput: function(id, options) {
     options = options || { initial: 0 };
     options.id = id; // very useful
@@ -349,6 +358,44 @@ var Snorkle = Backbone.Model.extend({
     })
   }
 });
+
+
+
+function int(f) {
+  return Math.floor( f );
+}
+
+function clamp (n, min, max) {
+	return Math.min(Math.max(n, min), max);
+}
+
+function of () {
+	for(var i=0; i<arguments.length; i++) {
+		if (typeof arguments[i] != "undefined" || arguments[i] != null) {
+			return arguments[i];
+		}
+	}
+}
+
+function coax(val, min, max, d, e) {
+  var in_min = (typeof d == "undefined" || d == null) ? 0 : d,
+			in_max = (typeof e == "undefined" || e == null) ? 1	: e,
+			in_diff = in_max - in_min,
+			diff = max - min,
+			ratio = diff / in_diff,
+			result = (val * ratio) + min;
+
+	//  (0.1, 10, 110) 			 ->  20
+	//  (20, 10, 110, 0, 20) -> 110
+
+
+	return result;
+	// console.log(diff + ":" + off)
+
+  v = (v / diff) + off; // coax value to be 0.0 - 1.0
+	return v;
+}
+
 
 
 
