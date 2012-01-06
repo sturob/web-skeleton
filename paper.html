@@ -174,7 +174,7 @@
   var J = new Snorkle();
 		//{ change: changed });
 
-  J.addInputArray( 'mouse', { initial: 0.1 } );
+  // J.addInputArray( 'mouse', { initial: 0.1 } );
 
   var acc_options = { min: -10, max: 10,  initial: 0 };
 
@@ -183,16 +183,20 @@
   // J.addInput( 'accZ', acc_options );
   // J.addInput( 'compass', { min: 0, max: 360, initial: 180 } );
   
+	
+	// TODO set these up dynamically on a per design-basis
   J.addOutput( 'scale' );
   J.addOutput( 'gap' );
+	J.addOutput( 'fontsize');
+	J.addOutput( 'wtf' );
+	J.addOutput( 'rand' );
+  J.addOutput( 'wave' );
 	J.addOutput( 'A' );
   J.addOutput( 'B' );
   J.addOutput( 'C' );
   J.addOutput( 'D' );
   J.addOutput( 'E' );
 	J.addOutput( 'F' );
-	J.addOutput( 'rand' );
-  J.addOutput( 'wave' );
 	
   var acc = {};
   
@@ -215,9 +219,9 @@
     // }, 100);
   // }
   
-  $(window).bind( 'mousemove', function(e) {
-    J.get('mouse').value([ e.clientX, e.clientY ]);
-  });
+  // $(window).bind( 'mousemove', function(e) {
+  //   J.get('mouse').value([ e.clientX, e.clientY ]);
+  // });
 	
 	
 	if (typeof io != "undefined") {
@@ -333,13 +337,15 @@
     paper.setup(canvas); // Create an empty project and a view for the canvas
 
 		window.context = canvas.getContext("2d");
-		var my_text = ['Breton&', 'On&', "On&", "On&", "Zzzzz..."];
+		var my_text = [
+			'Breton&', 'Breton&', "Breton&", "Breton&", "Breton&", "Breton."
+			// "Breton&", "Breton&", "Breton"
+		];
 		context.globalCompositeOperation = "xor";
 		var blank = true;
 		
     // draw text
     context.fillStyle="#000";
-		context.font = "Bold 150px Helvetica";
 	
     v = {
 			inputs: J.reals,
@@ -378,7 +384,7 @@
 			previous = _.clone( v.inputs );
 
       if (v.pause || ! focused) return;
-      $fps.text( 1 / event.delta);
+      $fps.text( shorten(1 / event.delta) );
       
       // v.pathHeight += (view.center.y - v.mousePos.y - v.pathHeight) / 10;
 
@@ -390,7 +396,7 @@
         v.path.segments[i].point.y = pos.y;
         v.path.segments[i].point.x = pos.x;
       }
-    
+
       if (v.smooth) { v.path.smooth(); }
       blank = true; // add postCanvas
     }
@@ -399,22 +405,19 @@
 
 		function postCanvas() {
 			if (blank) {
-				$(my_text).each(function(n, v) {
-					context.fillText(v, 10, (n + 1) * 146);
+				context.font = "Bold " + int(v.inputs.fontsize) + "px Helvetica";
+				$(my_text).each(function(n, text) {
+					context.fillText( text, v.inputs.D, v.inputs.C + (n + 1) * int( v.inputs.wtf ) );
 				});
-				
-
 			}
 			blank = false;
 		}
 	
-		setInterval(postCanvas, 100);
+		setInterval(postCanvas, 10);
 
 	};
 	
 	$(breton_and_on);
-
-
 	
   </script>
 </body>

@@ -76,7 +76,7 @@ var templates = {
   output:   
     '<li class="result" id="<%= id %>"> <h2><%= id %></h2>' +
       '<span class="viz"></span> <span class="value"></span> <span class="raw"></span>' +
-      '<input type="text" value="return 0">' +
+      '<input type="text" value="0">' +
     '</li>',
   frame:
     '<ul id="vars">' +
