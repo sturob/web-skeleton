@@ -88,12 +88,7 @@ var templates = {
 
 
 
-function shorten (f) {
-  if (typeof f == 'string') {
-    return f
-  }
-  return Math.round(f * 10000) / 10000
-}
+
 
 function kv (k, v) {
   var s = {};  s[k] = v;
@@ -266,8 +261,8 @@ Model.Out = Model.Var.extend({
     localStorage.setItem('out_' + this.id, formula );
     if (ok) {
 			this.calculate = f; // set the calculate function that tick() will call
-			console.log( this.get('parent').get('change') )
-			//.get('change').call();
+			var callback = this.get('parent').changeCallback;
+			callback && callback(); 
 		}
     return this;
   },
@@ -287,11 +282,13 @@ Model.Out = Model.Var.extend({
 
 
 var Snorkle = Backbone.Model.extend({
-  initialize: function(options) {
+  initialize: function(huh, options) {
     this.bind('change', function() {
       this.updateReals();
     });
     
+		this.changeCallback = options.change;
+		
     $('body').append(templates.frame);
 
 		this.$el = $('ul#vars');
@@ -390,8 +387,8 @@ function of () { // return first valid value
 //  (.1, 10, 5) 				 ->   9.5
 //  (20, 10, 110, 0, 20) -> 110
 function coax(val, min, max, d, e) {
-  var in_min  = (typeof d == "undefined" || d == null) ? 0 : d,
-			in_max  = (typeof e == "undefined" || e == null) ? 1 : e,
+  var in_min  = (typeof d == "undefined" || d == null) ? 0 : d, // assume input range is:
+			in_max  = (typeof e == "undefined" || e == null) ? 1 : e, // 0.0 - 1.0
 			in_diff = in_max - in_min,
 			diff    = max    - min,
 			ratio   = diff / in_diff,
@@ -400,5 +397,9 @@ function coax(val, min, max, d, e) {
 	return min + result;
 }
 
-
-
+function shorten (f) {
+  if (typeof f == 'string') {
+    return f
+  }
+  return Math.round(f * 10000) / 10000
+}

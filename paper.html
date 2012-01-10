@@ -41,15 +41,19 @@
     #editor {
       position: absolute;
       width: 500px;
-      height: 400px;
+/*      height: 400px;*/
 			left: 640px;
       top: 0;
     }
+		
+		#paperjs_editor, #canvas_editor {
+		  width: 500px;
+			height: 200px;
+      position: relative !important;
+		}
     
     
     /* snorkle.css */
-		
-		
 		div#results .raw { display: none; }
 		div#results .value {
 			width: 100px;
@@ -126,10 +130,11 @@
 /*      font-family: "Courier New";*/
     }
   </style>
-    
-    
-  <script type="text/javascript" src="js/lib/canvas/paper.js"></script> 
 
+	<!-- before jquery - needed to write to SVG -->
+  <!-- // <script type="text/javascript" src="js/lib/meh/MochiKit/MochiKit.js"></script>   -->
+    
+  <script type="text/javascript" src="js/lib/canvas/paper.js"></script>
   <script type="text/javascript" src="js/lib/jquery-1.7.min.js"></script>
   <script type="text/javascript" src="js/lib/underscore.js"></script>
   <script type="text/javascript" src="js/lib/backbone.js"></script>
@@ -139,9 +144,9 @@
   <script type="text/javascript" src="js/snorkle.js"></script>
 
 
-  <!-- script type="text/javascript" src="js/lib/meh/MochiKit/MochiKit.js"></script> 
-  <script type="text/javascript" src="js/lib/canvas/SVGKit.js"></script> 
-  <script type="text/javascript" src="js/lib/canvas/SVGCanvas.js"></script --> 
+
+  <!-- // <script type="text/javascript" src="js/lib/canvas/SVGKit.js"></script> 
+  // <script type="text/javascript" src="js/lib/canvas/SVGCanvas.js"></script> -->
   <!-- // <script type="text/javascript" src="js/lib/DAT.GUI.js"></script> -->
 </head>
 
@@ -150,40 +155,49 @@
   <button id="pause">||</button>
     
   <canvas id="canvas" keepalive="true" width='620' height='870'></canvas>
-
+  <!-- <canvas id="canvas" keepalive="true" width='1240' height='1740'></canvas> -->
   <div id="meh"></div>
   
 <div id="editor">
+	<div class="tabs">
+		<a href="#paperjs_editor">paper.js</a>
+		<a href="#canvas_editor">canvas</a>
+	</div>
+	
+	<div id="paperjs_editor"></div>
+  
+	<div id="canvas_editor"></div>
 </div>
   
 	<script type="text/javascript" src="http://localhost:8339/socket.io/socket.io.js"></script>
   
-  <script src="js/lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/lib/ace/ace-uncompressed-fix.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/lib/ace/theme-twilight.js" type="text/javascript" charset="utf-8"></script>  
   <script src="js/lib/ace/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
 
   <script type='text/javascript'>
-  var focused = true;
+  window.focused = true; // really?
   window.onblur  = function() { focused = false; };
   window.onfocus = function() { focused = true; };
 
 	function changed () {
 		window.previous = {};
 	}
-	
-  var J = new Snorkle();
-		//{ change: changed });
+
+
+  var J = new Snorkle({}, { change: _.throttle(changed, 100) });
+  var canvas = document.getElementById('canvas');
+
+
+
 
   // J.addInputArray( 'mouse', { initial: 0.1 } );
-
-  var acc_options = { min: -10, max: 10,  initial: 0 };
-
+  // var acc_options = { min: -10, max: 10,  initial: 0 };
   // J.addInput( 'accX', acc_options );
   // J.addInput( 'accY', acc_options );
   // J.addInput( 'accZ', acc_options );
   // J.addInput( 'compass', { min: 0, max: 360, initial: 180 } );
   
-	
 	// TODO set these up dynamically on a per design-basis
   J.addOutput( 'scale' );
   J.addOutput( 'gap' );
@@ -191,8 +205,8 @@
 	J.addOutput( 'wtf' );
 	J.addOutput( 'rand' );
   J.addOutput( 'wave' );
-	J.addOutput( 'A' );
-  J.addOutput( 'B' );
+	// J.addOutput( 'A' );
+  // J.addOutput( 'B' );
   J.addOutput( 'C' );
   J.addOutput( 'D' );
   J.addOutput( 'E' );
@@ -240,80 +254,106 @@
 			}
       
 	    J.pumpInput( face );
-    
 	    // socket.emit('my other event', { my: 'data' });
 	  });
 	}
 	
-  // https://github.com/paperjs/paper.js/issues/48
-  // SVGCanvas.prototype.transform = SVGCanvas.prototype.translate;
-  // SVGCanvas.prototype.fillText = SVGCanvas.prototype.text;
-  // 
-  // paper.View.prototype.toSVG = function() {
-  //   var svgContext = new SVGCanvas(this.canvas.width, this.canvas.height);
-  // 
-  //   var oldCtx = this._context;
-  // 
-  //   this._context = svgContext;  
-  //   this.draw(false);
-  // 
-  //   this._context = oldCtx;
-  // 
-  //   // Optional serialization of the SVG DOM nodes
-  //   var serializer = new XMLSerializer();
-  //   return serializer.serializeToString(svgContext.svg.htmlElement);
-  // };
 	
 
   // called if we're in simple mode
   var default_f = function(ev, n) {
 		with(v.inputs) {
-	    var i = ev.count;
-	    var b = n % 2,
-	        c = Math.floor(n / 2) * A,
-	        d = Math.sin(n * 10000) * B,
-	        e = 2; // Math.sin(i / 50);
+			v.path.fillColor = '#000';
 
-	    v.path.strokeWidth = C;
-	    v.path.strokeColor = '#ff0';
+			var fours = n % 4, // = 0..3
+			    even  = n % 8 > 3,
+			    bar_y = Math.floor( n / 4 ) * scale,
+			    xp    = [    -1,  v.width + 1,  v.width + 1,       -1 ],
+			    yp    = [ bar_y,        bar_y,        bar_y,    bar_y ];
 
-	    return {   x: 0 + b * v.width,
-	               y: 3 + d + c
-	    };
+			var b = mod(n  , 2) % 4, r = mod(n+1, 2) % 4,
+			    t = mod(n+2, 2) % 4, l = mod(n+3, 2) % 4;
+    
+			var huh = l * ((333 * mod(n, 4)) % 19 % E) * F +
+			          r * ((333 * mod(n, 4)) % 19 % E) * F
+			          + ((333*n) % 19 % E) * rand;
+
+			yp[0] +=  gap + huh; 
+			yp[1] +=  gap + huh;
+			yp[2] += -gap + huh;
+			yp[3] += -gap + huh;
+
+			return {  x: xp[fours],  y: yp[fours] + scale/2  };
+
 		}
   }
   
   var simple_mode = false,
-      mine = default_f,
-      editor;
-
+      // mine = default_f, // generalise
+			save_prefix = 'design_id-', // change for each design
+      editor,
+			editors = {
+        'canvas':  { f: function() {} },
+        'paperjs': { f: function() {} }
+      };
 
   if (! simple_mode) {
-    var on_code_change = function(ev) {
-      var f_text = editor.getSession().getValue();
-			var err = false;
-      try {
-				mine = new Function('ev', 'n', 'with(v.inputs) { ' + f_text + ' } ');
-      } catch (e) {
-				err = e;
+    
+    // require("ace/renderloop").RenderLoop.prototype.setTimeoutZero = function(c){setTimeout(c)}
+    
+    function code_change_for(key) {
+      return function(ev) {
+        var f_text = editors[key].ace.getSession().getValue();
+  			var err = false;
+        try {
+  				editors[key].f = new Function('ev', 'n', 'with(v.inputs) { ' + f_text + ' } ');
+        } catch (e) {
+  				err = e;
+        }
+  			if (! err) {
+  				window.previous = {}; // update hack
+  			}
+        localStorage.setItem(editors[key].id, f_text);
       }
-			
-			if (! err) {
-				window.previous = {};
-			}
-      localStorage.setItem('mine111', f_text);
-    };
+    }
+    
+      //     var _on_code_change = function(ev, w) {
+      //       var f_text = editor.getSession().getValue();
+      // var err = false;
+      //       try {
+      //   mine = new Function('ev', 'n', 'with(v.inputs) { ' + f_text + ' } ');
+      //       } catch (e) {
+      //   err = e;
+      //       }
+      // if (! err) {
+      //   window.previous = {};
+      // }
+      //       localStorage.setItem('mine111', f_text);
+      //     };
   
     window.onload = function() {
-      var saved_f = localStorage.getItem('mine111') || 'return 1';
-      editor = ace.edit("editor");
-      editor.setTheme("ace/theme/twilight");
+      
+
+      
       var JavaScriptMode = require("ace/mode/javascript").Mode;
-      var session = editor.getSession();
-      session.setValue( saved_f );
-      on_code_change(); // initial setup
-      session.setMode( new JavaScriptMode() );
-      session.on('change', on_code_change);
+      
+      _(editors).each(function(editor, key) {
+        editor.id = save_prefix + key;
+        
+        var saved_f = localStorage.getItem(editor.id) || 'return 1';
+        editor.ace = ace.edit( key + "_editor" );
+        editor.ace.setTheme( "ace/theme/twilight" );
+        var session = editor.ace.getSession();
+        session.setValue( saved_f );
+        
+        var on_code_change = code_change_for( key );
+        on_code_change();
+        
+        session.setMode( new JavaScriptMode() );
+        
+        session.on('change', on_code_change);
+      });
+
     };
   }
   
@@ -331,16 +371,44 @@
 	
 	window.previous = {};
 	
+  function append_png() {
+    var context = canvas.getContext("2d");
+    var img     = canvas.toDataURL("image/png");
+
+    // meh.inner
+		
+    // var svgContext = new SVGCanvas(this.canvas.width, this.canvas.height);
+    // var oldCtx = this._context;
+    // this._context = svgContext;  
+    // this.draw(false);  
+    // this._context = oldCtx;
+
+
+    meh.innerHTML = '<img src="'+img+'">';
+  }
+	
+	
   var breton_and_on = function() {
 		paper.install(window);
-    var canvas = document.getElementById('canvas');
+
     paper.setup(canvas); // Create an empty project and a view for the canvas
 
+	  // https://github.com/paperjs/paper.js/issues/48
+	  // SVGCanvas.prototype.transform = SVGCanvas.prototype.translate;
+	  // SVGCanvas.prototype.fillText = SVGCanvas.prototype.text;
+	  // 
+    // paper.View.prototype.toSVG = function() {
+    //   var svgContext = new SVGCanvas(this.canvas.width, this.canvas.height);
+    //        var oldCtx = this._context;
+    //   this._context = svgContext;  
+    //   this.draw(false);  
+    //   this._context = oldCtx;
+    //   var serializer = new XMLSerializer(); // Optional serialization of the SVG DOM nodes
+    //   return serializer.serializeToString(svgContext.svg.htmlElement);
+    // };
+
 		window.context = canvas.getContext("2d");
-		var my_text = [
-			'Breton&', 'Breton&', "Breton&", "Breton&", "Breton&", "Breton."
-			// "Breton&", "Breton&", "Breton"
-		];
+		
 		context.globalCompositeOperation = "xor";
 		var blank = true;
 		
@@ -392,9 +460,11 @@
       
       for (var i = 0; i < v.points; i++) {
 				v.inputs.n = i;
-        var pos = mine.call(v, event, i); // call with this set to p
-        v.path.segments[i].point.y = pos.y;
-        v.path.segments[i].point.x = pos.x;
+        var pos = editors.paperjs.f.call(v, event, i); // call with this set to p
+        if (pos) {
+          v.path.segments[i].point.y = pos.y;
+          v.path.segments[i].point.x = pos.x;
+        }
       }
 
       if (v.smooth) { v.path.smooth(); }
@@ -405,10 +475,7 @@
 
 		function postCanvas() {
 			if (blank) {
-				context.font = "Bold " + int(v.inputs.fontsize) + "px Helvetica";
-				$(my_text).each(function(n, text) {
-					context.fillText( text, v.inputs.D, v.inputs.C + (n + 1) * int( v.inputs.wtf ) );
-				});
+        editors.canvas.f.call(v);
 			}
 			blank = false;
 		}
