@@ -13,6 +13,12 @@
       padding: 0;
       margin: 0;
     }
+    
+    #control {
+      position: relative;
+      z-index: 1000;
+      width: 300px;
+    }
 
     button#pause {
       position: absolute;
@@ -30,25 +36,67 @@
       bottom: 0;
     }
     
+    
     canvas#canvas {
 			margin: 8px;
       position: relative;
       z-index: 1;
-	  	background: #eee;
+/*      background: #eee;*/
       border: 0;
+      zoom: 1;
+    }
+    
+    body.z1 canvas#canvas {
+      zoom: 0.4;
+      margin-left: 311px;
+      margin-top: 256px;
+    }
+    
+    #t {
+      display: none;
+    }
+
+    body.z1 #t {
+      display: block;
+      position: absolute;
+      top: 7px;
+      left: -17px;
+      width: 535px;
+    }
+
+    body.z3 canvas#canvas {
+      zoom: 0.14;
+    }
+    
+    .tabs {
+      position: relative;
+      z-index: 1000;
+      top: -2px;
+      margin: 0px 0 0 50px;
+    }
+    .tabs a {
+      text-decoration: none;
+      padding: 4px 4px 2px 4px;
+      border: 1px solid #999;
+      border-bottom: 0;
+      color: #666;
+    }
+    
+    .tabs a.active {
+      background: #000;
+      color: #ddd;
     }
     
     #editor {
       position: absolute;
-      width: 500px;
-/*      height: 400px;*/
+      width: 540px;
 			left: 640px;
-      top: 0;
+      top: 18px;
     }
 		
 		#paperjs_editor, #canvas_editor {
-		  width: 500px;
-			height: 200px;
+		  width: 540px;
+			height: 400px;
       position: relative !important;
 		}
     
@@ -140,10 +188,9 @@
   <script type="text/javascript" src="js/lib/backbone.js"></script>
   <script type="text/javascript" src="js/lib/json2.js"></script>
   <script type="text/javascript" src="js/lib/dataviz/jquery.sparkline.js"></script>
+  <script type="text/javascript" src="js/utils.js"></script>
 
   <script type="text/javascript" src="js/snorkle.js"></script>
-
-
 
   <!-- // <script type="text/javascript" src="js/lib/canvas/SVGKit.js"></script> 
   // <script type="text/javascript" src="js/lib/canvas/SVGCanvas.js"></script> -->
@@ -154,6 +201,14 @@
   <span id="fps"></span>
   <button id="pause">||</button>
     
+  <div id="control">
+    <button id="z1">T</button>
+    <button id="z2">Edit</button>
+    <button id="z3">Print</button>
+  </div>
+    
+    
+  <img id="t" src="images/full-white-t.png">
   <canvas id="canvas" keepalive="true" width='620' height='870'></canvas>
   <!-- <canvas id="canvas" keepalive="true" width='1240' height='1740'></canvas> -->
   <div id="meh"></div>
@@ -164,9 +219,8 @@
 		<a href="#canvas_editor">canvas</a>
 	</div>
 	
-	<div id="paperjs_editor"></div>
-  
-	<div id="canvas_editor"></div>
+	<div class="editor" id="paperjs_editor"></div>
+	<div class="editor" id="canvas_editor"></div>
 </div>
   
 	<script type="text/javascript" src="http://localhost:8339/socket.io/socket.io.js"></script>
@@ -176,44 +230,9 @@
   <script src="js/lib/ace/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
 
   <script type='text/javascript'>
-  window.focused = true; // really?
-  window.onblur  = function() { focused = false; };
-  window.onfocus = function() { focused = true; };
-
-	function changed () {
-		window.previous = {};
-	}
-
-
-  var J = new Snorkle({}, { change: _.throttle(changed, 100) });
-  var canvas = document.getElementById('canvas');
-
-
-
-
-  // J.addInputArray( 'mouse', { initial: 0.1 } );
-  // var acc_options = { min: -10, max: 10,  initial: 0 };
-  // J.addInput( 'accX', acc_options );
-  // J.addInput( 'accY', acc_options );
-  // J.addInput( 'accZ', acc_options );
-  // J.addInput( 'compass', { min: 0, max: 360, initial: 180 } );
   
-	// TODO set these up dynamically on a per design-basis
-  J.addOutput( 'scale' );
-  J.addOutput( 'gap' );
-	J.addOutput( 'fontsize');
-	J.addOutput( 'wtf' );
-	J.addOutput( 'rand' );
-  J.addOutput( 'wave' );
-	// J.addOutput( 'A' );
-  // J.addOutput( 'B' );
-  J.addOutput( 'C' );
-  J.addOutput( 'D' );
-  J.addOutput( 'E' );
-	J.addOutput( 'F' );
-	
-  var acc = {};
-  
+  // var acc = {};
+  //   
   // if (window.DeviceMotionEvent != undefined) {
   // 	  window.ondevicemotion = function(event) {
   //     acc.x = event.accelerationIncludingGravity.x;
@@ -236,7 +255,57 @@
   // $(window).bind( 'mousemove', function(e) {
   //   J.get('mouse').value([ e.clientX, e.clientY ]);
   // });
-	
+  
+  // J.addInputArray( 'mouse', { initial: 0.1 } );
+  // var acc_options = { min: -10, max: 10,  initial: 0 };
+  // J.addInput( 'accX', acc_options );
+  // J.addInput( 'accY', acc_options );
+  // J.addInput( 'accZ', acc_options );
+  // J.addInput( 'compass', { min: 0, max: 360, initial: 180 } );
+  
+  
+  window.focused = true; // really?
+  window.onblur  = function() { focused = false; };
+  window.onfocus = function() { focused = true; };
+
+	function changed () {
+		window.previous = {};
+	}
+
+  var J = new Snorkle({}, { change: _.throttle(changed, 100) });
+
+  var canvas = document.getElementById('canvas');
+	window.context = canvas.getContext('2d');
+
+  canvas.resize = function(new_size) {
+    var default_size = { x: 620, y: 870 },
+        ratio = default_size.y / default_size.x;
+    
+    if (new_size.x) {
+      new_size.y = new_size.x * ratio;
+    } else if (new_size.y) {
+      new_size.x = new_size.y / ratio;
+    } else {
+      new_size = default_size;
+    }
+    canvas.sizeRatio = new_size.x / default_size.x;
+    canvas.width = new_size.x;
+    canvas.height = new_size.y;
+		
+
+    changed();
+  }
+
+  canvas.resize({}); // setup
+
+
+	// TODO set these up dynamically on a per design-basis
+  J.addOutput( 'scale' );     J.addOutput( 'gap' );
+	J.addOutput( 'fontsize');   J.addOutput( 'wtf' );
+	J.addOutput( 'rand' );      J.addOutput( 'wave' );
+  J.addOutput( 'C' );         J.addOutput( 'D' );
+  J.addOutput( 'E' );       	J.addOutput( 'F' );
+
 	
 	if (typeof io != "undefined") {
 	  var socket = io.connect('http://localhost:8339');
@@ -254,52 +323,17 @@
 			}
       
 	    J.pumpInput( face );
-	    // socket.emit('my other event', { my: 'data' });
 	  });
 	}
-	
-	
-
-  // called if we're in simple mode
-  var default_f = function(ev, n) {
-		with(v.inputs) {
-			v.path.fillColor = '#000';
-
-			var fours = n % 4, // = 0..3
-			    even  = n % 8 > 3,
-			    bar_y = Math.floor( n / 4 ) * scale,
-			    xp    = [    -1,  v.width + 1,  v.width + 1,       -1 ],
-			    yp    = [ bar_y,        bar_y,        bar_y,    bar_y ];
-
-			var b = mod(n  , 2) % 4, r = mod(n+1, 2) % 4,
-			    t = mod(n+2, 2) % 4, l = mod(n+3, 2) % 4;
-    
-			var huh = l * ((333 * mod(n, 4)) % 19 % E) * F +
-			          r * ((333 * mod(n, 4)) % 19 % E) * F
-			          + ((333*n) % 19 % E) * rand;
-
-			yp[0] +=  gap + huh; 
-			yp[1] +=  gap + huh;
-			yp[2] += -gap + huh;
-			yp[3] += -gap + huh;
-
-			return {  x: xp[fours],  y: yp[fours] + scale/2  };
-
-		}
-  }
   
   var simple_mode = false,
-      // mine = default_f, // generalise
 			save_prefix = 'design_id-', // change for each design
-      editor,
 			editors = {
         'canvas':  { f: function() {} },
         'paperjs': { f: function() {} }
       };
 
   if (! simple_mode) {
-    
-    // require("ace/renderloop").RenderLoop.prototype.setTimeoutZero = function(c){setTimeout(c)}
     
     function code_change_for(key) {
       return function(ev) {
@@ -311,30 +345,13 @@
   				err = e;
         }
   			if (! err) {
-  				window.previous = {}; // update hack
+          changed();
   			}
         localStorage.setItem(editors[key].id, f_text);
       }
     }
-    
-      //     var _on_code_change = function(ev, w) {
-      //       var f_text = editor.getSession().getValue();
-      // var err = false;
-      //       try {
-      //   mine = new Function('ev', 'n', 'with(v.inputs) { ' + f_text + ' } ');
-      //       } catch (e) {
-      //   err = e;
-      //       }
-      // if (! err) {
-      //   window.previous = {};
-      // }
-      //       localStorage.setItem('mine111', f_text);
-      //     };
   
     window.onload = function() {
-      
-
-      
       var JavaScriptMode = require("ace/mode/javascript").Mode;
       
       _(editors).each(function(editor, key) {
@@ -353,7 +370,14 @@
         
         session.on('change', on_code_change);
       });
-
+      
+      $('.tabs a').click(function() {
+        var id = $(this).attr('href').substr(1)
+        $('.tabs a').removeClass('active'); $(this).addClass('active');
+        $('.editor').hide();
+        $('.editor#'+ id).show();
+        return false;
+      });
     };
   }
   
@@ -365,7 +389,16 @@
   
   $('#pause').bind('touchstart', toggle_pause);
   $('#pause').bind('mousedown', toggle_pause);
-  // $('body').bind('mousedown', toggle_pause);
+  
+  $('#control button').bind('click', function() {
+    $('body')[0].className = this.id;
+
+    if (this.id == "z2" || this.id == 'z1') {
+       // canvas.resize({ y: 600 });
+    } else if (this.id == 'z3') {
+       canvas.resize({ x: 4200 });
+    }
+  });
   
   var $fps = $('#fps');
 	
@@ -374,19 +407,17 @@
   function append_png() {
     var context = canvas.getContext("2d");
     var img     = canvas.toDataURL("image/png");
-
-    // meh.inner
 		
     // var svgContext = new SVGCanvas(this.canvas.width, this.canvas.height);
     // var oldCtx = this._context;
-    // this._context = svgContext;  
-    // this.draw(false);  
+    // this._context = svgContext;
+    // this.draw(false);
     // this._context = oldCtx;
-
 
     meh.innerHTML = '<img src="'+img+'">';
   }
 	
+
 	
   var breton_and_on = function() {
 		paper.install(window);
@@ -406,14 +437,10 @@
     //   var serializer = new XMLSerializer(); // Optional serialization of the SVG DOM nodes
     //   return serializer.serializeToString(svgContext.svg.htmlElement);
     // };
-
-		window.context = canvas.getContext("2d");
 		
-		context.globalCompositeOperation = "xor";
 		var blank = true;
 		
     // draw text
-    context.fillStyle="#000";
 	
     v = {
 			inputs: J.reals,
@@ -441,46 +468,78 @@
     }
 
     v.initializePath(v.points);
-		
-    var onFrame = function(event) { // replace with your own
+
+    var ev = { // TODO: sort this lot out
+      count:     0,    // event.count: the number of times the frame event was fired
+      time:     .1,   // event.time: the total amount of time passed since the first frame event in secs
+      delta:    .1,   // event.delta: the time passed in seconds since the last frame event
+      started:  12312 // Date.now() of first call
+    };
+
+    var frameRendering = [];
+    
+    function onFrame(event) { // replace with your own
+      // if (frameRendering) return;
+      
+      if (v.pause || ! focused) {
+        frameRendering.pop();
+        return false;
+      }
+
+      // frameRendering = true;
       J.updateReals();
 			
       var no_op = _.isEqual( previous, v.inputs ); // && function has not changed
-
-      if (no_op) return;
-
+      if (no_op) {
+        // frameRendering = false;
+        frameRendering.pop();
+        return false;
+      }
+      
 			previous = _.clone( v.inputs );
 
-      if (v.pause || ! focused) return;
       $fps.text( shorten(1 / event.delta) );
       
-      // v.pathHeight += (view.center.y - v.mousePos.y - v.pathHeight) / 10;
-
       J.recalculate();
       
       for (var i = 0; i < v.points; i++) {
 				v.inputs.n = i;
         var pos = editors.paperjs.f.call(v, event, i); // call with this set to p
         if (pos) {
-          v.path.segments[i].point.y = pos.y;
-          v.path.segments[i].point.x = pos.x;
+          v.path.segments[i].point.y = pos.y * canvas.sizeRatio;
+          v.path.segments[i].point.x = pos.x * canvas.sizeRatio;
         }
       }
 
       if (v.smooth) { v.path.smooth(); }
+      
+      
       blank = true; // add postCanvas
+      // frameRendering = false;
+      return true;
     }
 		
-    view.onFrame = onFrame;
+    // view.onFrame = onFrame;
+    (function animloop(){
+      requestAnimFrame(animloop);
+      var redraw = onFrame(ev);
+      ev.count++;
+      if (redraw) paper.view.draw();
+    })();
+
+
 
 		function postCanvas() {
 			if (blank) {
+        context.fillStyle="#000";
+        context.globalCompositeOperation = "xor";
+        
         editors.canvas.f.call(v);
 			}
 			blank = false;
 		}
 	
-		setInterval(postCanvas, 10);
+		setInterval(postCanvas, 100);
 
 	};
 	
