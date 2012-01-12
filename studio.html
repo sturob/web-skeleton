@@ -265,7 +265,6 @@
 	
   var breton_and_on = function() {
 		paper.install(window);
-
     paper.setup(canvas); // Create an empty project and a view for the canvas
 
 	  // https://github.com/paperjs/paper.js/issues/48
@@ -314,29 +313,32 @@
     v.initializePath(v.points);
 
     var ev = { // TODO: sort this lot out
-      count:     0,    // event.count: the number of times the frame event was fired
-      time:     .1,   // event.time: the total amount of time passed since the first frame event in secs
-      delta:    .1,   // event.delta: the time passed in seconds since the last frame event
-      started:  12312 // Date.now() of first call
+      count:  0,  /// event.count: the number of times the frame event was fired
+      time:   0,  // event.time: the total amount of time passed since the first frame event in secs
+      delta:  0,  // event.delta: the time passed in seconds since the last frame event
+      first:  0,  /// Date.now() of first call
+      last:   0   /// Date.now of the previous call
     };
-
-    var frameRendering = [];
     
     function onFrame(event) { // replace with your own
-      // if (frameRendering) return;
+
+      if (! event.first) {
+        event.first = Date.now() / 1000;
+      }
+      event.count++;
+      event.delta = Date.now() / 1000 - event.last;
+      event.last  = Date.now() / 1000;
+      event.time  = Date.now() / 1000- event.first;
       
       if (v.pause || ! focused) {
-        frameRendering.pop();
+        $fps.text( 0 );
         return false;
       }
 
-      // frameRendering = true;
       J.updateReals();
 			
       var no_op = _.isEqual( previous, v.inputs ); // && function has not changed
       if (no_op) {
-        // frameRendering = false;
-        frameRendering.pop();
         return false;
       }
       

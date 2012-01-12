@@ -24,7 +24,7 @@ body {
 
 button#pause {
   position: absolute;
-  left: @left_edge + 16px;
+  left: @left_edge;
   top: 5px;
   z-index: 2;
   font-size: 16px;
@@ -33,8 +33,10 @@ button#pause {
 #fps {
   font-size: 12px;
   position: absolute;
+  text-align: right;
   z-index: 4;
-  left: @left_edge;
+  width: 40px;
+  left: @left_edge - 60px;
   top: 6px;
 }
     
@@ -128,7 +130,7 @@ div#results .value {
 	text-align: right;
 	display: inline-block;
 }
-		
+
 ul#vars { 
   z-index: 3;
 /*      float: right;*/
@@ -137,8 +139,8 @@ ul#vars {
 	font-family: Helvetica;
 	top: 420px;
   background-color: white;
-  width: 480px;
-/*      margin: 4px 12px;*/
+  right: 0;
+/*   margin: 4px 12px;*/
   list-style: none;
   font-size: 18px;
   font-weight: bold;
