@@ -198,6 +198,7 @@
         
         var saved_f = localStorage.getItem(editor.id) || 'return 1';
         editor.ace = ace.edit( key + "_editor" );
+        editor.ace.setShowPrintMargin(false);
         editor.ace.setTheme( "ace/theme/twilight" );
         var session = editor.ace.getSession();
         session.setValue( saved_f );

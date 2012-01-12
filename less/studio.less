@@ -78,34 +78,46 @@ body.z3 canvas#canvas {
   position: relative;
   z-index: 1000;
   top: -4px;
+  left: -1px;
   margin: 0px 0 0 50px;
 }
 .tabs a {
+  font-size: 12px;
   text-decoration: none;
   background: #333;
-  padding: 4px 4px 2px 4px;
+  padding: 4px 8px 4px 8px;
   border: 1px solid #999;
+  .rounded_corners(4px,4px,0, 0);
   border-bottom: 0;
   color: #666;
 }
     
 .tabs a.active {
-  background: #000;
+  background: #111;
   color: #ddd;
 }
     
 #editor {
   position: absolute;
-  width: 540px;
+/*  width: 540px;*/
 	left: 640px;
   top: 13px;
+  right: 0;
 }
 		
 #paperjs_editor, #canvas_editor {
-  width: 540px;
-  line-height: 1.4em;
+/*  width: 540px;*/
+  line-height: 1.5em;
+  font-size: 11px;
 	height: 400px;
   position: relative !important;
+  
+  .ace_gutter-cell {
+    color: #bbb;
+  }
+  .ace_gutter {
+    background: none;
+  }
 }
     
     
