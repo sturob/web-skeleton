@@ -1,187 +1,19 @@
 <html>
 
 <head>
-  <title>foo</title>
+  <title>studio</title>
 
-  <style>
-    body {
-      background: #eee;
-/*      width: 1400px;*/
-    }
-    
-    * {
-      padding: 0;
-      margin: 0;
-    }
-    
-    #control {
-      position: relative;
-      z-index: 1000;
-      width: 300px;
-    }
+  <link id="studio_styles" rel="stylesheet" href="css/studio.css" type="text/css">
 
-    button#pause {
-      position: absolute;
-      left: 640px;
-      top: 20px;
-      z-index: 2;
-      font-size: 16px;
-    }
-    
-    #fps {
-      font-size: 9px;
-      position: absolute;
-      z-index: 4;
-      left: 0;
-      bottom: 0;
-    }
-    
-    
-    canvas#canvas {
-			margin: 8px;
-      position: relative;
-      z-index: 1;
-/*      background: #eee;*/
-      border: 0;
-      zoom: 1;
-    }
-    
-    body.z1 canvas#canvas {
-      zoom: 0.4;
-      margin-left: 311px;
-      margin-top: 256px;
-    }
-    
-    #t {
-      display: none;
-    }
-
-    body.z1 #t {
-      display: block;
-      position: absolute;
-      top: 7px;
-      left: -17px;
-      width: 535px;
-    }
-
-    body.z3 canvas#canvas {
-      zoom: 0.14;
-    }
-    
-    .tabs {
-      position: relative;
-      z-index: 1000;
-      top: -2px;
-      margin: 0px 0 0 50px;
-    }
-    .tabs a {
-      text-decoration: none;
-      padding: 4px 4px 2px 4px;
-      border: 1px solid #999;
-      border-bottom: 0;
-      color: #666;
-    }
-    
-    .tabs a.active {
-      background: #000;
-      color: #ddd;
-    }
-    
-    #editor {
-      position: absolute;
-      width: 540px;
-			left: 640px;
-      top: 18px;
-    }
-		
-		#paperjs_editor, #canvas_editor {
-		  width: 540px;
-			height: 400px;
-      position: relative !important;
-		}
-    
-    
-    /* snorkle.css */
-		div#results .raw { display: none; }
-		div#results .value {
-			width: 100px;
-			text-align: right;
-			display: inline-block;
-		}
-		
-    ul#vars { 
-      z-index: 3;
-/*      float: right;*/
-			position: absolute;
-			left: 690px;
-			font-family: Helvetica;
-			top: 420px;
-      background-color: white;
-      width: 480px;
-/*      margin: 4px 12px;*/
-      list-style: none;
-      font-size: 18px;
-      font-weight: bold;
-      color: #aaa;
-    }
-    ul#vars h1 {
-      font-size: 12px;
-      background-color: #333;
-      padding: 2px 0 2px 8px;
-      color: white;
-    }
-    ul#vars .viz {
-      display: inline-block;
-      width: 120px;
-			vertical-align: top;
-      margin-left: 70px;
-
-    }
-    ul#vars .viz canvas {
-			position: absolute;
-			right: 4px;
-		}
-    ul#vars .raw {
-      color: #ddd;
-    }
-    ul#vars input {
-      font-family: Monaco;
-      position: absolute;
-      left: 4px;
-      right: 4px;
-      font-size: 10px;
-      bottom: 2px;
-			border: 0;
-/*			border-bottom: 1px solid #aaa;*/
-			background: #fff;
-			color: #222;
-			padding: 2px 4px;
-		}
-    ul#vars h2 {
-      position: absolute;
-      left: 6px;
-      top: 6px;
-      font-size: 16px;
-    }
-    ul#vars li {
-      background-color: white;
-      border-bottom: 2px solid #eee;
-      position: relative;
-      margin: 0 0 0px 0;
-    }
-    ul#vars li.result {
-      padding-bottom: 24px;
-    }
-    ul#vars span {
-			font-size: 14px;
-			font-weight: normal;
-/*      font-family: "Courier New";*/
-    }
-  </style>
+  <script type="text/javascript">
+    studio_styles.rel = 'stylesheet/less';
+    studio_styles.href = 'less/studio.less';
+  </script>
 
 	<!-- before jquery - needed to write to SVG -->
   <!-- // <script type="text/javascript" src="js/lib/meh/MochiKit/MochiKit.js"></script>   -->
-    
+  
+  <script type="text/javascript" src="js/lib/less.js"></script>  
   <script type="text/javascript" src="js/lib/canvas/paper.js"></script>
   <script type="text/javascript" src="js/lib/jquery-1.7.min.js"></script>
   <script type="text/javascript" src="js/lib/underscore.js"></script>
@@ -189,6 +21,8 @@
   <script type="text/javascript" src="js/lib/json2.js"></script>
   <script type="text/javascript" src="js/lib/dataviz/jquery.sparkline.js"></script>
   <script type="text/javascript" src="js/utils.js"></script>
+
+  <script type="text/javascript" src="js/dev.js"></script>
 
   <script type="text/javascript" src="js/snorkle.js"></script>
 
@@ -198,36 +32,41 @@
 </head>
 
 <body>
-  <span id="fps"></span>
-  <button id="pause">||</button>
-    
+
   <div id="control">
+    zoom:
     <button id="z1">T</button>
     <button id="z2">Edit</button>
     <button id="z3">Print</button>
+    
+    design:
+    <select>
+      <option id="breton">breton</option>
+      <option id="lines">lines</option>
+    </select>
+    <button id="pause">||</button>
+    <span id="fps"></span>
   </div>
-    
-    
+        
   <img id="t" src="images/full-white-t.png">
   <canvas id="canvas" keepalive="true" width='620' height='870'></canvas>
-  <!-- <canvas id="canvas" keepalive="true" width='1240' height='1740'></canvas> -->
+  
   <div id="meh"></div>
   
-<div id="editor">
-	<div class="tabs">
-		<a href="#paperjs_editor">paper.js</a>
-		<a href="#canvas_editor">canvas</a>
-	</div>
-	
-	<div class="editor" id="paperjs_editor"></div>
-	<div class="editor" id="canvas_editor"></div>
-</div>
+  <div id="editor">
+  	<div class="tabs">
+      <a href="#paperjs_editor">paper.js</a> <a href="#canvas_editor">canvas</a>
+  	</div>
+  	<div class="editor" id="paperjs_editor"></div>
+  	<div class="editor" id="canvas_editor"></div>
+  </div>
   
 	<script type="text/javascript" src="http://localhost:8339/socket.io/socket.io.js"></script>
   
   <script src="js/lib/ace/ace-uncompressed-fix.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/lib/ace/theme-twilight.js" type="text/javascript" charset="utf-8"></script>  
   <script src="js/lib/ace/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
+
 
   <script type='text/javascript'>
   
@@ -512,14 +351,11 @@
       }
 
       if (v.smooth) { v.path.smooth(); }
-      
-      
+            
       blank = true; // add postCanvas
-      // frameRendering = false;
       return true;
     }
 		
-    // view.onFrame = onFrame;
     (function animloop(){
       requestAnimFrame(animloop);
       var redraw = onFrame(ev);
@@ -533,14 +369,12 @@
 			if (blank) {
         context.fillStyle="#000";
         context.globalCompositeOperation = "xor";
-        
         editors.canvas.f.call(v);
 			}
 			blank = false;
 		}
-	
-		setInterval(postCanvas, 100);
 
+		setInterval(postCanvas, 100);
 	};
 	
 	$(breton_and_on);

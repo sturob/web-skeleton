@@ -22,6 +22,7 @@
   background: -moz-linear-gradient(-90deg, @start, @end);
 }
 
+
 .grad_radial(@start:"", @end: "", @spread: 6, @center: 50%) {
   background: -webkit-gradient(radial, @center @center, 0, @center @center, @spread, from(@start), to(@end));
   background: -moz-radial-gradient(@center @center, farthest-side, @start, @end); /* For Mozilla/Gecko (Firefox etc) */
@@ -37,7 +38,7 @@
   -moz-box-shadow: @x @y @blur @color inset;
 }
 
-.rotation(@deg:5deg){ 
+.rotation(@deg: 5deg){ 
   -o-transform: rotate(@deg);
   -webkit-transform: rotate(@deg);
   -moz-transform: rotate(@deg);
