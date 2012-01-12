@@ -201,6 +201,8 @@
         editor.ace.setTheme( "ace/theme/twilight" );
         var session = editor.ace.getSession();
         session.setValue( saved_f );
+        session.setTabSize(2);
+        session.setUseSoftTabs(true);
         
         var on_code_change = code_change_for( key );
         on_code_change();
@@ -209,7 +211,7 @@
         
         session.on('change', on_code_change);
       });
-      
+            
       $('.tabs a').click(function() {
         var id = $(this).attr('href').substr(1)
         $('.tabs a').removeClass('active'); $(this).addClass('active');
@@ -217,6 +219,8 @@
         $('.editor#'+ id).show();
         return false;
       });
+
+      $('.tabs a:first-child').click(); // TODO remember
     };
   }
   
