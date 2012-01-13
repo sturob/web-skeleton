@@ -104,6 +104,7 @@
   
   
   window.focused = true; // really?
+  window.paused = false;
   window.onblur  = function() { focused = false; };
   window.onfocus = function() { focused = true; };
 
@@ -130,13 +131,11 @@
     canvas.sizeRatio = new_size.x / default_size.x;
     canvas.width = new_size.x;
     canvas.height = new_size.y;
-		
 
     changed();
   }
 
   canvas.resize({}); // setup
-
 
 	// TODO set these up dynamically on a per design-basis
   J.addOutput( 'scale' );     J.addOutput( 'gap' );
@@ -160,75 +159,71 @@
 			} else {
 				face[id.replace(/\//g, '_')] = t;
 			}
-      
 	    J.pumpInput( face );
 	  });
 	}
   
-  var simple_mode = false,
-			save_prefix = 'design_id-', // change for each design
+  var save_prefix = 'design_id-', // change for each design
 			editors = {
         'canvas':  { f: function() {} },
         'paperjs': { f: function() {} }
       };
 
-  if (! simple_mode) {
-    
-    function code_change_for(key) {
-      return function(ev) {
-        var f_text = editors[key].ace.getSession().getValue();
-  			var err = false;
-        try {
-  				editors[key].f = new Function('ev', 'n', 'with(v.inputs) { ' + f_text + ' } ');
-        } catch (e) {
-  				err = e;
-        }
-  			if (! err) {
-          changed();
-  			}
-        localStorage.setItem(editors[key].id, f_text);
-      }
-    }
-  
-    window.onload = function() {
-      var JavaScriptMode = require("ace/mode/javascript").Mode;
-      
-      _(editors).each(function(editor, key) {
-        editor.id = save_prefix + key;
-        
-        var saved_f = localStorage.getItem(editor.id) || 'return 1';
-        editor.ace = ace.edit( key + "_editor" );
-        editor.ace.setShowPrintMargin(false);
-        editor.ace.setTheme( "ace/theme/twilight" );
-        var session = editor.ace.getSession();
-        session.setValue( saved_f );
-        session.setTabSize(2);
-        session.setUseSoftTabs(true);
-        
-        var on_code_change = code_change_for( key );
-        on_code_change();
-        
-        session.setMode( new JavaScriptMode() );
-        
-        session.on('change', on_code_change);
-      });
-            
-      $('.tabs a').click(function() {
-        var id = $(this).attr('href').substr(1)
-        $('.tabs a').removeClass('active'); $(this).addClass('active');
-        $('.editor').hide();
-        $('.editor#'+ id).show();
-        return false;
-      });
 
-      $('.tabs a:first-child').click(); // TODO remember
-    };
+  function code_change_for(key) {
+    return function(ev) {
+      var f_text = editors[key].ace.getSession().getValue();
+			var err = false;
+      try {
+				editors[key].f = new Function('ev', 'n', 'with(v.inputs) { ' + f_text + ' } ');
+      } catch (e) {
+				err = e;
+      }
+			if (! err) {
+        changed();
+			}
+      localStorage.setItem(editors[key].id, f_text);
+    }
   }
+  
+  $(function() {
+    var JavaScriptMode = require("ace/mode/javascript").Mode;
+      
+    _(editors).each(function(editor, key) {
+      editor.id = save_prefix + key;
+        
+      var saved_f = localStorage.getItem(editor.id) || 'return 1';
+      editor.ace = ace.edit( key + "_editor" );
+      editor.ace.setShowPrintMargin(false);
+      editor.ace.setTheme( "ace/theme/twilight" );
+      var session = editor.ace.getSession();
+      session.setValue( saved_f );
+      session.setTabSize(2);
+      session.setUseSoftTabs(true);
+        
+      var on_code_change = code_change_for( key );
+      on_code_change();
+        
+      session.setMode( new JavaScriptMode() );
+        
+      session.on('change', on_code_change);
+    });
+            
+    $('.tabs a').click(function() {
+      var id = $(this).attr('href').substr(1)
+      $('.tabs a').removeClass('active'); $(this).addClass('active');
+      $('.editor').hide();
+      $('.editor#'+ id).show();
+      return false;
+    });
+
+    $('.tabs a:first-child').click(); // TODO remember
+  });
   
   
   function toggle_pause () {
-    v.pause = ! v.pause;
-    $('#pause').text( v.pause ? '>' : '||' );
+    paused = ! paused;
+    $('#pause').text( paused ? '>' : '||' );
   }
   
   $('#pause').bind('touchstart', toggle_pause);
@@ -246,51 +241,76 @@
   
   var $fps = $('#fps');
 	
+  paper.install(window);
+  paper.setup(canvas); // Create an empty project and a view for the canvas
+  
+  window.onFrame = function() {}; // gonna be overridden
+  
+  var ev = {
+    count:  0,  // number of times the frame event was fired
+    time:   0,  // total amount of time passed since the first frame event in secs
+    delta:  0,  // time passed in seconds since the last frame event
+    first:  0,  // Date.now()/1000 of first call
+    last:   0   // Date.now()/1000 of the previous call
+  };
+  var up_fps = _.throttle( function() { $fps.text( shorten(1 / ev.delta) ) }, 1000);
+  
+  (function animloop(){
+    requestAnimFrame(animloop);
+
+    if (paused || ! focused) {
+      $fps.text( 0 );
+      return false;
+    }
+    
+    up_fps();
+
+    if (! ev.first) {
+      ev.first = Date.now() / 1000;
+    }
+    ev.count++;
+    ev.delta = Date.now() / 1000 - ev.last;
+    ev.last  = Date.now() / 1000;
+    ev.time  = Date.now() / 1000- ev.first;
+    
+    var redraw = window.onFrame(ev);
+    if (redraw) paper.view.draw();
+  })();
+  
+	
 	window.previous = {};
 	
   function append_png() {
     var context = canvas.getContext("2d");
     var img     = canvas.toDataURL("image/png");
-		
-    // var svgContext = new SVGCanvas(this.canvas.width, this.canvas.height);
-    // var oldCtx = this._context;
-    // this._context = svgContext;
-    // this.draw(false);
-    // this._context = oldCtx;
-
     meh.innerHTML = '<img src="'+img+'">';
   }
 	
+  
+  
+  
+  // note:
+  //  - canvas + paper.js set up at app level
+  //  - designs/whatever.js needs to be loadable by tshirt.html also
+  
+  var Design = {
+    id: "",
+    setup: function() {}, // init and first render?
+    
+    
+  };
+
+  // below here - only design specific code
 
 	
   var breton_and_on = function() {
-		paper.install(window);
-    paper.setup(canvas); // Create an empty project and a view for the canvas
-
-	  // https://github.com/paperjs/paper.js/issues/48
-	  // SVGCanvas.prototype.transform = SVGCanvas.prototype.translate;
-	  // SVGCanvas.prototype.fillText = SVGCanvas.prototype.text;
-	  // 
-    // paper.View.prototype.toSVG = function() {
-    //   var svgContext = new SVGCanvas(this.canvas.width, this.canvas.height);
-    //        var oldCtx = this._context;
-    //   this._context = svgContext;  
-    //   this.draw(false);  
-    //   this._context = oldCtx;
-    //   var serializer = new XMLSerializer(); // Optional serialization of the SVG DOM nodes
-    //   return serializer.serializeToString(svgContext.svg.htmlElement);
-    // };
-		
 		var blank = true;
 		
     // draw text
-	
     v = {
 			inputs: J.reals,
-      pause: false,
       points: 800,
-      smooth: false,
-      mousePos: view.center / 2
+      smooth: false
     };
 	
     v.path = new Path();
@@ -312,29 +332,7 @@
 
     v.initializePath(v.points);
 
-    var ev = { // TODO: sort this lot out
-      count:  0,  /// event.count: the number of times the frame event was fired
-      time:   0,  // event.time: the total amount of time passed since the first frame event in secs
-      delta:  0,  // event.delta: the time passed in seconds since the last frame event
-      first:  0,  /// Date.now() of first call
-      last:   0   /// Date.now of the previous call
-    };
-    
-    function onFrame(event) { // replace with your own
-
-      if (! event.first) {
-        event.first = Date.now() / 1000;
-      }
-      event.count++;
-      event.delta = Date.now() / 1000 - event.last;
-      event.last  = Date.now() / 1000;
-      event.time  = Date.now() / 1000- event.first;
-      
-      if (v.pause || ! focused) {
-        $fps.text( 0 );
-        return false;
-      }
-
+    window.onFrame = function(event) { // replace with your own
       J.updateReals();
 			
       var no_op = _.isEqual( previous, v.inputs ); // && function has not changed
@@ -343,8 +341,6 @@
       }
       
 			previous = _.clone( v.inputs );
-
-      $fps.text( shorten(1 / event.delta) );
       
       J.recalculate();
       
@@ -363,15 +359,6 @@
       return true;
     }
 		
-    (function animloop(){
-      requestAnimFrame(animloop);
-      var redraw = onFrame(ev);
-      ev.count++;
-      if (redraw) paper.view.draw();
-    })();
-
-
-
 		function postCanvas() {
 			if (blank) {
         context.fillStyle="#000";
