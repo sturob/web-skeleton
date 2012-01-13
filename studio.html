@@ -21,10 +21,16 @@
   <script type="text/javascript" src="js/lib/json2.js"></script>
   <script type="text/javascript" src="js/lib/dataviz/jquery.sparkline.js"></script>
   <script type="text/javascript" src="js/utils.js"></script>
-
   <script type="text/javascript" src="js/dev.js"></script>
 
   <script type="text/javascript" src="js/snorkle.js"></script>
+
+	<script type="text/javascript" src="http://localhost:8339/socket.io/socket.io.js"></script>
+  
+  <script src="js/lib/ace/ace-uncompressed-fix.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/lib/ace/theme-twilight.js" type="text/javascript" charset="utf-8"></script>  
+  <script src="js/lib/ace/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
+
 
   <!-- // <script type="text/javascript" src="js/lib/canvas/SVGKit.js"></script> 
   // <script type="text/javascript" src="js/lib/canvas/SVGCanvas.js"></script> -->
@@ -49,6 +55,7 @@
   </div>
         
   <img id="t" src="images/full-white-t.png">
+  
   <canvas id="canvas" keepalive="true" width='620' height='870'></canvas>
   
   <div id="meh"></div>
@@ -61,62 +68,29 @@
   	<div class="editor" id="canvas_editor"></div>
   </div>
   
-	<script type="text/javascript" src="http://localhost:8339/socket.io/socket.io.js"></script>
-  
-  <script src="js/lib/ace/ace-uncompressed-fix.js" type="text/javascript" charset="utf-8"></script>
-  <script src="js/lib/ace/theme-twilight.js" type="text/javascript" charset="utf-8"></script>  
-  <script src="js/lib/ace/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
-
 
   <script type='text/javascript'>
+ 
+  // bind UI
+  function toggle_pause () {
+    paused = ! paused;
+    $('#pause').text( paused ? '>' : '||' );
+  }
   
-  // var acc = {};
-  //   
-  // if (window.DeviceMotionEvent != undefined) {
-  // 	  window.ondevicemotion = function(event) {
-  //     acc.x = event.accelerationIncludingGravity.x;
-  //     acc.y = event.accelerationIncludingGravity.y;
-  //     acc.z = event.accelerationIncludingGravity.z;
-  //   }
-  //   
-  //   window.addEventListener('deviceorientation', function(e) {
-  //     acc.compass = e.webkitCompassHeading;
-  //   });
-    // setInterval( function() {  	
-    //   	  J.get('accX').value( acc.x );
-    //   	  J.get('accY').value( acc.y );		
-    //   J.get('accZ').value( acc.z );
-    //   
-    //   // J.get('compass').value( acc.compass );
-    // }, 100);
-  // }
+  $('#pause').bind('touchstart', toggle_pause);
+  $('#pause').bind('mousedown', toggle_pause);
   
-  // $(window).bind( 'mousemove', function(e) {
-  //   J.get('mouse').value([ e.clientX, e.clientY ]);
-  // });
-  
-  // J.addInputArray( 'mouse', { initial: 0.1 } );
-  // var acc_options = { min: -10, max: 10,  initial: 0 };
-  // J.addInput( 'accX', acc_options );
-  // J.addInput( 'accY', acc_options );
-  // J.addInput( 'accZ', acc_options );
-  // J.addInput( 'compass', { min: 0, max: 360, initial: 180 } );
-  
-  
-  window.focused = true; // really?
-  window.paused = false;
-  window.onblur  = function() { focused = false; };
-  window.onfocus = function() { focused = true; };
+  $('#control button').bind('click', function() {
+    $('body')[0].className = this.id;
 
-	function changed () {
-		window.previous = {};
-	}
-
-  var J = new Snorkle({}, { change: _.throttle(changed, 100) });
-
-  var canvas = document.getElementById('canvas');
-	window.context = canvas.getContext('2d');
-
+    if (this.id == "z2" || this.id == 'z1') {
+       // canvas.resize({ y: 600 });
+    } else if (this.id == 'z3') {
+       canvas.resize({ x: 4200 });
+    }
+  });
+  
+  // dynamic canvas
   canvas.resize = function(new_size) {
     var default_size = { x: 620, y: 870 },
         ratio = default_size.y / default_size.x;
@@ -134,6 +108,41 @@
 
     changed();
   }
+  
+  if (typeof io != "undefined") {
+    var socket = io.connect('http://localhost:8339');
+    socket.on('face', function (data) {
+      var id = data.shift(),
+          t  = data.shift(),
+          face = {};
+
+  		if (data.length) {
+  	    _(data).each(function(v) {
+  	      face[ v[0].replace(/\//g, '_') ] = v.splice(1);
+  	    });
+  		} else {
+  			face[id.replace(/\//g, '_')] = t;
+  		}
+      J.pumpInput( face );
+    });
+  }
+  
+
+  </script>
+
+  <script type='text/javascript'>
+  
+  window.focused = true; // really?
+  window.paused = false;
+  window.onblur  = function() { focused = false; };
+  window.onfocus = function() { focused = true; };
+	window.context = canvas.getContext('2d');
+	function changed () {
+		window.previous = {};
+	}
+  window.v = {};
+
+  var J = new Snorkle({}, { change: _.throttle(changed, 100) });
 
   canvas.resize({}); // setup
 
@@ -144,25 +153,6 @@
   J.addOutput( 'C' );         J.addOutput( 'D' );
   J.addOutput( 'E' );       	J.addOutput( 'F' );
 
-	
-	if (typeof io != "undefined") {
-	  var socket = io.connect('http://localhost:8339');
-	  socket.on('face', function (data) {
-	    var id = data.shift(),
-	        t  = data.shift(),
-	        face = {};
-
-			if (data.length) {
-		    _(data).each(function(v) {
-		      face[ v[0].replace(/\//g, '_') ] = v.splice(1);
-		    });
-			} else {
-				face[id.replace(/\//g, '_')] = t;
-			}
-	    J.pumpInput( face );
-	  });
-	}
-  
   var save_prefix = 'design_id-', // change for each design
 			editors = {
         'canvas':  { f: function() {} },
@@ -186,60 +176,41 @@
     }
   }
   
-  $(function() {
-    var JavaScriptMode = require("ace/mode/javascript").Mode;
+  var JavaScriptMode = require("ace/mode/javascript").Mode;
       
-    _(editors).each(function(editor, key) {
-      editor.id = save_prefix + key;
+  _(editors).each(function(editor, key) {
+    editor.id = save_prefix + key;
         
-      var saved_f = localStorage.getItem(editor.id) || 'return 1';
-      editor.ace = ace.edit( key + "_editor" );
-      editor.ace.setShowPrintMargin(false);
-      editor.ace.setTheme( "ace/theme/twilight" );
-      var session = editor.ace.getSession();
-      session.setValue( saved_f );
-      session.setTabSize(2);
-      session.setUseSoftTabs(true);
+    var saved_f = localStorage.getItem(editor.id) || '';
+    editor.ace = ace.edit( key + "_editor" );
+    editor.ace.setShowPrintMargin(false);
+    editor.ace.setTheme( "ace/theme/twilight" );
+    
+    var session = editor.ace.getSession();
+    session.setValue( saved_f );
+    session.setTabSize( 2 );
+    session.setUseSoftTabs( true );
         
-      var on_code_change = code_change_for( key );
-      on_code_change();
+    var on_code_change = code_change_for( key );
+    on_code_change();
         
-      session.setMode( new JavaScriptMode() );
+    session.setMode( new JavaScriptMode() );
         
-      session.on('change', on_code_change);
-    });
+    session.on('change', on_code_change);
+  });
             
-    $('.tabs a').click(function() {
-      var id = $(this).attr('href').substr(1)
-      $('.tabs a').removeClass('active'); $(this).addClass('active');
-      $('.editor').hide();
-      $('.editor#'+ id).show();
-      return false;
-    });
-
-    $('.tabs a:first-child').click(); // TODO remember
+  $('.tabs a').click(function() {
+    var id = $(this).attr('href').substr(1)
+    $('.tabs a').removeClass('active'); $(this).addClass('active');
+    $('.editor').hide();
+    $('.editor#'+ id).show();
+    return false;
   });
-  
-  
-  function toggle_pause () {
-    paused = ! paused;
-    $('#pause').text( paused ? '>' : '||' );
-  }
-  
-  $('#pause').bind('touchstart', toggle_pause);
-  $('#pause').bind('mousedown', toggle_pause);
-  
-  $('#control button').bind('click', function() {
-    $('body')[0].className = this.id;
 
-    if (this.id == "z2" || this.id == 'z1') {
-       // canvas.resize({ y: 600 });
-    } else if (this.id == 'z3') {
-       canvas.resize({ x: 4200 });
-    }
-  });
+  $('.tabs a:first-child').click(); // TODO remember
   
-  var $fps = $('#fps');
+  
+
 	
   paper.install(window);
   paper.setup(canvas); // Create an empty project and a view for the canvas
@@ -253,13 +224,13 @@
     first:  0,  // Date.now()/1000 of first call
     last:   0   // Date.now()/1000 of the previous call
   };
-  var up_fps = _.throttle( function() { $fps.text( shorten(1 / ev.delta) ) }, 1000);
+  var up_fps = _.throttle( function() { fps.innerHTML = shorten(1 / ev.delta) }, 1000);
   
   (function animloop(){
     requestAnimFrame(animloop);
 
     if (paused || ! focused) {
-      $fps.text( 0 );
+      fps.innerHTML = '0';
       return false;
     }
     
@@ -272,6 +243,17 @@
     ev.delta = Date.now() / 1000 - ev.last;
     ev.last  = Date.now() / 1000;
     ev.time  = Date.now() / 1000- ev.first;
+    
+    J.updateReals();
+			
+    var no_op = _.isEqual( previous, v.inputs ); // && function has not changed
+    if (no_op) {
+      return false;
+    }
+      
+		previous = _.clone( v.inputs );
+      
+    J.recalculate();
     
     var redraw = window.onFrame(ev);
     if (redraw) paper.view.draw();
@@ -295,9 +277,7 @@
   
   var Design = {
     id: "",
-    setup: function() {}, // init and first render?
-    
-    
+    setup: function() {} // init and first render?
   };
 
   // below here - only design specific code
@@ -306,18 +286,18 @@
   var breton_and_on = function() {
 		var blank = true;
 		
-    // draw text
     v = {
 			inputs: J.reals,
       points: 800,
       smooth: false
     };
 	
+   // move to browser coding
     v.path = new Path();
 		v.path.strokeWidth = 0;
     v.path.closed = false;
 
-    v.initializePath = function (points) {      
+    v.initializePath = function (points) {
       v.center = view.center;
       v.width  = view.size.width;
       v.height = view.size.height / 2;
@@ -333,16 +313,6 @@
     v.initializePath(v.points);
 
     window.onFrame = function(event) { // replace with your own
-      J.updateReals();
-			
-      var no_op = _.isEqual( previous, v.inputs ); // && function has not changed
-      if (no_op) {
-        return false;
-      }
-      
-			previous = _.clone( v.inputs );
-      
-      J.recalculate();
       
       for (var i = 0; i < v.points; i++) {
 				v.inputs.n = i;
@@ -361,8 +331,6 @@
 		
 		function postCanvas() {
 			if (blank) {
-        context.fillStyle="#000";
-        context.globalCompositeOperation = "xor";
         editors.canvas.f.call(v);
 			}
 			blank = false;
@@ -377,3 +345,42 @@
 </body>
 
 </html>
+
+
+<script type='text/javascript'>
+
+
+
+// var acc = {};
+//   
+// if (window.DeviceMotionEvent != undefined) {
+// 	  window.ondevicemotion = function(event) {
+//     acc.x = event.accelerationIncludingGravity.x;
+//     acc.y = event.accelerationIncludingGravity.y;
+//     acc.z = event.accelerationIncludingGravity.z;
+//   }
+//   
+//   window.addEventListener('deviceorientation', function(e) {
+//     acc.compass = e.webkitCompassHeading;
+//   });
+  // setInterval( function() {  	
+  //   	  J.get('accX').value( acc.x );
+  //   	  J.get('accY').value( acc.y );		
+  //   J.get('accZ').value( acc.z );
+  //   
+  //   // J.get('compass').value( acc.compass );
+  // }, 100);
+// }
+  
+// $(window).bind( 'mousemove', function(e) {
+//   J.get('mouse').value([ e.clientX, e.clientY ]);
+// });
+  
+// J.addInputArray( 'mouse', { initial: 0.1 } );
+// var acc_options = { min: -10, max: 10,  initial: 0 };
+// J.addInput( 'accX', acc_options );
+// J.addInput( 'accY', acc_options );
+// J.addInput( 'accZ', acc_options );
+// J.addInput( 'compass', { min: 0, max: 360, initial: 180 } );
+
+</script>
