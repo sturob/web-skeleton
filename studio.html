@@ -131,12 +131,12 @@
   </script>
 
   <script type='text/javascript'>
-  
   window.focused = true; // really?
   window.paused = false;
   window.onblur  = function() { focused = false; };
   window.onfocus = function() { focused = true; };
 	window.context = canvas.getContext('2d');
+	window.previous = {};
 	function changed () {
 		window.previous = {};
 	}
@@ -160,7 +160,7 @@
       };
 
 
-  function code_change_for(key) {
+  function code_change_for(key) { // generate a function to deal with changes to code for :key
     return function(ev) {
       var f_text = editors[key].ace.getSession().getValue();
 			var err = false;
@@ -209,9 +209,7 @@
 
   $('.tabs a:first-child').click(); // TODO remember
   
-  
 
-	
   paper.install(window);
   paper.setup(canvas); // Create an empty project and a view for the canvas
   
@@ -222,9 +220,20 @@
     time:   0,  // total amount of time passed since the first frame event in secs
     delta:  0,  // time passed in seconds since the last frame event
     first:  0,  // Date.now()/1000 of first call
-    last:   0   // Date.now()/1000 of the previous call
+    last:   0,  // Date.now()/1000 of the previous call
+    update: function() {
+      var now = Date.now() / 1000;
+      if (! ev.first) {
+        ev.first = now;
+      }
+      ev.count++;
+      ev.delta = now - ev.last;
+      ev.time  = now - ev.first;
+      ev.last  = now;
+    }
   };
-  var up_fps = _.throttle( function() { fps.innerHTML = shorten(1 / ev.delta) }, 1000);
+  
+  var update_fps = _.throttle( function() { fps.innerHTML = shorten(1 / ev.delta) }, 1000);
   
   (function animloop(){
     requestAnimFrame(animloop);
@@ -233,19 +242,11 @@
       fps.innerHTML = '0';
       return false;
     }
-    
-    up_fps();
 
-    if (! ev.first) {
-      ev.first = Date.now() / 1000;
-    }
-    ev.count++;
-    ev.delta = Date.now() / 1000 - ev.last;
-    ev.last  = Date.now() / 1000;
-    ev.time  = Date.now() / 1000- ev.first;
-    
-    J.updateReals();
-			
+    ev.update();      // update the event var
+    update_fps();     // show frames per second
+    J.updateReals();  // 
+
     var no_op = _.isEqual( previous, v.inputs ); // && function has not changed
     if (no_op) {
       return false;
@@ -257,10 +258,21 @@
     
     var redraw = window.onFrame(ev);
     if (redraw) paper.view.draw();
+    drawPost = true; // for postCanvas... can't just run it here cos of timing issues :/
   })();
   
+	function postCanvas() {
+		if (drawPost) {
+      editors.canvas.f.call(v);
+		}
+    drawPost = false;
+	}
+
+	setInterval(postCanvas, 200);
+  
+  
 	
-	window.previous = {};
+
 	
   function append_png() {
     var context = canvas.getContext("2d");
@@ -284,7 +296,6 @@
 
 	
   var breton_and_on = function() {
-		var blank = true;
 		
     v = {
 			inputs: J.reals,
@@ -324,19 +335,9 @@
       }
 
       if (v.smooth) { v.path.smooth(); }
-            
-      blank = true; // add postCanvas
-      return true;
-    }
-		
-		function postCanvas() {
-			if (blank) {
-        editors.canvas.f.call(v);
-			}
-			blank = false;
-		}
 
-		setInterval(postCanvas, 100);
+      return true;
+    }		
 	};
 	
 	$(breton_and_on);
