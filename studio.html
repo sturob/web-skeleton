@@ -69,7 +69,7 @@
   </div>
   
 
-  <script type='text/javascript'>
+  <script type="text/javascript">
  
   // bind UI
   function toggle_pause () {
@@ -109,6 +109,26 @@
     changed();
   }
   
+  // passed into the tick
+  function tickEvent() {
+    this.count = 0;  // number of times the frame event was fired
+    this.time  = 0;  // total amount of time passed since the first frame event in secs
+    this.delta = 0;  // time passed in seconds since the last frame event
+    this.first = 0;  // Date.now()/1000 of first call
+    this.last  = 0;  // Date.now()/1000 of the previous call
+    this.update = function() {
+      var now = Date.now() / 1000;
+      if (! this.first) {
+        this.first = now;
+      }
+      this.count++;
+      this.delta = now - this.last;
+      this.time  = now - this.first;
+      this.last  = now;
+    }
+  }
+  
+  
   if (typeof io != "undefined") {
     var socket = io.connect('http://localhost:8339');
     socket.on('face', function (data) {
@@ -131,6 +151,7 @@
   </script>
 
   <script type='text/javascript'>
+  
   window.focused = true; // really?
   window.paused = false;
   window.onblur  = function() { focused = false; };
@@ -141,10 +162,23 @@
 		window.previous = {};
 	}
   window.v = {};
+  
+  paper.install(window);
+  paper.setup(canvas); // Create an empty project and a view for the canvas
+  canvas.resize({}); // setup
+
+  $('.tabs a').click(function() {
+    var id = $(this).attr('href').substr(1)
+    $('.tabs a').removeClass('active'); $(this).addClass('active');
+    $('.editor').hide();
+    $('.editor#'+ id).show();
+    return false;
+  });
+  
+
+  // 
 
   var J = new Snorkle({}, { change: _.throttle(changed, 100) });
-
-  canvas.resize({}); // setup
 
 	// TODO set these up dynamically on a per design-basis
   J.addOutput( 'scale' );     J.addOutput( 'gap' );
@@ -158,7 +192,6 @@
         'canvas':  { f: function() {} },
         'paperjs': { f: function() {} }
       };
-
 
   function code_change_for(key) { // generate a function to deal with changes to code for :key
     return function(ev) {
@@ -176,64 +209,48 @@
     }
   }
   
+  // setup editors
   var JavaScriptMode = require("ace/mode/javascript").Mode;
-      
   _(editors).each(function(editor, key) {
     editor.id = save_prefix + key;
-        
-    var saved_f = localStorage.getItem(editor.id) || '';
     editor.ace = ace.edit( key + "_editor" );
-    editor.ace.setShowPrintMargin(false);
-    editor.ace.setTheme( "ace/theme/twilight" );
-    
     var session = editor.ace.getSession();
-    session.setValue( saved_f );
+    
+    // settings    
+    editor.ace.setShowPrintMargin( false );
+    editor.ace.setTheme( "ace/theme/twilight" );
     session.setTabSize( 2 );
     session.setUseSoftTabs( true );
-        
-    var on_code_change = code_change_for( key );
-    on_code_change();
-        
     session.setMode( new JavaScriptMode() );
-        
-    session.on('change', on_code_change);
+    session.setValue( '' );
+    
+    // bindings
+    editor.onChange = code_change_for( key );
+    session.on('change', editor.onChange);
   });
-            
-  $('.tabs a').click(function() {
-    var id = $(this).attr('href').substr(1)
-    $('.tabs a').removeClass('active'); $(this).addClass('active');
-    $('.editor').hide();
-    $('.editor#'+ id).show();
-    return false;
-  });
-
-  $('.tabs a:first-child').click(); // TODO remember
   
-
-  paper.install(window);
-  paper.setup(canvas); // Create an empty project and a view for the canvas
+  
+  
+  
+  
+  
+  
+  // load code
+  _(editors).each(function(editor, key) {
+    var session = editor.ace.getSession();
+    var saved_f = localStorage.getItem( editor.id ) || '';
+    session.setValue( saved_f );
+    editor.onChange();
+  });
+  
+  $('.tabs a:first-child').click(); // TODO remember
   
   window.onFrame = function() {}; // gonna be overridden
   
-  var ev = {
-    count:  0,  // number of times the frame event was fired
-    time:   0,  // total amount of time passed since the first frame event in secs
-    delta:  0,  // time passed in seconds since the last frame event
-    first:  0,  // Date.now()/1000 of first call
-    last:   0,  // Date.now()/1000 of the previous call
-    update: function() {
-      var now = Date.now() / 1000;
-      if (! ev.first) {
-        ev.first = now;
-      }
-      ev.count++;
-      ev.delta = now - ev.last;
-      ev.time  = now - ev.first;
-      ev.last  = now;
-    }
-  };
+  var ev = new tickEvent();
   
   var update_fps = _.throttle( function() { fps.innerHTML = shorten(1 / ev.delta) }, 1000);
+  
   
   (function animloop(){
     requestAnimFrame(animloop);
@@ -267,7 +284,6 @@
 		}
     drawPost = false;
 	}
-
 	setInterval(postCanvas, 200);
   
   
@@ -281,22 +297,37 @@
   }
 	
   
+
+  // below here - only code called when a design loads
+
+
+  // clear codes
+  
+  // clear J
+
+  // load saved code
+  // load saved vars
+  
+  
+
+
+  // below here - only design specific code
+
   
   
   // note:
   //  - canvas + paper.js set up at app level
   //  - designs/whatever.js needs to be loadable by tshirt.html also
-  
+  //  export window.onFrame ?
   var Design = {
     id: "",
-    setup: function() {} // init and first render?
+    // setup: function() {} // init and first render?
+    frame: function() {}
   };
 
-  // below here - only design specific code
 
 	
   var breton_and_on = function() {
-		
     v = {
 			inputs: J.reals,
       points: 800,
@@ -324,7 +355,6 @@
     v.initializePath(v.points);
 
     window.onFrame = function(event) { // replace with your own
-      
       for (var i = 0; i < v.points; i++) {
 				v.inputs.n = i;
         var pos = editors.paperjs.f.call(v, event, i); // call with this set to p
@@ -335,7 +365,6 @@
       }
 
       if (v.smooth) { v.path.smooth(); }
-
       return true;
     }		
 	};
