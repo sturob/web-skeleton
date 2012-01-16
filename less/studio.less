@@ -17,15 +17,24 @@ body {
   position: relative;
   z-index: 1000;
   background: #333;
-  height: 24px;
+  height: 29px;
   color: #ddd;
-  padding-top: 5px;
+
+  button {
+    margin: 0;
+    height: 24px;
+    padding: 3px 6px;
+    margin-top: 2px;
+    .rounded(4px);
+    border: 0;
+    .grad_linear(#fff,#ddd);
+  }
 }
 
 button#pause {
   position: absolute;
   left: @left_edge;
-  top: 5px;
+
   z-index: 2;
   font-size: 16px;
 }

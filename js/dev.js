@@ -6,7 +6,7 @@ CONFIG.transitions = false;
 // setInterval(function() { if (less.watchMode) less.refresh() }, 1000); // why, i do not know
 
 window.onkeyup = function(e) {
-  if (e.keyCode == 49) {
+  if (e.keyCode == 0) { // §
     less.watchMode = ! less.watchMode;
     window.status = 'less refresh = ' + less.watchMode;
   }
