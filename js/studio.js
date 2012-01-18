@@ -1,3 +1,10 @@
+function append_png() {
+  var context = canvas.getContext("2d");
+  var img     = canvas.toDataURL("image/png");
+  meh.innerHTML = '<img src="'+img+'">';
+}
+
+
 $(function() {
   
   // bind UI
@@ -56,11 +63,7 @@ $(function() {
     }
   }
   
-  function append_png() {
-    var context = canvas.getContext("2d");
-    var img     = canvas.toDataURL("image/png");
-    meh.innerHTML = '<img src="'+img+'">';
-  }
+
   
   
   if (typeof io != "undefined") {
@@ -205,6 +208,7 @@ $(function() {
   
   function load_design (id) {
     paused = true;
+    paper.project.layers[0].removeChildren();
     changed();
     window.ev = new tickEvent();
     current_design = id;
@@ -233,12 +237,24 @@ $(function() {
   //  - designs/whatever.js needs to be loadable by tshirt.html also
   //  export window.onFrame ?
 
-
+  Design.fibonacci = function() {
+    $(canvas).css({ background: 'black' });
+    
+    v = {
+      inputs: J.reals
+    };
+    
+    window.onFrame = function(event) { // replace with your own
+      editors.paperjs.f.call(v, event, 0); // call with this set to p
+    };
+  };
+  
+  
   Design.lines = function() {
     $(canvas).css({ background: 'black' });
     
     v = {
-  		inputs: J.reals,
+      inputs: J.reals,
       points: 399,
       smooth: false
     };
@@ -282,7 +298,7 @@ $(function() {
     $(canvas).css({ background: 'white' });
     
     v = {
-  		inputs: J.reals,
+      inputs: J.reals,
       points: 800,
       smooth: false
     };

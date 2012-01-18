@@ -19,7 +19,7 @@ function ajax_dump (method, url, data) {
   return 'wait for it...'
 }
 
-// adapted http://www.jameswiseman.com/blog/2010/08/24/manually-traverse-a-dom-tree-using-jquery/
+// adapted www.jameswiseman.com/blog/2010/08/24/manually-traverse-a-dom-tree-using-jquery/
 
 function html2less($item, pass) {  
   var tmp = {};
