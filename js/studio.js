@@ -91,7 +91,6 @@ $(function() {
   window.previous   = {};
   window.ev         = new tickEvent();
   window.v          = {};
-  window.Design     = {}; // designs load into here
   window.onFrame    = function() {}; // gonna be overridden
 
   window.changed = function() {
@@ -111,7 +110,7 @@ $(function() {
   });
   
   $('#design_picker').change(function(e) {
-    load_design( $(this).find($('option:selected'))[0].id );
+    Design.load( $(this).find($('option:selected'))[0].id );
   });
   
   // initialisations
@@ -122,7 +121,8 @@ $(function() {
   var J = new Snorkle({}, { change: _.throttle(changed, 100) });
 
   // TODO set these up dynamically on a per design-basis
-  J.addOutput( 'scale' );     J.addOutput( 'gap' );
+  J.addOutput( 'scale', { initial: 1 } );
+  J.addOutput( 'gap' );
   J.addOutput( 'fontsize');   J.addOutput( 'wtf' );
   J.addOutput( 'rand' );      J.addOutput( 'wave' );
   J.addOutput( 'C' );         J.addOutput( 'D' );
@@ -203,39 +203,40 @@ $(function() {
   setInterval(postCanvas, 200);
 	
   
-
   // below here - only code called when a design loads
+    
+  window.Design = {
+    load: function(id) {
+      paused = true;
+      paper.project.layers[0].removeChildren();
+      changed();
+      window.ev = new tickEvent();
+      current_design = id; // TODO save this var automatically in LocalStorage instead of...
+      localStorage.setItem( 'tudio::current_design', current_design );
+      
+      console.log('loading design: ' + id);
+    
+      // load code
+      _(editors).each(function(editor, key) {
+        var session = editor.ace.getSession();
+        var saved_f = localStorage.getItem( current_design + key ) || '';
+        session.setValue( saved_f );
+        editor.onChange();
+      });
   
-  function load_design (id) {
-    paused = true;
-    paper.project.layers[0].removeChildren();
-    changed();
-    window.ev = new tickEvent();
-    current_design = id;
+      $('.tabs a:first-child').click(); // TODO remember
     
-    console.log('loading design: ' + id);
+      Design[id].call();
     
-    // load code
-    _(editors).each(function(editor, key) {
-      var session = editor.ace.getSession();
-      var saved_f = localStorage.getItem( current_design + key ) || '';
-      session.setValue( saved_f );
-      editor.onChange();
-    });
-  
-    $('.tabs a:first-child').click(); // TODO remember
-    
-    Design[id].call();
-    
-    paused = false;
-  }
-    
+      paused = false;
+    }
+  }; 
 
   // below here - only design specific code
   
   // note:
   //  - designs/whatever.js needs to be loadable by tshirt.html also
-  //  export window.onFrame ?
+  //  export window.onFrame
 
   Design.fibonacci = function() {
     $(canvas).css({ background: 'black' });
@@ -337,8 +338,7 @@ $(function() {
     }		
   };
 
-  load_design( 'breton' ); // TODO remember last loaded
-
+  Design.load( localStorage.getItem( 'tudio::current_design') || 'breton' );
 
 });
 

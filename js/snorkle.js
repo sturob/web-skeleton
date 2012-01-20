@@ -43,12 +43,9 @@ dependencies :/
    [ ]  edit max + min
 
    [ ]  hide variable (and stop processing)
-   [ ]  global pause button
-   [ ]  find big win optimisations (init() as well as tick())
+
    [ ]  bounding flag + working (?)
    [ ]  fix bug: same value()s mean no update to the variable
-
-
 
 
   use cases
@@ -76,7 +73,8 @@ var templates = {
   output:   
     '<li class="result" id="<%= id %>"> <h2><%= id %></h2>' +
       '<span class="viz"></span> <span class="value"></span> <span class="raw"></span>' +
-      '<input type="text" value="0">' +
+      '<input class="code" type="text" value="0">' +
+      '<input class="default_value" type="text" value="<%= initial %>">' +
     '</li>',
   frame:
     '<ul id="vars">' +
@@ -217,22 +215,22 @@ Model.InArray = Model.Var.extend({
 
 Model.Out = Model.Var.extend({
   initialize: function(options) {
-    var initial = (typeof options.initial == "undefined" || options.initial == null) ? 0 : options.initial;
+    if (typeof options.initial == "undefined" || options.initial == null) options.initial = 0;
     var formula = localStorage.getItem('out_' + this.id);
     var that = this;
-    $('ul#vars div#results').append( _.template( templates.output )({ id: options.id }) );
+    $('ul#vars div#results').append( _.template( templates.output )( options ) );
     
-    $('li.result#' + options.id + ' input').keyup(function(ev) {
+    $('li.result#' + options.id + ' input.code').keyup(function(ev) {
       that.calculateEntered( ev.target.value );
     })
 
-    this.set({ raw: initial, value: initial });
+    this.set({ raw: options.initial, value: options.initial });
 
     this.initHistory();
 
     if (formula) {
       this.calculateEntered( formula ).update();
-      $('li#' + this.id + ' input').val( formula );
+      $('li#' + this.id + ' input.code').val( formula );
     }
 
     return this;

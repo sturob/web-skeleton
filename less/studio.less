@@ -154,6 +154,29 @@ ul#vars {
   font-size: 18px;
   font-weight: bold;
   color: #aaa;
+  
+  input {
+    font-family: Monaco;
+    position: absolute;
+  	border: 0;
+  	background: #fff;
+  	color: #222;
+  	padding: 2px 4px;
+  }
+  input.code {
+    left: 4px;
+    right: 4px;
+    bottom: 2px;
+    font-size: 10px;  
+  }
+  input.default_value {
+    position: absolute;
+    right: 1px;
+    width: 5em;
+    background: #ddd;
+  }
+  
+  
 }
 ul#vars h1 {
   font-size: 12px;
@@ -165,29 +188,18 @@ ul#vars .viz {
   display: inline-block;
   width: 120px;
 	vertical-align: top;
-  margin-left: 70px;
+/*  margin-left: 70px;*/
 
+  canvas {
+  	position: absolute;
+  	right: 74px;
+  }
 }
-ul#vars .viz canvas {
-	position: absolute;
-	right: 4px;
-}
+
 ul#vars .raw {
   color: #ddd;
 }
-ul#vars input {
-  font-family: Monaco;
-  position: absolute;
-  left: 4px;
-  right: 4px;
-  font-size: 10px;
-  bottom: 2px;
-	border: 0;
-/*			border-bottom: 1px solid #aaa;*/
-	background: #fff;
-	color: #222;
-	padding: 2px 4px;
-}
+
 ul#vars h2 {
   position: absolute;
   left: 6px;
