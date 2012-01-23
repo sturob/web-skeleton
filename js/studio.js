@@ -118,15 +118,7 @@ $(function() {
   paper.setup( canvas ); // Create an empty project and a view for the canvas
   canvas.resize({ }); // setup
 
-  var J = new Snorkle({}, { change: _.throttle(changed, 100) });
-
-  // TODO set these up dynamically on a per design-basis
-  J.addParam( 'scale', { initial: 1 } );
-  J.addParam( 'gap' );
-  J.addParam( 'fontsize' ); J.addParam( 'wtf' );
-  J.addParam( 'rand' );     J.addParam( 'wave' );
-  J.addParam( 'C' );        J.addParam( 'D' );
-  J.addParam( 'E' );        J.addParam( 'F' );
+  window.J = new Snorkle({}, { change: _.throttle(changed, 100) }); // TODO this empty
 
   var current_design = 'breton', // change for each design
   		editors = {
@@ -209,6 +201,18 @@ $(function() {
     load: function(id) {
       paused = true;
       paper.project.layers[0].removeChildren();
+      
+      // id
+      J = new Snorkle({}, { design: id, change: _.throttle(changed, 100) });
+      
+      // TODO set these up dynamically on a per design-basis
+      J.addParam( 'scale', { initial: 1 } );
+      J.addParam( 'gap' );
+      J.addParam( 'fontsize' ); J.addParam( 'wtf' );
+      J.addParam( 'rand' );     J.addParam( 'wave' );
+      J.addParam( 'C' );        J.addParam( 'D' );
+      J.addParam( 'E' );        J.addParam( 'F' );
+      
       changed();
       window.ev = new tickEvent();
       current_design = id; // TODO save this var automatically in LocalStorage instead of...

@@ -140,21 +140,25 @@ div#results .value {
 	display: inline-block;
 }
 
-ul#vars { 
+ul.Snorkle { 
   z-index: 3;
-/*      float: right;*/
+/* float: right; */
 	position: absolute;
 	left: 690px;
 	font-family: Helvetica;
 	top: 420px;
   background-color: white;
   right: 0;
-/*   margin: 4px 12px;*/
+/* margin: 4px 12px; */
   list-style: none;
   font-size: 18px;
   font-weight: bold;
   color: #aaa;
   
+  button.delete {
+    position: relative;
+    left: -18px;
+  }
   input {
     font-family: Monaco;
     position: absolute;
@@ -176,47 +180,51 @@ ul#vars {
     background: #ddd;
   }
   
+  h1 {
+    font-size: 12px;
+    background-color: #333;
+    padding: 2px 0 2px 8px;
+    color: white;
+  }
+  .viz {
+    display: inline-block;
+    width: 120px;
+  	vertical-align: top;
+  /*  margin-left: 70px;*/
+
+    canvas {
+    	position: absolute;
+    	right: 74px;
+    }
+  }
+
+  .raw {
+    color: #ddd;
+  }
+
+  h2 {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    font-size: 16px;
+  }
+  li {
+    background-color: white;
+    border-bottom: 2px solid #eee;
+    position: relative;
+    margin: 0 0 0px 0;
+  }
+  li.result {
+    padding-bottom: 24px;
+  }
+  span {
+  	font-size: 14px;
+  	font-weight: normal;
+  /* font-family: "Courier New";*/
+  }
   
 }
-ul#vars h1 {
-  font-size: 12px;
-  background-color: #333;
-  padding: 2px 0 2px 8px;
-  color: white;
-}
-ul#vars .viz {
-  display: inline-block;
-  width: 120px;
-	vertical-align: top;
-/*  margin-left: 70px;*/
 
-  canvas {
-  	position: absolute;
-  	right: 74px;
-  }
-}
 
-ul#vars .raw {
-  color: #ddd;
-}
 
-ul#vars h2 {
-  position: absolute;
-  left: 6px;
-  top: 6px;
-  font-size: 16px;
-}
-ul#vars li {
-  background-color: white;
-  border-bottom: 2px solid #eee;
-  position: relative;
-  margin: 0 0 0px 0;
-}
-ul#vars li.result {
-  padding-bottom: 24px;
-}
-ul#vars span {
-	font-size: 14px;
-	font-weight: normal;
-/*      font-family: "Courier New";*/
-}
+

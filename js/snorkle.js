@@ -53,7 +53,7 @@ dependencies :/
     accelerometer
 */
 
-var Templates = {}, Model = {}, View = {};
+var Templates = {}, Model = {}, View = {}, Collection = {};
 
 Model.Var = Backbone.Model.extend({
   initHistory: function() {  
@@ -191,11 +191,16 @@ View.Param = View.Var.extend({
 });
 
 
-/* Param:
+/*
+
+
+
+ Param:
       project
       design
       id
 */
+
 
 Model.Param = Model.Var.extend({
   initialize: function(options) {
@@ -231,6 +236,7 @@ Model.Param = Model.Var.extend({
     }
 
     localStorage.setItem('out_' + this.id, formula );
+    
     if (ok) {
 			this.calculate = f; // set the calculate function that tick() will call
 			var callback = this.get('parent').changeCallback;
@@ -244,7 +250,7 @@ Model.Param = Model.Var.extend({
       this.addToHistory( v );
       this.set({ value: v });
     } else {
-      this.set({ error: 'calculate() is not set'})
+      this.set({ error: 'calculate() is not set'});
     }
   },
   value: function() {
@@ -254,6 +260,32 @@ Model.Param = Model.Var.extend({
     // this.options
   }
 });
+
+
+
+// Collection.Params = Backbone.Collection.extend({
+//   model: Model.Param,
+//   localStorage: new Store("param"),
+//   done: function() {
+//     return this.filter(function(todo){ return todo.get('done'); });
+//   },
+//   remaining: function() {
+//     return this.without.apply(this, this.done());
+//   },
+//   nextOrder: function() {
+//     if (!this.length) return 1;
+//     return this.last().get('order') + 1;
+//   },
+//   comparator: function(todo) {
+//     return todo.get('order');
+//   }
+// });
+
+
+//  window.ParamsList = new Collection({ localStorage: n});
+
+
+
 
 ///////////////////////////////////////////////////////////////
 
@@ -267,7 +299,7 @@ Model.InArray = Model.Var.extend({
       _(this.children).each( function(child) {
         ret.push( child.value() )
       });
-      return ret
+      return ret;
     }
     var that = this;
     _(values).each(function( val, n ) {
@@ -289,24 +321,45 @@ Model.InArray = Model.Var.extend({
 
 ///////////////////////////////////////////////////////////////
 
-Templates.frame = '<ul id="vars">' +
-                    '<h1>parameters</h1> <div id="parameters"></div>' +
-                    '<h1>inputs</h1>  <div id="inputs"></div>' +
-                  '</ul>';
+Templates.frame =   '<h1>Parameters</h1> <button class="add_parameter">+ Param</button> <div id="parameters"></div>' +
+                    '<h1>Inputs</h1> <div id="inputs"></div>';
+
+// reload for each design
+View.UI = Backbone.View.extend({
+  tagName: "ul",
+  className: "Snorkle",
+  template: _.template( Templates.frame ),
+
+  events: {
+    "click button.add_parameter": "addParam"
+  },
+  render: function() {
+    $(this.el).html( this.template({}) );
+    return this;
+  },
+  addParam: function() {
+    var name = prompt('Parameter name?');
+    if (name) {
+      J.addParam( name );
+    }
+  }
+});
 
 var Snorkle = Backbone.Model.extend({
-  initialize: function(huh, options) {
+  initialize: function(huh, options) {    
+    // remove previous UI
+    $('ul.Snorkle').remove();
+    
+    // setup UI
+    var view = new View.UI;
+    $("body").append( view.render().el );
+    
     this.bind('change', function() {
       this.updateReals();
     });
     
 		this.changeCallback = options.change;
-		
-    $('body').append( Templates.frame );
-
-		this.$el = $('ul#vars');
     this.reals = {};
-    
     this.updateReals();
   },
   updateReals: function() {
@@ -338,7 +391,7 @@ var Snorkle = Backbone.Model.extend({
     options.id = id; // very useful
     options.parent = this;
     
-    var m    = new Model.Param( options );
+    var m = new Model.Param( options );
     
     this.set( kv(id, m) ); // add it to vars for this Snorkle
 
