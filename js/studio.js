@@ -281,7 +281,7 @@ $(function() {
     v.initializePath( v.points );
 
     window.onFrame = function(event) { // replace with your own
-      console.log('lines')
+
       for (var i = 0; i < v.points; i++) {
         var pos = editors.paperjs.f.call(v, event, i); // call with this set to p
         if (pos) {

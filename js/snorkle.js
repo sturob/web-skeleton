@@ -1,12 +1,8 @@
 /*
-
 snorkle.js: take a look under the surface
 
   visualise and combine variables in realtime
-
   ideal for prototyping interfaces with complex multi-variate interplay
-
-
 
 dependencies :/
   - backbone
@@ -14,7 +10,6 @@ dependencies :/
   - jquery
   - jquery.sparkleline
 
-  
 /*
    [√]  multiple values input in realtime
    [√]  multiple values calculated and output in realtime
@@ -64,81 +59,54 @@ dependencies :/
   
 */
 
-var templates = {
-  input: 
-    '<li id="<%= id %>">' +
-      '<h2><%= id %></h2>' +
-      '<div class="row"> <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </div>' +
-    '</li>',
-  output:   
-    '<li class="result" id="<%= id %>"> <h2><%= id %></h2>' +
-      '<span class="viz"></span> <span class="value"></span> <span class="raw"></span>' +
-      '<input class="code" type="text" value="0">' +
-      '<input class="default_value" type="text" value="<%= initial %>">' +
-    '</li>',
-  frame:
-    '<ul id="vars">' +
-      '<h1>results</h1><div id="results"></div>' +
-      '<h1>inputs</h1><div id="inputs"></div>' +
-    '</ul>'
-};
-  
-
-
-
-
-
-function kv (k, v) {
-  var s = {};  s[k] = v;
-  return s;
-}
-
-
-
-var Model = {};
-
-var options = { 
-  normalRangeMin: 0, normalRangeMax: 1, 
-  width: '120px', chartRangeClip: true, spotColor: false,
-  minSpotColor: false, maxSpotColor: false, fillColor: false,
-	lineColor: '#777', 
-};
-
+var Templates = {}, Model = {}, View = {};
 
 
 Model.Var = Backbone.Model.extend({
-  initHistory: function() {
-    this.bind( 'change:value', function() {
-      var el = '#' + this.id;
-      
-      if (el) {
-        $(el + " span.value").text( shorten( this.value() ) );
-        $(el + " span.raw"  ).text( shorten( this.get('raw') ) );
-        $(el + " span.viz"  ).sparkline( this.get('history'), options );
-      }
-    });
-    
+  initHistory: function() {  
     this.set({ history_length: 50, history: [] });
   },
   addToHistory: function(v) {
-    var h = this.get('history');
-    
+    var h = this.get( 'history' );
     if (h.length > this.get('history_length')) {
 	    h.shift();
 	  }
 	  h.push( v );
-	  
 	  this.set({ history: h })
   }
 });
 
+View.Var = Backbone.View.extend({
+  initHistory: function() {
+    var that = this;
+    this.model.bind( 'change:value', function() {
+      var $el = $(that.el);
+
+      var spark_options = { 
+        width: '120px', normalRangeMin: 0, normalRangeMax: 1, chartRangeClip: true, 
+        spotColor: false, maxSpotColor: false, fillColor: false, minSpotColor: false,
+      	lineColor: '#777'
+      };
+      
+      if ($el) {
+        $el.find( "span.value" ).text( shorten( this.value() ) );
+        $el.find( "span.raw"   ).text( shorten( this.get('raw') ) );
+        $el.find( "span.viz"   ).sparkline( this.get('history'), spark_options );
+      }
+    });
+  }
+});
+
+///////////////////////////////////////////////////////////////////////////////
+
+Templates.input = 
+  '<h2><%= id %></h2>' +
+  '<div class="row"> <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </div>';
+
 
 Model.In = Model.Var.extend({
   initialize: function (options) {
-    var initial = (typeof options.initial == "undefined" || options.initial == null) ? 0 : options.initial;
-    
-    $('ul#vars div#inputs').prepend( _.template( templates.input )({ id: options.id }) );
-    
+    var initial = (typeof options.initial == "undefined" || options.initial == null) ? 0 : options.initial;    
     this.initHistory();
     this.set({ raw: initial, value: initial });
     
@@ -156,7 +124,6 @@ Model.In = Model.Var.extend({
     }
     
     var raw = v;
-  
     if (v < this.min) {
       this.min = v;
     }
@@ -170,68 +137,77 @@ Model.In = Model.Var.extend({
     v = (v / diff) + off; // coax value to be 0.0 - 1.0
     
     this.addToHistory( v );
-
-    this.set({ 
-      value: v, 
-      raw: raw 
-    });
+    this.set({  value: v,  raw: raw  });
   }
 });
 
-
-
-
-Model.InArray = Model.Var.extend({
+View.In = View.Var.extend({
+  tagName: 'li',
+  className: 'input',
+  template: _.template( Templates.input ),
+  events: { },
   initialize: function() {
-    this.children = [];
+    this.initHistory();
+    // this.model.bind('change', this.render, this);
+    // this.model.bind('destroy', this.remove, this);
   },
-  value: function(values) { // takes and array and sets children or returns array of child values
-    if (typeof values == "undefined" || values == null) {
-      var ret = [];
-      _(this.children).each( function(child) {
-        ret.push( child.value() )
-      });
-      return ret
-    }
-    var that = this;
-    _(values).each(function( val, n ) {
-      that.child( n ).value( val );
-    });
-  },
-  child: function(n) {
-    if (this.children[n]) {
-      return this.children[n]
-    } else {
-      var child_attr = _.clone(this.attributes);
-      child_attr.id = this.id + "_" + n;
-      var c = new Model.In( child_attr );
-      this.children[n] = c;
-      return c;
-    }
+  render: function() {
+    $(this.el).html( this.template( this.model.toJSON() ) );
+    return this;
   }
 });
 
+///////////////////////////////////////////////////////////////////////////////
 
+Templates.output =
+  '<h2><%= id %></h2>' +
+  '<span class="viz"></span> <span class="value"></span> <span class="raw"></span>' +
+  '<input class="code" type="text" value="<%= formula %>">' +
+  '<input class="default_value" type="text" value="<%= initial %>">';
+
+View.Out = View.Var.extend({
+  tagName: 'li',
+  className: 'result',
+  template: _.template( Templates.output ),
+  
+  events: {
+    // add
+    // delete
+    // rename... patience!
+    'keyup  input.code':          'updateFormula',
+    'change input.default_value': 'setDefault'
+  },
+  initialize: function() {
+    this.initHistory();
+    // this.model.bind('change', this.render, this);
+    this.model.bind('destroy', this.remove, this);
+  },
+  render: function() {
+    $(this.el).html( this.template( this.model.toJSON() ) );
+    return this;
+  },
+  updateFormula: function() {
+    var f = $(this.el).find('input.code').val();
+    this.model.calculateEntered( f ).update();
+  },
+  setDefault: function() {}
+  
+  // clear: function() {
+  //   this.model.destroy();
+  // }
+});
+
+///////////////////////////////////////////////////////////////
 
 Model.Out = Model.Var.extend({
   initialize: function(options) {
+    options.formula = localStorage.getItem('out_' + this.id);
+
     if (typeof options.initial == "undefined" || options.initial == null) options.initial = 0;
-    var formula = localStorage.getItem('out_' + this.id);
-    var that = this;
-    $('ul#vars div#results').append( _.template( templates.output )( options ) );
     
-    $('li.result#' + options.id + ' input.code').keyup(function(ev) {
-      that.calculateEntered( ev.target.value );
-    })
-
-    this.set({ raw: options.initial, value: options.initial });
-
+    this.set({ raw: options.initial, value: options.initial, formula: options.formula });
+    
     this.initHistory();
-
-    if (formula) {
-      this.calculateEntered( formula ).update();
-      $('li#' + this.id + ' input.code').val( formula );
-    }
 
     return this;
   },
@@ -275,9 +251,50 @@ Model.Out = Model.Var.extend({
   },
   value: function() {
     return this.get('value')
+  },
+  setInitial: function(val) {
+    // this.options
   }
 });
 
+///////////////////////////////////////////////////////////////
+
+Model.InArray = Model.Var.extend({
+  initialize: function() {
+    this.children = [];
+  },
+  value: function(values) { // takes and array and sets children or returns array of child values
+    if (typeof values == "undefined" || values == null) {
+      var ret = [];
+      _(this.children).each( function(child) {
+        ret.push( child.value() )
+      });
+      return ret
+    }
+    var that = this;
+    _(values).each(function( val, n ) {
+      that.child( n ).value( val );
+    });
+  },
+  child: function(n) {
+    if (this.children[n]) {
+      return this.children[n]
+    } else {
+      var child_attr = _.clone(this.attributes);
+      child_attr.id = this.id + "_" + n;
+      var c = new Model.In( child_attr );
+      this.children[n] = c;
+      return c;
+    }
+  }
+});
+
+///////////////////////////////////////////////////////////////
+
+Templates.frame = '<ul id="vars">' +
+                    '<h1>results</h1> <div id="results"></div>' +
+                    '<h1>inputs</h1>  <div id="inputs"></div>' +
+                  '</ul>';
 
 var Snorkle = Backbone.Model.extend({
   initialize: function(huh, options) {
@@ -287,11 +304,11 @@ var Snorkle = Backbone.Model.extend({
     
 		this.changeCallback = options.change;
 		
-    $('body').append(templates.frame);
+    $('body').append( Templates.frame );
 
 		this.$el = $('ul#vars');
-
     this.reals = {};
+    
     this.updateReals();
   },
   updateReals: function() {
@@ -312,24 +329,31 @@ var Snorkle = Backbone.Model.extend({
     options.id = id; // very useful
     options.parent = this;
     
-    var v = new Model.In( options );
-    this.set( kv(id, v) );
-    return v;
+    var model = new Model.In( options );
+    this.set( kv(id, model) );
+    var view = new View.In({ model: model });
+    $('div#inputs').prepend( view.render().el );
+
+    return model;
   },
 	renameOutput: function(id, new_id) {
 		// this.get(id).
 	},
 	removeOutput: function(id) {
-		// meh
+//    this.get(id).clear()
 	},
   addOutput: function(id, options) {
     options = options || { initial: 0 };
     options.id = id; // very useful
     options.parent = this;
-        
-    var v = new Model.Out( options );
-    this.set( kv(id, v) ); // add it to vars
-    return v;
+    
+    var m    = new Model.Out( options );
+    this.set( kv(id, m) ); // add it to vars for this Snorkle
+
+    var view = new View.Out({ model: m }); // create + insert view
+    $("div#results").append( view.render().el );
+    
+    return m;
   },
   addInputArray: function(id, options) {
     options.id = id;
@@ -358,6 +382,12 @@ var Snorkle = Backbone.Model.extend({
   }
 });
 
+
+
+function kv (k, v) {
+  var s = {};  s[k] = v;
+  return s;
+}
 
 
 function int(f) {
