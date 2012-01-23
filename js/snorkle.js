@@ -24,7 +24,7 @@ dependencies :/
    [√]  support multi value variables
 
    [√]  separate library  -  snorkle.js
-   [√]  insert HTML for results/outputs
+   [√]  insert HTML for parameters/outputs
    [√]  generalise id   
    [√]  switch off / bypass prod-vs-dev
    
@@ -42,25 +42,18 @@ dependencies :/
    [ ]  bounding flag + working (?)
    [ ]  fix bug: same value()s mean no update to the variable
 
-
   use cases
-
     paper.js
-
     faceosc
       animating faces with paper.js
       emoticon history
       logo manip
-
     touch
       logo manip
-
     accelerometer
-  
 */
 
 var Templates = {}, Model = {}, View = {};
-
 
 Model.Var = Backbone.Model.extend({
   initHistory: function() {  
@@ -103,7 +96,6 @@ Templates.input =
   '<h2><%= id %></h2>' +
   '<div class="row"> <span class="viz"></span> <span class="value"></span> <span class="raw"></span> </div>';
 
-
 Model.In = Model.Var.extend({
   initialize: function (options) {
     var initial = (typeof options.initial == "undefined" || options.initial == null) ? 0 : options.initial;    
@@ -122,8 +114,8 @@ Model.In = Model.Var.extend({
     if (typeof v == "undefined" || v == null) {
       return this.get('value');
     }
-    
     var raw = v;
+    
     if (v < this.min) {
       this.min = v;
     }
@@ -132,7 +124,7 @@ Model.In = Model.Var.extend({
     }
 
     var diff = this.max - this.min;
-    var off = 1 - this.max / diff;
+    var off  = 1 - this.max / diff;
   
     v = (v / diff) + off; // coax value to be 0.0 - 1.0
     
@@ -159,21 +151,22 @@ View.In = View.Var.extend({
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Templates.output =
+Templates.param =
+  '<button class="delete">&times;</button>' +
   '<h2><%= id %></h2>' +
   '<span class="viz"></span> <span class="value"></span> <span class="raw"></span>' +
   '<input class="code" type="text" value="<%= formula %>">' +
   '<input class="default_value" type="text" value="<%= initial %>">';
 
-View.Out = View.Var.extend({
-  tagName: 'li',
+View.Param = View.Var.extend({
+  tagName:   'li',
   className: 'result',
-  template: _.template( Templates.output ),
+  template:  _.template( Templates.param ),
   
   events: {
     // add
-    // delete
     // rename... patience!
+    'click  button.delete':        'clear',
     'keyup  input.code':          'updateFormula',
     'change input.default_value': 'setDefault'
   },
@@ -190,16 +183,21 @@ View.Out = View.Var.extend({
     var f = $(this.el).find('input.code').val();
     this.model.calculateEntered( f ).update();
   },
-  setDefault: function() {}
-  
-  // clear: function() {
-  //   this.model.destroy();
-  // }
+  setDefault: function() {},  
+  clear: function() {
+    this.remove();
+    // this.model.destroy();
+  }
 });
 
-///////////////////////////////////////////////////////////////
 
-Model.Out = Model.Var.extend({
+/* Param:
+      project
+      design
+      id
+*/
+
+Model.Param = Model.Var.extend({
   initialize: function(options) {
     options.formula = localStorage.getItem('out_' + this.id);
 
@@ -292,7 +290,7 @@ Model.InArray = Model.Var.extend({
 ///////////////////////////////////////////////////////////////
 
 Templates.frame = '<ul id="vars">' +
-                    '<h1>results</h1> <div id="results"></div>' +
+                    '<h1>parameters</h1> <div id="parameters"></div>' +
                     '<h1>inputs</h1>  <div id="inputs"></div>' +
                   '</ul>';
 
@@ -333,25 +331,19 @@ var Snorkle = Backbone.Model.extend({
     this.set( kv(id, model) );
     var view = new View.In({ model: model });
     $('div#inputs').prepend( view.render().el );
-
     return model;
   },
-	renameOutput: function(id, new_id) {
-		// this.get(id).
-	},
-	removeOutput: function(id) {
-//    this.get(id).clear()
-	},
-  addOutput: function(id, options) {
+  addParam: function(id, options) {
     options = options || { initial: 0 };
     options.id = id; // very useful
     options.parent = this;
     
-    var m    = new Model.Out( options );
+    var m    = new Model.Param( options );
+    
     this.set( kv(id, m) ); // add it to vars for this Snorkle
 
-    var view = new View.Out({ model: m }); // create + insert view
-    $("div#results").append( view.render().el );
+    var view = new View.Param({ model: m }); // create + insert view
+    $("div#parameters").append( view.render().el );
     
     return m;
   },

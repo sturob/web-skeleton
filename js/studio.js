@@ -121,12 +121,12 @@ $(function() {
   var J = new Snorkle({}, { change: _.throttle(changed, 100) });
 
   // TODO set these up dynamically on a per design-basis
-  J.addOutput( 'scale', { initial: 1 } );
-  J.addOutput( 'gap' );
-  J.addOutput( 'fontsize');   J.addOutput( 'wtf' );
-  J.addOutput( 'rand' );      J.addOutput( 'wave' );
-  J.addOutput( 'C' );         J.addOutput( 'D' );
-  J.addOutput( 'E' );       	J.addOutput( 'F' );
+  J.addParam( 'scale', { initial: 1 } );
+  J.addParam( 'gap' );
+  J.addParam( 'fontsize' ); J.addParam( 'wtf' );
+  J.addParam( 'rand' );     J.addParam( 'wave' );
+  J.addParam( 'C' );        J.addParam( 'D' );
+  J.addParam( 'E' );        J.addParam( 'F' );
 
   var current_design = 'breton', // change for each design
   		editors = {
