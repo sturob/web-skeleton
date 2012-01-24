@@ -4,9 +4,7 @@ function append_png() {
   meh.innerHTML = '<img src="'+img+'">';
 }
 
-
 $(function() {
-  
   // bind UI
   function toggle_pause () {
     paused = ! paused;
@@ -39,7 +37,7 @@ $(function() {
       new_size = default_size;
     }
     canvas.sizeRatio = new_size.x / default_size.x;
-    canvas.width = new_size.x;
+    canvas.width  = new_size.x;
     canvas.height = new_size.y;
     changed();
   }
@@ -62,8 +60,6 @@ $(function() {
       this.last  = now;
     }
   }
-  
-
   
   
   if (typeof io != "undefined") {
@@ -206,12 +202,10 @@ $(function() {
       J = new Snorkle({}, { design: id, change: _.throttle(changed, 100) });
       
       // TODO set these up dynamically on a per design-basis
-      J.addParam( 'scale', { initial: 1 } );
-      J.addParam( 'gap' );
-      J.addParam( 'fontsize' ); J.addParam( 'wtf' );
-      J.addParam( 'rand' );     J.addParam( 'wave' );
-      J.addParam( 'C' );        J.addParam( 'D' );
-      J.addParam( 'E' );        J.addParam( 'F' );
+      // J.addParam( 'scale', { initial: 1 } );
+      // J.addParam( 'gap' );
+      // J.addParam( 'fontsize' ); J.addParam( 'wtf' );
+      // J.addParam( 'rand' );     J.addParam( 'wave' );
       
       changed();
       window.ev = new tickEvent();

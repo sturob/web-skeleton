@@ -151,28 +151,24 @@ View.In = View.Var.extend({
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Templates.param =
-  '<button class="delete">&times;</button>' +
-  '<h2><%= id %></h2>' +
-  '<span class="viz"></span> <span class="value"></span> <span class="raw"></span>' +
-  '<input class="code" type="text" value="<%= formula %>">' +
-  '<input class="default_value" type="text" value="<%= initial %>">';
+Templates.param = '<button class="delete">&times;</button>' +
+                  '<h2><%= id %></h2>' +
+                  '<span class="viz"></span> <span class="value"></span> <span class="raw"></span>' +
+                  '<input class="code" type="text" value="<%= formula %>">' +
+                  '<input class="default_value" type="text" value="<%= initial %>">';
 
 View.Param = View.Var.extend({
   tagName:   'li',
   className: 'result',
   template:  _.template( Templates.param ),
-  
   events: {
-    // add
-    // rename... patience!
-    'click  button.delete':        'clear',
+    // rename
+    'click  button.delete':       'clear',
     'keyup  input.code':          'updateFormula',
     'change input.default_value': 'setDefault'
   },
   initialize: function() {
     this.initHistory();
-    // this.model.bind('change', this.render, this);
     this.model.bind('destroy', this.remove, this);
   },
   render: function() {
@@ -186,32 +182,19 @@ View.Param = View.Var.extend({
   setDefault: function() {},  
   clear: function() {
     this.remove();
-    // this.model.destroy();
+    this.model.destroy();
   }
 });
 
-
-/*
-
-
-
- Param:
-      project
-      design
-      id
-*/
-
-
 Model.Param = Model.Var.extend({
+  defaults: {
+    initial: 0,  raw: 0,  formula: ""
+  },
   initialize: function(options) {
-    options.formula = localStorage.getItem('out_' + this.id);
-
-    if (typeof options.initial == "undefined" || options.initial == null) options.initial = 0;
-    
-    this.set({ raw: options.initial, value: options.initial, formula: options.formula });
-    
+    // options.formula = localStorage.getItem('out_' + this.id);
+    // if (typeof options.initial == "undefined" || options.initial == null) options.initial = 0;
+    this.set( options );
     this.initHistory();
-
     return this;
   },
   calculateEntered: function(formula) {
@@ -226,65 +209,41 @@ Model.Param = Model.Var.extend({
 			// console.log(f);
     } catch (e) { // error if the code was garbage
       ok = false;
-      this.set({ error: e });
-    }
+      this.error = e;
+    };
     try { // ...to actually run the function
-      f.call( this.get('parent').reals );
+      f.call( GlobalSnorkle.reals );
     } catch (e) { // error if the code is runtime bad
-      this.set({ error: e });
+      this.error = e;
       ok = false;
-    }
-
-    localStorage.setItem('out_' + this.id, formula );
+    };
+    this.save({ formula: formula });
     
     if (ok) {
 			this.calculate = f; // set the calculate function that tick() will call
-			var callback = this.get('parent').changeCallback;
+			var callback = GlobalSnorkle.changeCallback;
 			callback && callback(); 
 		}
     return this;
   },
   update: function() {
     if (typeof this.calculate == 'function') {
-      var v = this.calculate.call( this.get('parent').reals );
+      var v = this.calculate.call( GlobalSnorkle.reals );
       this.addToHistory( v );
       this.set({ value: v });
     } else {
-      this.set({ error: 'calculate() is not set'});
+      this.error = 'calculate() is not set';
     }
   },
   value: function() {
     return this.get('value')
-  },
-  setInitial: function(val) {
-    // this.options
   }
 });
 
 
-
-// Collection.Params = Backbone.Collection.extend({
-//   model: Model.Param,
-//   localStorage: new Store("param"),
-//   done: function() {
-//     return this.filter(function(todo){ return todo.get('done'); });
-//   },
-//   remaining: function() {
-//     return this.without.apply(this, this.done());
-//   },
-//   nextOrder: function() {
-//     if (!this.length) return 1;
-//     return this.last().get('order') + 1;
-//   },
-//   comparator: function(todo) {
-//     return todo.get('order');
-//   }
-// });
-
-
-//  window.ParamsList = new Collection({ localStorage: n});
-
-
+Collection.Params = Backbone.Collection.extend({
+  model: Model.Param
+});
 
 
 ///////////////////////////////////////////////////////////////
@@ -293,7 +252,7 @@ Model.InArray = Model.Var.extend({
   initialize: function() {
     this.children = [];
   },
-  value: function(values) { // takes and array and sets children or returns array of child values
+  value: function(values) { // takes an array and sets children or returns array of child values
     if (typeof values == "undefined" || values == null) {
       var ret = [];
       _(this.children).each( function(child) {
@@ -340,13 +299,20 @@ View.UI = Backbone.View.extend({
   addParam: function() {
     var name = prompt('Parameter name?');
     if (name) {
-      J.addParam( name );
+      
+      var param = new Model.Param({ id: name });
+      ParamsList.add( param );
+      GlobalSnorkle.addParam( param ); // display it and wire it to vars
     }
   }
 });
 
 var Snorkle = Backbone.Model.extend({
-  initialize: function(huh, options) {    
+  initialize: function(huh, options) {
+    window.GlobalSnorkle = this; // hacky but fuck this straightjacket shit seriously
+    this.reals = {};
+    this.changeCallback = options.change;
+    
     // remove previous UI
     $('ul.Snorkle').remove();
     
@@ -358,8 +324,20 @@ var Snorkle = Backbone.Model.extend({
       this.updateReals();
     });
     
-		this.changeCallback = options.change;
-    this.reals = {};
+    // setup the list of params
+    window.ParamsList = new Collection.Params;
+
+    // define it's localStorage
+    ParamsList.localStorage = new Store( options.design );
+    
+    // load all on reset
+    ParamsList.bind("reset", function(what) {
+      this.each( GlobalSnorkle.addParam );
+    });
+    // ParamsList.bind('all', function(a){ console.log(a); });
+
+    ParamsList.fetch();  // load any saved params
+
     this.updateReals();
   },
   updateReals: function() {
@@ -378,7 +356,6 @@ var Snorkle = Backbone.Model.extend({
   },
   addInput: function(id, options) {
     options.id = id; // very useful
-    options.parent = this;
     
     var model = new Model.In( options );
     this.set( kv(id, model) );
@@ -386,23 +363,13 @@ var Snorkle = Backbone.Model.extend({
     $('div#inputs').prepend( view.render().el );
     return model;
   },
-  addParam: function(id, options) {
-    options = options || { initial: 0 };
-    options.id = id; // very useful
-    options.parent = this;
-    
-    var m = new Model.Param( options );
-    
-    this.set( kv(id, m) ); // add it to vars for this Snorkle
-
-    var view = new View.Param({ model: m }); // create + insert view
-    $("div#parameters").append( view.render().el );
-    
-    return m;
+  addParam: function(param) {
+    GlobalSnorkle.set( kv(param.id, param) );
+    var view = new View.Param({ model: param });
+    $('div#parameters').prepend( view.render().el );
   },
   addInputArray: function(id, options) {
     options.id = id;
-    options.parent = this;
     
     var v = new Model.InArray( options );
 
