@@ -5,28 +5,33 @@ function append_png() {
 }
 
 var dump_design = function(id) { 
-  var keys = _( localStorage.getItem(id).split(',') ).map(function(a) {
-    return id + '-' + a
-  }).concat([ id + '_paperjs', id + '_canvas' ]);
 
   var the_dump = {};
-  _( keys ).each( function(it, k) {
-    the_dump[it] = localStorage.getItem(it);
+  _( localStorage.getItem(id).split(',') ).each( function(it, n) {
+    the_dump[it] = JSON.parse( localStorage.getItem(id + '-' + it) );
   });
+  
+  _([ 'paperjs', 'canvas' ]).each( function(it, n) {
+    the_dump[it] = localStorage.getItem( id + "_" + it );
+  });
+  
   return the_dump;
 };
   
-setInterval(function(){
-  var data = dump_design( current_design );
   
+function save_a_version() {
+  var data = dump_design( current_design );
   $.ajax({
     type: 'POST',
     url: 'http://localhost:6969/' + current_design,
-    data: data
-    // success: success,
-    // contentType: 'application/json'
+    data: JSON.stringify( data ),
+    dataType: 'json'
+    
+    // success: success, contentType: 'application/json'
   });
-}, 6000);
+}
+
+setInterval(save_a_version, 60000);
 
 $(function() {
   // bind UI

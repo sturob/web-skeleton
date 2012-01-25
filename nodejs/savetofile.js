@@ -18,19 +18,19 @@ require("http").createServer(function(request, response) {
     request.on('end', function () {
       response.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       response.end();
-      
-      console.log( querystring.parse( body ) )
-      return;
       var date = new Date(Date.now()).toISOString().replace(/:/g,'\.');
-      var filename = file_id + '_' + date;
-      
+      var filename = '/tmp/' + file_id + '_' + date + '.json';
       var fs = require('fs');
+      
       var stream = fs.createWriteStream( filename );
+      var tmp = JSON.parse( body );
+      
+      var output = JSON.stringify(tmp, null, 2 );
       stream.once('open', function(fd) {
-        stream.write(body);
+        stream.write( output );
       });
-      console.log('wrote ' + filename + '\n');
-      // console.log( body );
+      console.log('wrote ' + filename);
+      // console.log( output );
     });
   }
 }).listen(6969);
