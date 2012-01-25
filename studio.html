@@ -43,8 +43,12 @@
       <option id="breton">breton</option>
       <option id="lines">lines</option>
       <option id="fibonacci">fibonacci</option>
+      <option id="blocks">blocks</option>
     </select>
+    <button id="reload">&#x21BB;</button>
+    <button id="save_a_version">Save</button>
     <button id="pause">||</button>
+
     <span id="fps"></span>
   </div>
         
@@ -56,10 +60,13 @@
   
   <div id="editor">
   	<div class="tabs">
-      <a href="#paperjs_editor">paper.js</a> <a href="#canvas_editor">canvas</a>
+      <a href="#paperjs_editor">paper.js</a> 
+      <a href="#canvas_editor">canvas</a>
+      <a href="#initial_editor">initial</a>
   	</div>
   	<div class="editor" id="paperjs_editor"></div>
   	<div class="editor" id="canvas_editor"></div>
+  	<div class="editor" id="initial_editor"></div>
   </div>
 </body>
 </html>

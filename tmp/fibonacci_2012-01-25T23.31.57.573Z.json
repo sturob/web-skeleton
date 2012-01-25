@@ -1,0 +1,52 @@
+{
+  "twist": {
+    "initial": "0.117101",
+    "raw": 0,
+    "formula": "",
+    "id": "twist",
+    "history_length": 50,
+    "history": [],
+    "value": "0.117101"
+  },
+  "embiggen": {
+    "initial": ".012",
+    "raw": 0,
+    "formula": "",
+    "id": "embiggen",
+    "history_length": 50,
+    "history": [],
+    "value": ".012"
+  },
+  "radius": {
+    "initial": "4",
+    "raw": 0,
+    "formula": "",
+    "id": "radius",
+    "history_length": 50,
+    "history": [],
+    "value": "4"
+  },
+  "linear_big": {
+    "initial": 0,
+    "raw": 0,
+    "formula": "0 ",
+    "id": "linear_big",
+    "history_length": 50,
+    "history": [],
+    "value": 0
+  },
+  "spread": {
+    "initial": ".075",
+    "raw": 0,
+    "formula": "",
+    "id": "spread",
+    "history_length": 50,
+    "history": [
+      null,
+      null
+    ]
+  },
+  "canvas": "",
+  "paperjs": "window.dots = [];\nv.dotcount = 4399;\n\npaper.project.layers[0].removeChildren();\n\nfor (var i = 0, l = v.dotcount; i < l; i++) {\n  dots[i] = new Path.Circle( [ 100, 100 ], 1 );  \n}\n\n\nvar offset   = 310 * canvas.sizeRatio;\n\nfor (var i = 0, l = v.dotcount; i < l; i++) {\n  if (i > 4000 || i < 10) continue;\n  var x = canvas.sizeRatio * (Math.cos(i * twist) * (i * spread)),\n      y = canvas.sizeRatio * (Math.sin(i * twist) * (i * spread)),\n      size = (Math.sqrt(i) * embiggen * radius) * canvas.sizeRatio;\n  \n  if (linear_big) size = radius;\n  window.c = dots[i];\n  c.segments[2].point.x = 0;\n  c.segments[2].point.y = 0;\n\n  //var path = new Path.Rectangle(new Point(80, 25), size);\n  c.position.x = offset + x;\n  c.position.y = offset + y;\n  //if (x < -300 || x > 300 || y < -300) continue;\n  c.fillColor = '#333';\n  if (i% 15) continue;\n  c.fillColor.red   = (i %  3 == 0) ? 1 : 0.5;\n  c.fillColor.green = (i %  4 == 0) ? 1 : 0.5;\n  c.fillColor.blue  = (i %  8 == 0)  ? 1 : 0.5;\n  c.fillColor.green += Math.sin(i/143);\n  c.fillColor.blue  += Math.sin(i/210);\n  c.fillColor.red   += Math.sin(i/280);\n}\n",
+  "initial": "\nalert('dots go...');\n"
+}

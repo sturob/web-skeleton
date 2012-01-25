@@ -5,16 +5,13 @@ function append_png() {
 }
 
 var dump_design = function(id) { 
-
   var the_dump = {};
   _( localStorage.getItem(id).split(',') ).each( function(it, n) {
     the_dump[it] = JSON.parse( localStorage.getItem(id + '-' + it) );
   });
-  
-  _([ 'paperjs', 'canvas' ]).each( function(it, n) {
-    the_dump[it] = localStorage.getItem( id + "_" + it );
+  _(editors).each( function(it, editor) {
+    the_dump[editor] = localStorage.getItem( id + "_" + editor );
   });
-  
   return the_dump;
 };
   
@@ -26,12 +23,10 @@ function save_a_version() {
     url: 'http://localhost:6969/' + current_design,
     data: JSON.stringify( data ),
     dataType: 'json'
-    
-    // success: success, contentType: 'application/json'
   });
 }
 
-setInterval(save_a_version, 60000);
+setInterval(save_a_version, 180000);
 
 $(function() {
   // bind UI
@@ -115,7 +110,7 @@ $(function() {
   window.context    = canvas.getContext('2d');
   window.previous   = {};
   window.ev         = new tickEvent();
-  window.v          = {};
+  window.v          = { inputs: {} };
   window.onFrame    = function() {}; // gonna be overridden
 
   window.changed = function() {
@@ -138,6 +133,16 @@ $(function() {
     Design.load( $(this).find($('option:selected'))[0].id );
   });
   
+  $('#reload').click(function() {
+    Design.load( current_design );
+  })
+  
+  $('#save_a_version').click(function() {
+    save_a_version();
+  })
+  
+  
+  
   // initialisations
   paper.install( window );
   paper.setup( canvas ); // Create an empty project and a view for the canvas
@@ -147,9 +152,10 @@ $(function() {
 
   window.current_design = 'breton'; // change for each design
   
-  var	editors = {
+  window.editors = {
         'canvas':  { f: function() {} },
-        'paperjs': { f: function() {} }
+        'paperjs': { f: function() {} },
+        'initial': { f: function() {} }
       };
 
   function code_change_for(key) { // generate a function to deal with changes to code for :key
@@ -157,14 +163,17 @@ $(function() {
       var f_text = editors[key].ace.getSession().getValue();
   		var err = false;
       try {
-  			editors[key].f = new Function('ev', 'n', 'with(v.inputs) { ' + f_text + ' } ');
+  			editors[key].f = new Function('ev', 'n', 'with (v.inputs) { ' + f_text + ' } ');
       } catch (e) {
   			err = e;
+        console.log( key );
+        console.log( f_text );
+        console.log( err );
       }
   		if (! err) {
         changed();
   		}
-      localStorage.setItem( current_design + "_" + key, f_text ); // breton
+      localStorage.setItem( current_design + "_" + key, f_text ); // save if OK only
     }
   }
   
@@ -236,7 +245,8 @@ $(function() {
       localStorage.setItem( 'tudio::current_design', current_design );
       
       console.log('loading design: ' + id);
-    
+      $('#design_picker option#' + id).attr({ selected: true }); // make sure
+      
       // load code
       _(editors).each(function(editor, key) {
         var session = editor.ace.getSession();
@@ -265,6 +275,21 @@ $(function() {
     v = {
       inputs: J.reals
     };
+    
+    window.onFrame = function(event) { // replace with your own
+      editors.paperjs.f.call(v, event, 0); // call with this set to p
+    };
+  };
+  
+  
+  Design.blocks = function() {
+    $(canvas).css({ background: 'black' });
+    
+    v = {
+      inputs: J.reals
+    };
+    
+    editors.initial.f.call(v); // call with this set to p
     
     window.onFrame = function(event) { // replace with your own
       editors.paperjs.f.call(v, event, 0); // call with this set to p
