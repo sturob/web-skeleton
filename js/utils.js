@@ -5,6 +5,11 @@ function kv (k, v) {
   return s;
 }
 
+var log = function(t) {
+  if (console) console.log(t);
+};
+
+
 
 function dump(obj) {
   console.log( JSON.stringify(obj, null, 2) )

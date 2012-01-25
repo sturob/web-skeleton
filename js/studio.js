@@ -4,6 +4,30 @@ function append_png() {
   meh.innerHTML = '<img src="'+img+'">';
 }
 
+var dump_design = function(id) { 
+  var keys = _( localStorage.getItem(id).split(',') ).map(function(a) {
+    return id + '-' + a
+  }).concat([ id + '_paperjs', id + '_canvas' ]);
+
+  var the_dump = {};
+  _( keys ).each( function(it, k) {
+    the_dump[it] = localStorage.getItem(it);
+  });
+  return the_dump;
+};
+  
+setInterval(function(){
+  var data = dump_design( current_design );
+  
+  $.ajax({
+    type: 'POST',
+    url: 'http://localhost:6969/' + current_design,
+    data: data
+    // success: success,
+    // contentType: 'application/json'
+  });
+}, 6000);
+
 $(function() {
   // bind UI
   function toggle_pause () {
@@ -116,8 +140,9 @@ $(function() {
 
   window.J = new Snorkle({}, { change: _.throttle(changed, 100) }); // TODO this empty
 
-  var current_design = 'breton', // change for each design
-  		editors = {
+  window.current_design = 'breton'; // change for each design
+  
+  var	editors = {
         'canvas':  { f: function() {} },
         'paperjs': { f: function() {} }
       };
@@ -134,7 +159,7 @@ $(function() {
   		if (! err) {
         changed();
   		}
-      localStorage.setItem( current_design + key, f_text ); // breton
+      localStorage.setItem( current_design + "_" + key, f_text ); // breton
     }
   }
   
@@ -198,14 +223,7 @@ $(function() {
       paused = true;
       paper.project.layers[0].removeChildren();
       
-      // id
       J = new Snorkle({}, { design: id, change: _.throttle(changed, 100) });
-      
-      // TODO set these up dynamically on a per design-basis
-      // J.addParam( 'scale', { initial: 1 } );
-      // J.addParam( 'gap' );
-      // J.addParam( 'fontsize' ); J.addParam( 'wtf' );
-      // J.addParam( 'rand' );     J.addParam( 'wave' );
       
       changed();
       window.ev = new tickEvent();
@@ -217,7 +235,7 @@ $(function() {
       // load code
       _(editors).each(function(editor, key) {
         var session = editor.ace.getSession();
-        var saved_f = localStorage.getItem( current_design + key ) || '';
+        var saved_f = localStorage.getItem( current_design + '_' + key ) || '';
         session.setValue( saved_f );
         editor.onChange();
       });

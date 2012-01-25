@@ -179,7 +179,9 @@ View.Param = View.Var.extend({
     var f = $(this.el).find('input.code').val();
     this.model.calculateEntered( f ).update();
   },
-  setDefault: function() {},  
+  setDefault: function() {
+    this.model.save({ initial: $(this.el).find('input.default_value').val() });
+  },  
   clear: function() {
     this.remove();
     this.model.destroy();
@@ -195,6 +197,7 @@ Model.Param = Model.Var.extend({
     // if (typeof options.initial == "undefined" || options.initial == null) options.initial = 0;
     this.set( options );
     this.initHistory();
+    this.set({ value: this.get('initial') });
     return this;
   },
   calculateEntered: function(formula) {
@@ -210,6 +213,7 @@ Model.Param = Model.Var.extend({
     } catch (e) { // error if the code was garbage
       ok = false;
       this.error = e;
+      console.error(e)
     };
     try { // ...to actually run the function
       f.call( GlobalSnorkle.reals );
@@ -236,7 +240,7 @@ Model.Param = Model.Var.extend({
     }
   },
   value: function() {
-    return this.get('value')
+    return this.get('value') || this.get('initial')
   }
 });
 
@@ -299,7 +303,6 @@ View.UI = Backbone.View.extend({
   addParam: function() {
     var name = prompt('Parameter name?');
     if (name) {
-      
       var param = new Model.Param({ id: name });
       ParamsList.add( param );
       GlobalSnorkle.addParam( param ); // display it and wire it to vars
