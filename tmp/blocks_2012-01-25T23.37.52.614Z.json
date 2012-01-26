@@ -1,0 +1,14 @@
+{
+  "size": {
+    "initial": 0,
+    "raw": 0,
+    "formula": "1",
+    "id": "size",
+    "history_length": 50,
+    "history": [],
+    "value": 0
+  },
+  "canvas": "",
+  "paperjs": "var a = [];",
+  "initial": "v.blocks = [];\n\nfor (var i = 0, l = 64; i < l; i++) {\\n  dots[i] = new Path.Circle( [ 100, 100 ], 1 );\n"
+}

@@ -1,0 +1,14 @@
+{
+  "size": {
+    "initial": 0,
+    "raw": 0,
+    "formula": "1",
+    "id": "size",
+    "history_length": 50,
+    "history": [],
+    "value": 0
+  },
+  "canvas": "",
+  "paperjs": "paper.project.layers[0].removeChildren();\n//b.originals = _.map( b.segments, function(s){ return [s.point.x, s.point.y] });\nv.blocks = [];\n\nfor (var i = 0, l = 144; i < l; i++) {\n  var b = new Path.Circle( [ 300, 300 ], 10 );\n\n  b.position.x = 38 +  (i % 12) * 48;\n  b.position.y = 48 + mod(i, 12) * 4;\n\n  b.fillColor = '#0000ff';\n  //b.fillColor.blue = (i / 64);\n  if (i % 2.5) {\n    b.fillColor.saturation = 0;\n    b.fillColor.brightness = 0.999;\n  }\n  \n  b.fillColor.hue = i * 4;\n  //b.segments[0].point.x = Math.sin(Date.now()/300) * i;\n  \n  //b.rotate( (100 + Math.sin(i*i)) / 40 )\n  //b.scale(.9);\n  if (true) {\n\n  } else {\n    \n  }\n}\n",
+  "initial": "\n"
+}

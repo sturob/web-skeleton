@@ -137,11 +137,7 @@ $(function() {
     Design.load( current_design );
   })
   
-  $('#save_a_version').click(function() {
-    save_a_version();
-  })
-  
-  
+  $('#save_a_version').click( save_a_version );
   
   // initialisations
   paper.install( window );
@@ -212,9 +208,11 @@ $(function() {
     ev.update();      // update the event var
     update_fps();     // show frames per second
     J.updateReals();  // 
+
     if (_.isEqual( previous, v.inputs )) return false; // && function has not changed
   	previous = _.clone( v.inputs );
     J.recalculate();
+
     window.onFrame( ev );
     paper.view.draw();
     drawPost = true; // for postCanvas... can't just run it here cos of timing issues :/
@@ -276,6 +274,23 @@ $(function() {
       inputs: J.reals
     };
     
+    editors.initial.f.call(v); // call with this set to p
+    
+    window.onFrame = function(event) { // replace with your own
+      editors.paperjs.f.call(v, event, 0); // call with this set to p
+    };
+  };
+
+
+  Design.discs = function() {
+    $(canvas).css({ background: 'black' });
+    
+    v = {
+      inputs: J.reals
+    };
+    
+    editors.initial.f.call(v); // call with this set to p
+    
     window.onFrame = function(event) { // replace with your own
       editors.paperjs.f.call(v, event, 0); // call with this set to p
     };
@@ -306,6 +321,8 @@ $(function() {
       smooth: false
     };
 	
+    editors.initial.f.call(v); // call with this set to p
+  
    // move to browser coding?
     v.path = new Path();
     // v.path.strokeWidth = 0;

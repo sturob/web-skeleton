@@ -19,7 +19,7 @@ require("http").createServer(function(request, response) {
       response.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       response.end();
       var date = new Date(Date.now()).toISOString().replace(/:/g,'\.');
-      var filename = '/tmp/' + file_id + '_' + date + '.json';
+      var filename = './tmp/' + file_id + '_' + date + '.json';
       var fs = require('fs');
       
       var stream = fs.createWriteStream( filename );
@@ -28,6 +28,8 @@ require("http").createServer(function(request, response) {
       var output = JSON.stringify(tmp, null, 2 );
       stream.once('open', function(fd) {
         stream.write( output );
+        stream.destroySoon();
+      console.log('closed ' + filename);
       });
       console.log('wrote ' + filename);
       // console.log( output );
