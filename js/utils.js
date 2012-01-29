@@ -1,17 +1,73 @@
 // mine
 
-function kv (k, v) {
+// TODO combine kv() + a2o() as hash(key|keys[], [value])
+
+function kv (k, v) { // (1, 2) -> { 1: 2 }
   var s = {};  s[k] = v;
   return s;
 }
 
-var log = function(t) {
+function a2o (a) {  // [ 'a', 'b', 3 ] -> { 'a': true, 'b': true, 3: true }
+  var o = {};
+  for(var n = 0; n < a.length; n++) {
+    o[a[n]] = true;
+  }
+  return o;
+}
+
+function log (t) {
   if (console) console.log(t);
 };
 
 
+// quick maths + util stuff
 
-function dump(obj) {
+function int(f) {
+  return Math.floor( f );
+}
+
+function mod(a,b) {
+	return a - (a % b);
+}
+
+function clamp(n, min, max) { // not used
+	return Math.min(Math.max(n, min), max);
+}
+
+function of() { // return first valid value
+	for(var i=0; i<arguments.length; i++) {
+		if (typeof arguments[i] != "undefined" || arguments[i] != null) {
+			return arguments[i];
+		}
+	}
+}
+
+//  (0.1, 10, 110) 			 ->  20
+//  (.1, 5, 10) 				 ->   5.5
+//  (.1, 10, 5) 				 ->   9.5
+//  (20, 10, 110, 0, 20) -> 110
+function coax(val, min, max, d, e) {
+  var in_min  = (typeof d == "undefined" || d == null) ? 0 : d, // assume input range is:
+			in_max  = (typeof e == "undefined" || e == null) ? 1 : e, // 0.0 - 1.0
+			in_diff = in_max - in_min,
+			diff    = max    - min,
+			ratio   = diff / in_diff,
+			result  = val * ratio;
+
+	return min + result;
+}
+
+function shorten(f) {
+  if (typeof f == 'string') {
+    return f
+  }
+  return Math.round(f * 10000) / 10000
+}
+
+
+
+
+function dump (obj) {
   console.log( JSON.stringify(obj, null, 2) )
 }
 

@@ -1,20 +1,22 @@
 function append_png() {
-  var context = canvas.getContext("2d");
-  var img     = canvas.toDataURL("image/png");
+  var img     = canvas.el.toDataURL("image/png");
   meh.innerHTML = '<img src="'+img+'">';
 }
 
 var dump_design = function(id) { 
-  var the_dump = {};
+  var the_dump = {
+    functions: {}, parameters: {}
+  };
+
   _( localStorage.getItem(id).split(',') ).each( function(it, n) {
-    the_dump[it] = JSON.parse( localStorage.getItem(id + '-' + it) );
+    the_dump.parameters[it] = JSON.parse( localStorage.getItem(id + '-' + it) );
   });
   _(editors).each( function(it, editor) {
-    the_dump[editor] = localStorage.getItem( id + "_" + editor );
+    the_dump.functions[editor] = localStorage.getItem( id + "_" + editor );
   });
   return the_dump;
 };
-  
+
   
 function save_a_version() {
   var data = dump_design( current_design );
@@ -26,7 +28,7 @@ function save_a_version() {
   });
 }
 
-setInterval(save_a_version, 180000);
+//setInterval(save_a_version, 180000);
 
 $(function() {
   // bind UI
@@ -48,42 +50,7 @@ $(function() {
     }
   });
   
-  // dynamic canvas
-  canvas.resize = function(new_size) {
-    var default_size = {  x: 620,  y: 870  },
-        ratio        = default_size.y / default_size.x;
-    
-    if (new_size.x) {
-      new_size.y = new_size.x * ratio;
-    } else if (new_size.y) {
-      new_size.x = new_size.y / ratio;
-    } else {
-      new_size = default_size;
-    }
-    canvas.sizeRatio = new_size.x / default_size.x;
-    canvas.width  = new_size.x;
-    canvas.height = new_size.y;
-    changed();
-  }
-  
-  // passed into the tick
-  function tickEvent() {
-    this.count = 0;  // number of times the frame event was fired
-    this.time  = 0;  // total amount of time passed since the first frame event in secs
-    this.delta = 0;  // time passed in seconds since the last frame event
-    this.first = 0;  // Date.now()/1000 of first call
-    this.last  = 0;  // Date.now()/1000 of the previous call
-    this.update = function() {
-      var now = Date.now() / 1000;
-      if (! this.first) {
-        this.first = now;
-      }
-      this.count++;
-      this.delta = now - this.last;
-      this.time  = now - this.first;
-      this.last  = now;
-    }
-  }
+
   
   
   if (typeof io != "undefined") {
@@ -107,7 +74,6 @@ $(function() {
   // loads of globals that really need to be sorted out
   window.unfocused  = false; // really?
   window.paused     = false;
-  window.context    = canvas.getContext('2d');
   window.previous   = {};
   window.ev         = new tickEvent();
   window.v          = { inputs: {} };
@@ -141,7 +107,7 @@ $(function() {
   
   // initialisations
   paper.install( window );
-  paper.setup( canvas ); // Create an empty project and a view for the canvas
+  paper.setup( canvas.el ); // Create an empty project and a view for the canvas
   canvas.resize({ }); // setup
 
   window.J = new Snorkle({}, { change: _.throttle(changed, 100) }); // TODO this empty
@@ -268,7 +234,7 @@ $(function() {
   //  export window.onFrame
 
   Design.fibonacci = function() {
-    $(canvas).css({ background: 'black' });
+    $(canvas.el).css({ background: 'black' });
     
     v = {
       inputs: J.reals
@@ -283,7 +249,7 @@ $(function() {
 
 
   Design.discs = function() {
-    $(canvas).css({ background: 'black' });
+    $(canvas.el).css({ background: 'black' });
     
     v = {
       inputs: J.reals
@@ -298,7 +264,7 @@ $(function() {
   
   
   Design.blocks = function() {
-    $(canvas).css({ background: 'black' });
+    $(canvas.el).css({ background: 'black' });
     
     v = {
       inputs: J.reals
@@ -313,7 +279,7 @@ $(function() {
   
   
   Design.lines = function() {
-    $(canvas).css({ background: 'black' });
+    $(canvas.el).css({ background: 'black' });
     
     v = {
       inputs: J.reals,
@@ -359,7 +325,7 @@ $(function() {
   };
 
   Design.breton = function() {
-    $(canvas).css({ background: 'white' });
+    $(canvas.el).css({ background: 'white' });
     
     v = {
       inputs: J.reals,

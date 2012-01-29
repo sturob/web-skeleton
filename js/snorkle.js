@@ -204,7 +204,7 @@ Model.Param = Model.Var.extend({
     var f, ok = true;
 
     try { // ... to create function with the code entered
-      f = new Function( 
+      f = new Function(
 				"with (this) {\nreturn " + formula + "\n}"
 	 		);
     	// f.toString = function() { return formula; } 
@@ -338,9 +338,7 @@ var Snorkle = Backbone.Model.extend({
       this.each( GlobalSnorkle.addParam );
     });
     // ParamsList.bind('all', function(a){ console.log(a); });
-
     ParamsList.fetch();  // load any saved params
-
     this.updateReals();
   },
   updateReals: function() {
@@ -399,50 +397,3 @@ var Snorkle = Backbone.Model.extend({
 
 
 
-function kv (k, v) {
-  var s = {};  s[k] = v;
-  return s;
-}
-
-
-function int(f) {
-  return Math.floor( f );
-}
-
-function mod(a,b) {
-	return a - (a % b);
-}
-
-function clamp (n, min, max) { // not used
-	return Math.min(Math.max(n, min), max);
-}
-
-function of () { // return first valid value
-	for(var i=0; i<arguments.length; i++) {
-		if (typeof arguments[i] != "undefined" || arguments[i] != null) {
-			return arguments[i];
-		}
-	}
-}
-
-//  (0.1, 10, 110) 			 ->  20
-//  (.1, 5, 10) 				 ->   5.5
-//  (.1, 10, 5) 				 ->   9.5
-//  (20, 10, 110, 0, 20) -> 110
-function coax(val, min, max, d, e) {
-  var in_min  = (typeof d == "undefined" || d == null) ? 0 : d, // assume input range is:
-			in_max  = (typeof e == "undefined" || e == null) ? 1 : e, // 0.0 - 1.0
-			in_diff = in_max - in_min,
-			diff    = max    - min,
-			ratio   = diff / in_diff,
-			result  = val * ratio;
-
-	return min + result;
-}
-
-function shorten (f) {
-  if (typeof f == 'string') {
-    return f
-  }
-  return Math.round(f * 10000) / 10000
-}
