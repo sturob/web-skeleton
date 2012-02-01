@@ -31,10 +31,11 @@ require("http").createServer(function(request, response) {
         console.log('writing ' + s.path );
         s.write( output );
         s.destroy();
-        console.log('closed' + s.path )
+//        console.log('closed')
       }
       
-      save_stream.once('open', function() { writefile( save_stream ) });  
+      save_stream.once('open', function() { writefile( save_stream ) });
+      
       data_stream.once('open', function() { writefile( data_stream ) });
 
       // console.log( output );
