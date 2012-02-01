@@ -40,20 +40,15 @@
     <button id="z3">Print</button>
     
     design:
-    <select id="design_picker">
-      <option id="breton">breton</option>
-      <option id="lines">lines</option>
-      <option id="fibonacci">fibonacci</option>
-      <option id="blocks">blocks</option>
-      <option id="discs">discs</option>
-    </select>
+    <select id="design_picker"></select>
+    
     <button id="reload">&#x21BB;</button>
     <button id="save_a_version">Save</button>
     <button id="pause">||</button>
 
     <span id="fps"></span>
   </div>
-        
+
   <img id="t" src="images/full-white-t.png">
   
   <canvas id="canvas" keepalive="true" width='620' height='870'></canvas>
@@ -69,6 +64,8 @@
   	<div class="editor" id="paperjs_editor"></div>
   	<div class="editor" id="canvas_editor"></div>
   	<div class="editor" id="initial_editor"></div>
+    
+    <div class="error_message">NO WAY</div>
   </div>
 </body>
 </html>

@@ -87,14 +87,12 @@ function html2less($item, pass) {
   
   $item = $item ? $item : $('body');
   pass = pass ? pass : { max: 50, count: 0, less: "" };
-  
 
-  
   $item.each(function(n, v) {
     var tagName   = this.tagName.toLowerCase(),
         className = this.className ? '.' + this.className : '',
-        selector  = tagName + className;
-        var indented = Array(pass.count * 2).join(" ");
+        selector  = tagName + className,
+        indented = Array(pass.count * 2).join(" ");
 
     if (tmp[selector]) {
       return;

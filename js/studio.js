@@ -122,17 +122,22 @@ $(function() {
 
   function code_change_for(key) { // generate a function to deal with changes to code for :key
     return function(ev) {
-      var f_text = editors[key].ace.getSession().getValue();
-  		var err = false;
+      var ed = editors[key],
+          f_text = ed.ace.getSession().getValue(),
+          error_last_time = !! ed.error;
+      ed.error = false;    
+
       try {
-  			editors[key].f = new Function('ev', 'n', 'with (v.inputs) { ' + f_text + ' } ');
+  			ed.f = new Function('ev', 'n', 'with (v.inputs) { ' + f_text + ' } ');
       } catch (e) {
-  			err = e;
-        console.log( key );
-        console.log( f_text );
-        console.log( err );
+  			ed.error = e;
+        inform_of_error(e);
       }
-  		if (! err) {
+
+  		if (! ed.error) {
+        if (error_last_time) {
+          inform_of_error(false);
+        }
         changed();
   		}
       localStorage.setItem( current_design + "_" + key, f_text ); // save if OK only
@@ -142,7 +147,7 @@ $(function() {
   // setup code editors
   var JavaScriptMode = require("ace/mode/javascript").Mode;
   _(editors).each(function(editor, key) {
-    // editor.id = save_prefix + key;
+    editor.error = false;
     editor.ace = ace.edit( key + "_editor" );
     var session = editor.ace.getSession();
     
@@ -159,7 +164,15 @@ $(function() {
     editor.onChange = code_change_for( key );
     session.on('change', editor.onChange);
   });
-    
+  
+  
+  function inform_of_error(e) {
+    if (e) {
+      $('#editor .error_message').text("line " + e.line + ": " + e.message).show();
+    } else {
+      $('#editor .error_message').text('').hide();
+    }
+  }
 
   
   // animation loop stuff
@@ -216,7 +229,7 @@ $(function() {
         var session = editor.ace.getSession();
         var saved_f = localStorage.getItem( current_design + '_' + key ) || '';
         session.setValue( saved_f );
-        editor.onChange();
+        // editor.onChange();
       });
   
       $('.tabs a:first-child').click(); // TODO remember
@@ -226,6 +239,54 @@ $(function() {
       paused = false;
     }
   }; 
+
+
+
+  Design.valentines = function() {
+    v = {
+      inputs: J.reals
+    };
+    
+    editors.initial.f.call(v); // call with this set to p
+    
+    window.onFrame = function(event) { // replace with your own
+      try {
+        editors.paperjs.f.call(v, event, 0); // call with this set to p
+      } catch(e) {
+        editors.paperjs.error = e;
+        inform_of_error(e);
+      }
+    };
+  };
+
+
+  Design.mexico68 = function() {
+    v = {
+      inputs: J.reals
+    };
+    
+    editors.initial.f.call(v); // call with this set to p
+    
+    window.onFrame = function(event) { // replace with your own
+      editors.paperjs.f.call(v, event, 0); // call with this set to p
+    };
+  };
+
+
+
+
+  Design.triangles = function() {
+    v = {
+      inputs: J.reals
+    };
+    
+    editors.initial.f.call(v); // call with this set to p
+    
+    window.onFrame = function(event) { // replace with your own
+      editors.paperjs.f.call(v, event, 0); // call with this set to p
+    };
+  };
+
 
   // below here - only design specific code
   
@@ -367,6 +428,11 @@ $(function() {
     }		
   };
 
+  var t = _.template('<option id="<%= id %>"><%= id %></option>');
+  _(Design).each(function(d, id) {
+    $('#design_picker').append( t({ id: id }) );
+  });
+  
   Design.load( localStorage.getItem( 'tudio::current_design') || 'breton' );
 
 });
