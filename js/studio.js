@@ -44,7 +44,7 @@ $(function() {
     $('body')[0].className = this.id;
 
     if (this.id == "z2" || this.id == 'z1') {
-       // canvas.resize({ y: 600 });
+       canvas.resize({});
     } else if (this.id == 'z3') {
        canvas.resize({ x: 4200 });
     }
@@ -123,7 +123,7 @@ $(function() {
   function code_change_for(key) { // generate a function to deal with changes to code for :key
     return function(ev) {
       var ed = editors[key],
-          f_text = ed.ace.getSession().getValue(),
+          f_text = ed.ace.getSession().getValue() + "\n",
           error_last_time = !! ed.error;
       ed.error = false;    
 
@@ -173,7 +173,7 @@ $(function() {
       $('#editor .error_message').text('').hide();
     }
   }
-
+  
   
   // animation loop stuff
   var update_fps = _.throttle( function() { fps.innerHTML = shorten(1 / ev.delta) }, 1000);
@@ -241,6 +241,12 @@ $(function() {
   }; 
 
 
+  // below here - only design specific code
+  
+  // note:
+  //  - designs/whatever.js needs to be loadable by tshirt.html also
+  //  export window.onFrame
+
 
   Design.valentines = function() {
     v = {
@@ -288,11 +294,6 @@ $(function() {
   };
 
 
-  // below here - only design specific code
-  
-  // note:
-  //  - designs/whatever.js needs to be loadable by tshirt.html also
-  //  export window.onFrame
 
   Design.fibonacci = function() {
     $(canvas.el).css({ background: 'black' });

@@ -12,8 +12,9 @@ window.canvas = {
       new_size = default_size;
     }
     canvas.sizeRatio = new_size.x / default_size.x;
-    canvas.width  = new_size.x;
-    canvas.height = new_size.y;
+    window.scale = function(n) { return n * canvas.sizeRatio };
+    canvas.el.width  = new_size.x;
+    canvas.el.height = new_size.y;
     changed();
   }
 };

@@ -35,7 +35,6 @@ require("http").createServer(function(request, response) {
       }
       
       save_stream.once('open', function() { writefile( save_stream ) });
-      
       data_stream.once('open', function() { writefile( data_stream ) });
 
       // console.log( output );
