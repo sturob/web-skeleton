@@ -123,12 +123,12 @@ $(function() {
   function code_change_for(key) { // generate a function to deal with changes to code for :key
     return function(ev) {
       var ed = editors[key],
-          f_text = ed.ace.getSession().getValue() + "\n",
+          f_text = ed.ace.getSession().getValue(),
           error_last_time = !! ed.error;
       ed.error = false;    
 
       try {
-  			ed.f = new Function('ev', 'n', 'with (v.inputs) { ' + f_text + ' } ');
+  			ed.f = new Function('ev', 'n', 'with (v.inputs) { ' + f_text + '\n } ');
       } catch (e) {
   			ed.error = e;
         inform_of_error(e);

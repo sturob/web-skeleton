@@ -198,6 +198,7 @@ Model.Param = Model.Var.extend({
     this.set( options );
     this.initHistory();
     this.set({ value: this.get('initial') });
+    this.calculateEntered( this.get('formula') );
     return this;
   },
   calculateEntered: function(formula) {

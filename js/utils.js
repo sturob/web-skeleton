@@ -71,7 +71,7 @@ function dump (obj) {
   console.log( JSON.stringify(obj, null, 2) )
 }
 
-function status (s) { // TODO use a notification thingy
+function setStatus (s) { // TODO use a notification thingy
   window.status = s;
 }
 

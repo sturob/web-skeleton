@@ -18,7 +18,7 @@ window.canvas = {
     changed();
   }
 };
-  
+
 $(function() {
   canvas.el = $('canvas')[0];
   window.context    = canvas.el.getContext('2d');
