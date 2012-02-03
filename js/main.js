@@ -19,11 +19,8 @@ $(function() {
   
   (function animloop() {
     requestAnimFrame( animloop );
-
     ev.update();      // update the event var
-
     window.onFrame && window.onFrame( ev );
-
     paper.view.draw();
   })();
 });
@@ -47,12 +44,16 @@ coax = function(n, min, max, a, b) {
   return old_coax(hack, min, max, a, b);
 };
 
+
+var randomise_count = 0;
 function randomise() {
-  for (p in design.parameters) {
-    raw_params[p] = Math.random();
-  }
+  var animate_to = {};
   
-  apply_para_functions( raw_params );
+  for (p in design.parameters) {
+    $(raw_params).animate( kv(p, Math.random()) )
+  }
+
+//  apply_para_functions( raw_params );
 }
 
 

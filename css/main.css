@@ -194,9 +194,12 @@ input, select {
 .wtf {
   outline: 2px solid red;
 }
-@media only screen and (-webkit-min-device-pixel-ratio: 2) {
-  
+/*
+// for retina displays
+@media only screen and (-webkit-min-device-pixel-ratio: 2) { 
+  // set background images to @2x ones
 }
+*/
 body {
   /*  position: relative;*/
 
@@ -243,6 +246,13 @@ button.zoom {
 button.zoom#out {
   left: 128px;
 }
+button.randomise {
+  position: absolute;
+  bottom: 0px;
+  left: 254px;
+  z-index: 100;
+  font-size: 200%;
+}
 button.tweak {
   position: absolute;
   bottom: 0;
@@ -277,8 +287,9 @@ body .dg {
 body.tweak .dg {
   display: block !important;
   width: 100%;
+  max-width: 400px;
   z-index: 100 !important;
-  margin: 0 auto;
+  margin: 0 0 auto auto;
   opacity: 0.9;
   /* Auto-placed GUI's */
 
