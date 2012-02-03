@@ -31,100 +31,31 @@
       js( 'lib/less.js' );
       js( 'dev.js' );
     }
-
     js( 'lib/jquery-1.7.min.js' );
     js( 'lib/underscore.js' );
+    js( 'utils.js' );
     js( 'lib/custom/dat.gui.js' );
     js( 'lib/canvas/paper.js' );
     js( 'custom/vectee.js' );
     js( 'main.js' );
-    js( 'utils.js' );
-    
+
   </script>
 
-  <script type="text/javascript">
-  
-    var current = {
-      vert:   20,
-      wiggle: 0,
-      thick:  2
-    };
-    
-    var previous = {
-      vert:   0,
-      wiggle: 0,
-      thick:  0
-    }
-    
-    var steps = {
-      vert:   1,
-      wiggle: 0.25,
-      thick:  0.05
-    };
-    
-    var last_pos = {
-      vert:   0,
-      wiggle: 0,
-      thick:  0
-    };
-    
-    var last_zoom = 1;
-    
-    var p = {
-      pause: false,
-      inputs: current
-    };
-    
-    
-    var old_coax = coax;
+  <script type="text/javascript">    
+    var last_zoom = 1,
+        last_pos = {};
 
-    // coax = function (x, from, to) { // expects input 0-1
-    //   this
-    // }
-    
-    
-    
-    // design.functions.paperjs
-    
-    
-    var J = { // mocked snorkle.js so we don't have to change code from prototyping in snorkle to here
-      updateReals: function() {
-      },
-      recalculate: function() {},
-      reals: current
-    };
-    
-    var mine = function(ev, n) {
-      var i = ev.count;
-      var b = n % 2,
-          c = Math.floor(n / 2) * p.inputs.vert,
-          d = Math.sin(n * 10000) * p.inputs.wiggle,
-          e = 2; // Math.sin(i / 50);
-
-      p.path.strokeWidth = p.inputs.thick;
-      p.path.strokeColor = '#ff0';
-
-      return {   x: 0 + b * p.width,
-                 y: 3 + d + c
-      };
-    }
-    
-    
-    
     $(function() {
-      var gui = new dat.GUI({  });
-      gui.add(current, 'vert',     0, 40).step(.5).listen();
-      gui.add(current, 'wiggle', -10, 10).step(0.25).listen();
-      gui.add(current, 'thick',    0,  5).step(0.05).listen();
+      window.gui = new dat.GUI({  }); // meh
       
       $('.slider').bind('touchend', function(e) {
         var v = $(this).parents( 'li.cr' ).find( '.property-name' ).text();        
         var x = e.originalEvent.changedTouches[0].clientX;
         
         if (x < 40) {
-          current[v] -= steps[v];
+          raw_params[v] -= steps[v];
         } else if (x > 600) {
-          current[v] += steps[v];
+          raw_params[v] += steps[v];
         }
       })
       
@@ -146,9 +77,9 @@
             
         if (movement > 1) {
           if (last_pos[v] < pos) {
-            current[v] += steps[v] * movement / 10;
+            raw_params[v] += steps[v] * movement / 10;
           } else {
-            current[v] -= steps[v] * movement / 10;
+            raw_params[v] -= steps[v] * movement / 10;
           }
         }
         
@@ -202,66 +133,6 @@
   
   <!-- <a href="paper.html">yeah</a> -->
 </body>
-
-<script type="text/paperscript" canvas="canvas">
-  p.points = 399;
-  p.smooth = false;
-  p.mousePos = view.center / 2;
-  p.pathHeight = p.mousePos.y;
-  p.project = project;
-  p.view = view;
-  
-  p.path = new Path();
-  p.path.strokeColor = 'red';
-  // p.path.fillColor = 'white';
-  p.path.closed = false;    
-
-  p.initializePath = function (points) {
-    p.points = points || p.points;
-    
-    p.center = view.center;
-    p.width  = view.size.width;
-    p.height = view.size.height / 2;
-    p.path.segments = [];
-    for (var i = 0; i < p.points; i++) {
-      var point = new Point(p.width / p.points * i, p.center.y);
-      p.path.add(point);
-    }
-    p.path.fullySelected = false;
-  }
-
-  p.initializePath();
-
-
-  function onFrame(event) {
-        
-    if (p.pause) return;
-    // $fps.text(1/ event.delta);      
-
-    var no_op = _.isEqual( previous, current );
-    
-    previous = _.clone( current );
-    
-    if (no_op && last_zoom == view.zoom) return;
-    last_zoom = view.zoom;
-    
-    p.pathHeight += (p.center.y - p.mousePos.y - p.pathHeight) / 10;
-    
-    J.updateReals();
-    J.recalculate();
-    
-    // p.inputs = J.reals;
-    
-    for (var i = 0; i < p.points; i++) {
-      var pos = mine.call(p, event, i); // call with this set to p
-      p.path.segments[i].point.y = pos.y;
-      p.path.segments[i].point.x = pos.x;
-    }
-  
-    if (p.smooth) { p.path.smooth(); }
-  }
-  
-</script>
 
 </html>
 
