@@ -89,6 +89,8 @@
       
       // p.view.scrollBy(point)
       
+      $( 'button.randomise' ).click( randomise );
+      
       $('button.zoom').click(function() {
         if (p.view.zoom == 1 && this.id == 'out') {
           $('body').addClass('tshirt_view');
@@ -127,6 +129,7 @@
   <div id="bar">
     <button class="zoom" id="out">-</button>
     <button class="zoom" id="in">+</button>
+    <button class="randomise">?</button>
   
     <button class="tweak">%</button>
   </div>

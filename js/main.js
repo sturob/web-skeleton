@@ -47,6 +47,14 @@ coax = function(n, min, max, a, b) {
   return old_coax(hack, min, max, a, b);
 };
 
+function randomise() {
+  for (p in design.parameters) {
+    raw_params[p] = Math.random();
+  }
+  
+  apply_para_functions( raw_params );
+}
+
 
 function load_design(design) {    
 //  var initial = 
@@ -64,7 +72,7 @@ function load_design(design) {
 
     // load sliders
     design.parameters[p].f = new Function( "with (this) {\nreturn " + design.parameters[p].formula + "\n}" );
-
+    
     var frame_f = new Function('ev', 'n', 'with (v) { ' + design.functions.paperjs + '\n } ');
   }
   
@@ -72,7 +80,6 @@ function load_design(design) {
   
   function apply_para_functions(inputs) {
     for (p in design.parameters) {
-      // console.log( design.parameters[p].f )
       hack = inputs[p];
       coaxed_params[p] = design.parameters[p].f.call( inputs );
     }
