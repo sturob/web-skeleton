@@ -17,7 +17,7 @@ $(function() {
   paper.setup( canvas.el ); // Create an empty project and a view for the canvas
   canvas.resize({ }, changed); // setup
 
-  $.get('js/designs/blocks.json', function(design) {
+  $.get( 'js/designs/blocks.json', function(design) {
     window.design = design;
     load_design( design )
   });
@@ -31,7 +31,6 @@ $(function() {
 
 
 // this is nasty yeah
-
 coax = function(n, min, max, a, b) {
   return old_coax(hack, min, max, a, b);
 };
@@ -44,7 +43,7 @@ var Randomise = {
     var keys = _(design.parameters).keys(),
         key  = keys[ Math.floor( keys.length * Math.random() ) ];
   
-    $(raw_params).animate( kv(key, Math.random()), function() {
+    $(raw_params).stop().animate( kv(key, Math.random()), function() {
       animating = false;
     });
   },
@@ -57,8 +56,6 @@ var Randomise = {
     }
   }
 }
-
-
 
 
 function load_design(design) {    
@@ -77,13 +74,13 @@ function load_design(design) {
     
     design.parameters[p].f = new Function( "with (this) {\nreturn " + design.parameters[p].formula + "\n}" );
   }
-    
+
   apply_para_functions( raw_params );
   Randomise.all();
   
   function apply_para_functions(inputs) {
     for (p in design.parameters) {
-      hack = inputs[p];
+      hack = inputs[p]; // bleugh
       coaxed_params[p] = design.parameters[p].f.call( inputs );
     }
   }
