@@ -89,8 +89,8 @@
       
       // p.view.scrollBy(point)
       
-      $( 'button.randomise' ).click( randomise );
-      $( 'canvas' ).click( randomise );
+      $( 'button.randomise' ).click( Randomise.one );
+      $( 'canvas' ).click( Randomise.one );
       
       $('button.zoom').click(function() {
         if (view.zoom == 1 && this.id == 'out') {
