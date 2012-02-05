@@ -1,6 +1,8 @@
 window.ev = new tickEvent(); // meh
 
-function changed() {} // TODO better
+function changed() {
+  refresh = true;
+}
 
 
 
@@ -21,7 +23,6 @@ $(function() {
     requestAnimFrame( animloop );
     ev.update();      // update the event var
     window.onFrame && window.onFrame( ev );
-    paper.view.draw();
   })();
 });
 
@@ -33,9 +34,10 @@ var raw_params = {},
 //   pause: false,
 //   inputs: current
 // };
-// 
 
 
+var refresh = false,
+    animating = false;
 
 var old_coax = coax;
 var hack;
@@ -48,12 +50,34 @@ coax = function(n, min, max, a, b) {
 var randomise_count = 0;
 function randomise() {
   var animate_to = {};
+  animating = true;
+  refresh = true;
+  
+  var keys = _(design.parameters).keys();
+  
+  var key = keys[ Math.floor( keys.length * Math.random() ) ];
+  
+  // for (p in design.parameters) {
+    $(raw_params).animate( kv(key, Math.random()), function() {
+      animating = false;
+    });
+  // }
+  
+//  apply_para_functions( raw_params );
+}
+
+function initial_randomise() {
+  animating = true;
+  
+  var stop = _.after( _(design.parameters).keys().length, function () {
+    animating = false;
+  });
   
   for (p in design.parameters) {
-    $(raw_params).animate( kv(p, Math.random()) )
+    $(raw_params).animate( kv(p, Math.random()), function() {
+      stop();
+    });
   }
-
-//  apply_para_functions( raw_params );
 }
 
 
@@ -67,9 +91,22 @@ function load_design(design) {
   window.gui.destroy();
   window.gui = new dat.GUI({  });
 
+  // window.gui.onChange = function() {
+  //   console.log('huh');
+  //   refresh = true;
+  // };
+
   for (p in design.parameters) {
     raw_params[p] = 0;
-    gui.add( raw_params, p, 0, 1 ).step( 0.01 ).listen();
+    var gui_row = gui.add( raw_params, p, 0, 1 ).step( 0.001 ).listen();
+
+    window.gui_row = gui_row;
+    
+    gui_row.onChange( function(value) {
+      refresh = true;
+    });
+    
+    // raw_params[p] = design.parameters[p].initial - 0;
 
     // load sliders
     design.parameters[p].f = new Function( "with (this) {\nreturn " + design.parameters[p].formula + "\n}" );
@@ -79,6 +116,8 @@ function load_design(design) {
   
   apply_para_functions( raw_params );
   
+  initial_randomise();
+  
   function apply_para_functions(inputs) {
     for (p in design.parameters) {
       hack = inputs[p];
@@ -87,8 +126,12 @@ function load_design(design) {
   }
 
   window.onFrame = function(event) {
-    apply_para_functions( raw_params );
-    frame_f.call(coaxed_params, event, 0); // call with this set to p
+    if (refresh) {
+      apply_para_functions( raw_params );
+      frame_f.call(coaxed_params, event, 0); // call with this set to p
+      paper.view.draw();
+      if (! animating) refresh = false;
+    }
   };
 
 }

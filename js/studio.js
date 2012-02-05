@@ -178,6 +178,7 @@ $(function() {
   // animation loop stuff
   var update_fps = _.throttle( function() { fps.innerHTML = shorten(1 / ev.delta) }, 1000);
   
+  var drawPost = false;
   (function animloop() {
     requestAnimFrame( animloop );
     if (paused || unfocused) {
@@ -246,6 +247,26 @@ $(function() {
   // note:
   //  - designs/whatever.js needs to be loadable by tshirt.html also
   //  export window.onFrame
+
+
+
+
+  Design.mushroom = function() {
+    v = {
+      inputs: J.reals
+    };
+    
+    editors.initial.f.call(v); // call with this set to p
+    
+    window.onFrame = function(event) { // replace with your own
+      try {
+        editors.paperjs.f.call(v, event, 0); // call with this set to p
+      } catch(e) {
+        editors.paperjs.error = e;
+        inform_of_error(e);
+      }
+    };
+  };
 
 
   Design.valentines = function() {

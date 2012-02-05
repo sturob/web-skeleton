@@ -90,9 +90,10 @@
       // p.view.scrollBy(point)
       
       $( 'button.randomise' ).click( randomise );
+      $( 'canvas' ).click( randomise );
       
       $('button.zoom').click(function() {
-        if (p.view.zoom == 1 && this.id == 'out') {
+        if (view.zoom == 1 && this.id == 'out') {
           $('body').addClass('tshirt_view');
           return;
         }
@@ -102,7 +103,7 @@
           return;
         }
       
-        p.view.zoom = p.view.zoom * (this.id == 'in' ? 2 : 0.5);
+        view.zoom = view.zoom * (this.id == 'in' ? 2 : 0.5);
       });
       
       $('button.tweak').click(function() {

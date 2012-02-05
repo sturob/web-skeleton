@@ -190,14 +190,20 @@ View.Param = View.Var.extend({
 
 Model.Param = Model.Var.extend({
   defaults: {
-    initial: 0,  raw: 0,  formula: ""
+    initial: 0,  raw: 0,  formula: "", value: 0
   },
   initialize: function(options) {
     // options.formula = localStorage.getItem('out_' + this.id);
     // if (typeof options.initial == "undefined" || options.initial == null) options.initial = 0;
+    
+    _.defaults( options, this.defaults );
+    
+    console.log( options )
+    
     this.set( options );
     this.initHistory();
     this.set({ value: this.get('initial') });
+    
     this.calculateEntered( this.get('formula') );
     return this;
   },

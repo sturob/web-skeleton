@@ -6,98 +6,144 @@
   },
   "parameters": {
     "size": {
-      "initial": "2",
+      "initial": "180",
       "raw": 0,
       "formula": "int( coax( this._2_fader1, 1, 180 ) )",
+      "value": "180",
       "id": "size",
+      "history_length": 50,
+      "history": []
+    },
+    "x_stretch": {
+      "initial": "0.8",
+      "raw": 0,
+      "formula": "coax( this._2_fader6, .1, 10 )",
+      "value": "0.8",
+      "id": "x_stretch",
+      "history_length": 50,
+      "history": []
+    },
+    "y_stretch": {
+      "initial": "1",
+      "raw": 0,
+      "formula": "coax( this._2_fader7, .1, 10 )",
+      "value": null,
+      "id": "y_stretch",
       "history_length": 50,
       "history": [
         null,
         null,
         null,
         null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
         null
-      ],
-      "value": null
-    },
-    "x_stretch": {
-      "initial": "0.8",
-      "raw": 0,
-      "formula": "coax( this._2_fader6, .1, 50 )",
-      "id": "x_stretch",
-      "history_length": 50,
-      "history": [],
-      "value": "0.8"
-    },
-    "y_stretch": {
-      "initial": "1",
-      "raw": 0,
-      "formula": "coax( this._2_fader7, .1, 50 )",
-      "id": "y_stretch",
-      "history_length": 50,
-      "history": [],
-      "value": "1"
+      ]
     },
     "x_wriggle": {
-      "initial": "4",
+      "initial": "10",
       "raw": 0,
-      "formula": "coax( this._2_fader2, 0.01, 30 )",
+      "formula": "coax( this._2_fader2, 0.01, 10 )",
+      "value": null,
       "id": "x_wriggle",
       "history_length": 50,
-      "history": [],
-      "value": "4"
+      "history": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
     },
     "y_wriggle": {
       "initial": "4",
       "raw": 0,
-      "formula": "coax( this._2_fader3, 0.01, 30 )",
+      "formula": "coax( this._2_fader3, 0.01, 10 )",
+      "value": null,
       "id": "y_wriggle",
       "history_length": 50,
-      "history": [],
-      "value": "4"
+      "history": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
     },
     "rotate_rate": {
       "initial": "16",
       "raw": 0,
-      "formula": "coax( this._2_fader4, 0.0001, 30 )",
+      "formula": "coax( this._2_fader4, 0.0001, 3 )",
+      "value": "16",
       "id": "rotate_rate",
       "history_length": 50,
-      "history": [],
-      "value": "16"
+      "history": []
     },
     "rotate_initial": {
       "initial": 0,
       "raw": 0,
       "formula": "coax( this._2_fader5, 0, 360 )",
+      "value": 0,
       "id": "rotate_initial",
       "history_length": 50,
-      "history": [],
-      "value": 0
+      "history": []
     },
     "color_spread": {
       "initial": "0",
       "raw": 0,
       "formula": "coax(this._2_fader8, 0, 1)",
+      "value": "0",
       "id": "color_spread",
       "history_length": 50,
-      "history": [],
-      "value": "0"
+      "history": []
     },
     "start_n": {
       "initial": 0,
       "raw": 0,
       "formula": "int( coax(this._3_fader1, 0, 79) )",
+      "value": 0,
       "id": "start_n",
       "history_length": 50,
-      "history": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-      ],
-      "value": null
+      "history": []
     }
   }
 }
