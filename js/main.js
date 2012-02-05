@@ -40,10 +40,23 @@ var Randomise = {
   one: function() {
     animating = true;
     refresh   = true;
-    var keys = _(design.parameters).keys(),
-        key  = keys[ Math.floor( keys.length * Math.random() ) ];
-  
-    $(raw_params).stop().animate( kv(key, Math.random()), function() {
+    var change = 0.33,
+        keys   = _(design.parameters).keys(),
+        key    = keys[ Math.floor( keys.length * Math.random() ) ];
+        old_value = raw_params[key],
+        new_value = Math.random();
+        
+    if (Math.abs(new_value - old_value) < change) {
+      if (new_value > old_value) {
+        new_value = Math.min(1, new_value + change)
+      } else {
+        new_value = Math.max(0, new_value - change)
+      }
+    }
+
+    console.log(old_value + "->" + new_value);
+
+    $(raw_params).stop().animate( kv(key, new_value), function() {
       animating = false;
     });
   },
