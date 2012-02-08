@@ -70,10 +70,11 @@ $(function() {
       J.pumpInput( face );
     });
   }
-  
+
   // loads of globals that really need to be sorted out
+  window.SAFE_MODE  = (window.location.hash == '#safe');
   window.unfocused  = false; // really?
-  window.paused     = false;
+  window.paused     = SAFE_MODE;
   window.previous   = {};
   window.ev         = new tickEvent();
   window.v          = { inputs: {} };
@@ -126,7 +127,13 @@ $(function() {
           f_text = ed.ace.getSession().getValue(),
           error_last_time = !! ed.error;
       ed.error = false;    
-
+      
+      if (SAFE_MODE) {
+        console.log('safe mode');
+        localStorage.setItem( current_design + "_" + key, f_text ); // save change but don't run
+        return;
+      }
+      
       try {
   			ed.f = new Function('ev', 'n', 'with (v.inputs) { ' + f_text + '\n } ');
       } catch (e) {
@@ -140,7 +147,7 @@ $(function() {
         }
         changed();
   		}
-      localStorage.setItem( current_design + "_" + key, f_text ); // save if OK only
+      localStorage.setItem( current_design + "_" + key, f_text ); // save
     }
   }
   
@@ -230,13 +237,13 @@ $(function() {
         var session = editor.ace.getSession();
         var saved_f = localStorage.getItem( current_design + '_' + key ) || '';
         session.setValue( saved_f );
-        // editor.onChange();
       });
   
       $('.tabs a:first-child').click(); // TODO remember
     
-      Design[id].call();
-    
+      if (! SAFE_MODE) {
+        Design[id].call();
+      }
       paused = false;
     }
   }; 

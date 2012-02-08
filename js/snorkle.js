@@ -198,7 +198,7 @@ Model.Param = Model.Var.extend({
     
     _.defaults( options, this.defaults );
     
-    console.log( options )
+//    console.log( options )
     
     this.set( options );
     this.initHistory();
