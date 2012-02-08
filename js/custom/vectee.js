@@ -12,7 +12,17 @@ window.canvas = {
       new_size = default_size;
     }
     canvas.sizeRatio = new_size.x / default_size.x;
-    window.scale = function(n) { return n * canvas.sizeRatio };
+    window.scale = function(n) { 
+      if (_.isArray(n)) {
+        var arr = [];
+        for (var i = 0; i < n.length; i++) {
+          arr[i] = n[i] * canvas.sizeRatio
+        }
+        return arr;
+      } else {
+        return n * canvas.sizeRatio
+      }
+    };
     canvas.el.width  = new_size.x;
     canvas.el.height = new_size.y;
     changed();
