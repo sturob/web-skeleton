@@ -67,6 +67,48 @@ window.onkeyup = function(e) {
 
 
 
+
+
+
+function ls (obj, depth, original) { // 
+  if (! depth) { 
+    depth    = 0;
+    original = obj;
+  }
+  
+  var indent = Array(depth * 4).join(" "),
+      props  = Object.getOwnPropertyNames( obj ),
+      parent = Object.getPrototypeOf( obj ),
+      text   = '';
+  
+  props = _(props).sort().map(function(p) {
+    try {
+      if (_.isFunction( obj[p] )) { 
+        var str = (obj[p] + "").split('\n')[0];
+        if (str) {
+          str = str.replace(/\ /g, ''); // no fucking spaces
+          var match = str.match( /^function\((.*?)\)/ );
+          p += match ? '(' + match[1] + ')' : '(?)';
+        }
+      }
+      if (_.isElement(  obj[p] )) { p += "$" }
+      if (_.isArray(    obj[p] )) { p += "[" + obj[p].length + "]" }
+      if (_.isString(   obj[p] )) { p += '="' + obj[p] + '"' }
+      if (_.isBoolean(  obj[p] )) { p += '=' + obj[p] }
+      if (_.isNumber(   obj[p] )) { p += '=' + obj[p] }
+    } catch (err) {
+      p = p + "*";
+      // console.log(err)
+    }
+    return p;
+  });
+      
+  text = "\n" + indent + props.join('  ') + "\n";
+
+  return (parent ? text + ls(parent, ++depth, original) : text);
+}
+
+
 // http://patik.com/blog/complete-cross-browser-console-log/
 
 // Tell IE9 to use its built-in console
