@@ -19,7 +19,7 @@ dependencies :/
    [√]  ids known so el: not needed
 
    [√]  calculate() updatable at runtime
-   [√]  generate html 
+   [√]  generate html
    [√]  creates param, if it doesn't already exist
    [√]  support multi value variables
 
@@ -30,7 +30,19 @@ dependencies :/
    
       
   ----
-
+  
+  cleanly split into params + inputs
+   - params:
+      * default 
+      * min
+      * max
+      * skew/bend
+      * formula
+      * possible inputs
+   - inputs
+       all about the unpredicatable osc/sensor input + making sense + normalising it
+       
+       
  apply
    [ ]  moving average
    [ ]  display maxs + mins
@@ -165,7 +177,7 @@ View.Param = View.Var.extend({
     // rename
     'click  button.delete':       'clear',
     'keyup  input.code':          'updateFormula',
-    'change input.default_value': 'setDefault'
+    'keyup  input.default_value': 'setDefault'
   },
   initialize: function() {
     this.initHistory();
@@ -190,16 +202,14 @@ View.Param = View.Var.extend({
 
 Model.Param = Model.Var.extend({
   defaults: {
-    initial: 0,  raw: 0,  formula: "", value: 0
+    initial: 0.5,  raw: 0.5,  formula: "", value: 0.5, history: [], history_length: 0
   },
   initialize: function(options) {
     // options.formula = localStorage.getItem('out_' + this.id);
     // if (typeof options.initial == "undefined" || options.initial == null) options.initial = 0;
     
     _.defaults( options, this.defaults );
-    
-//    console.log( options )
-    
+        
     this.set( options );
     this.initHistory();
     this.set({ value: this.get('initial') });
@@ -308,10 +318,9 @@ View.UI = Backbone.View.extend({
     return this;
   },
   addParam: function() {
-    var name = prompt('Parameter name?');
+    var name = prompt('Parameter name!?');
     if (name) {
-      var param = new Model.Param({ id: name });
-      ParamsList.add( param );
+      var param = ParamsList.create( { id: name } );
       GlobalSnorkle.addParam( param ); // display it and wire it to vars
     }
   }
