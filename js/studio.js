@@ -30,6 +30,7 @@ function save_a_version() {
 
 //setInterval(save_a_version, 180000);
 
+
 $(function() {
   // bind UI
   function toggle_pause () {
@@ -43,14 +44,12 @@ $(function() {
   $('#control button').bind('click', function() {
     $('body')[0].className = this.id;
 
-    if (this.id == "z2" || this.id == 'z1') {
-       canvas.resize({});
+    if (this.id == "z2" || this.id == 'z1') {       
+       canvas.resize({ y: $(window).innerHeight() - 20 })
     } else if (this.id == 'z3') {
        canvas.resize({ x: 4200 });
     }
   });
-  
-
   
   
   if (typeof io != "undefined") {
@@ -110,6 +109,8 @@ $(function() {
   paper.install( window );
   paper.setup( canvas.el ); // Create an empty project and a view for the canvas
   canvas.resize({ }); // setup
+  canvas.resize({ y: $(window).innerHeight() - 60 }) // size
+  
 
   window.J = new Snorkle({}, { change: _.throttle(changed, 100) }); // TODO this empty
 

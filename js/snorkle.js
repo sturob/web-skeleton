@@ -28,7 +28,6 @@ dependencies :/
    [√]  generalise id   
    [√]  switch off / bypass prod-vs-dev
    
-      
   ----
   
   cleanly split into params + inputs
@@ -338,7 +337,7 @@ var Snorkle = Backbone.Model.extend({
     
     // setup UI
     var view = new View.UI;
-    $("body").append( view.render().el );
+    $("body #sidebar").append( view.render().el );
     
     this.bind('change', function() {
       this.updateReals();
