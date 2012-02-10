@@ -37,6 +37,7 @@ dependencies :/
       * min
       * max
       * skew/bend
+      * weights
       * formula
       * possible inputs
    - inputs

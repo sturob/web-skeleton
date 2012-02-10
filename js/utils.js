@@ -21,43 +21,7 @@ if (! log) {
   };
 }
 
-function ls (obj, depth, original) { // 
-  if (! depth) { 
-    depth    = 0;
-    original = obj;
-  }
-  
-  var indent = Array(depth * 4).join(" "),
-      props  = Object.getOwnPropertyNames( obj ),
-      parent = Object.getPrototypeOf( obj ),
-      text   = '';
-  
-  props = _(props).sort().map(function(p) {
-    try {
-      if (_.isFunction( obj[p] )) { 
-        var str = obj[p] + "";
-        if (str) {
-          str = str.replace(/\ /g, ''); // no fucking spaces
-          var match = str.match( /^function\((.*?)\)/ );
-          p += match ? '(' + match[1] + ')' : '(?)';
-        }
-      }
-      if (_.isElement(  obj[p] )) { p += "$" }
-      if (_.isArray(    obj[p] )) { p += "[" + obj[p].length + "]" }
-      if (_.isString(   obj[p] )) { p += '="' + obj[p] + '"' }
-      if (_.isBoolean(  obj[p] )) { p += '=' + obj[p] }
-      if (_.isNumber(   obj[p] )) { p += '=' + obj[p] }
-    } catch (err) {
-      p = p + "*";
-      // console.log(err)
-    }
-    return p;
-  });
-      
-  text = "\n" + indent + props.join('  ') + "\n";
 
-  return (parent ? text + ls(parent, ++depth, original) : text);
-}
 
 // quick maths + util stuff
 
@@ -88,6 +52,52 @@ function add2(a, b) {
   }
   return arr;
 }
+
+
+
+// TODO spline based, work for <0 and 1>, cache?
+// var skew = Skewer({ 0.1:0.01, 0.9:0.99 });
+// skew( 0.4 )
+function Skewer ( pts ) {
+  pts[0] = 0;
+  pts[1] = 1;
+  var getNearest = function(n) {
+    var known_xs = _(pts).keys().sort().map(function(k){ return k - 0 }); // keys -> incrementing numbers
+    
+    for (var i = 0; i + 1 < known_xs.length; i++) { // find the points n is between
+      if (n > known_xs[i] && n < known_xs[i+1]) {
+        return [ known_xs[i], known_xs[i+1] ];
+      }
+    } 
+    // TODO deal with number outside 0-1
+  }
+  
+  var sk = function(x) {
+    if (typeof pts[x] != "undefined" && pts[x] != null) { 
+      return pts[x];
+    }
+    
+    var nr = getNearest(x),
+        x1 = nr[0],  y1 = pts[x1],
+        x2 = nr[1],  y2 = pts[x2];
+        xd = x2 - x1,
+        yd = y2 - y1;
+
+    return (((x - x1) / xd) * yd) + y1;
+  };
+  sk.test = function() { 
+    for(var i = 0; i <= 1; i += 0.05) {
+      console.log( sprintf( "%0.2f: %s", i, new Array( Math.round( 100 * sk(i) ) ).join('-') ) );
+    }
+  };
+  return sk;
+}
+
+
+
+
+
+
 
 
 //  (0.1, 10, 110) 			 ->  20
