@@ -8,6 +8,7 @@ CONFIG.transitions = false;
 window.onkeyup = function(e) {
   if (e.keyCode == 0) { // §
     less.watchMode = ! less.watchMode;
+    if (less.watchMode) less.watch();
     window.status = 'less refresh = ' + less.watchMode;
   }
   if (e.keyCode == 58) {

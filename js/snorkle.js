@@ -41,8 +41,7 @@ dependencies :/
       * possible inputs
    - inputs
        all about the unpredicatable osc/sensor input + making sense + normalising it
-       
-       
+
  apply
    [ ]  moving average
    [ ]  display maxs + mins
@@ -164,10 +163,12 @@ View.In = View.Var.extend({
 ///////////////////////////////////////////////////////////////////////////////
 
 Templates.param = '<button class="delete">&times;</button>' +
-                  '<h2><%= id %></h2>' +
+                  '<h2><%= id %> <input type="text" class="weight" value="<%= weight %>" placeholder="&#9878;"> </h2>' +
+                  '<input type="text" class="curve" placeholder="curve">' + 
                   '<span class="viz"></span> <span class="value"></span> <span class="raw"></span>' +
                   '<input class="code" type="text" value="<%= formula %>">' +
-                  '<input class="default_value" type="text" value="<%= initial %>">';
+                  '<input class="default_value" type="text" value="<%= initial %>">' + 
+                  '<span class="arrow">&rarr;</span>';
 
 View.Param = View.Var.extend({
   tagName:   'li',
@@ -177,7 +178,9 @@ View.Param = View.Var.extend({
     // rename
     'click  button.delete':       'clear',
     'keyup  input.code':          'updateFormula',
-    'keyup  input.default_value': 'setDefault'
+    'keyup  input.default_value': 'setDefault',
+    'keyup  input.weight':        'setWeight',
+    'keyup  input.curve':        'setCurve',
   },
   initialize: function() {
     this.initHistory();
@@ -192,8 +195,14 @@ View.Param = View.Var.extend({
     this.model.calculateEntered( f ).update();
   },
   setDefault: function() {
-    this.model.save({ initial: $(this.el).find('input.default_value').val() });
+    this.model.save({ initial: $(this.el).find('input.default_value').val() - 0 });
   },  
+  setWeight: function() {
+    this.model.save({ weight: $(this.el).find('input.weight').val() - 0 });
+  },
+  setCurve: function() {
+    this.model.save({ curve: $(this.el).find('input.curve').val() });
+  },
   clear: function() {
     this.remove();
     this.model.destroy();
@@ -202,7 +211,7 @@ View.Param = View.Var.extend({
 
 Model.Param = Model.Var.extend({
   defaults: {
-    initial: 0.5,  raw: 0.5,  formula: "", value: 0.5, history: [], history_length: 0
+    initial: 0.5,  raw: 0.5,  formula: "", value: 0.5, weight: null
   },
   initialize: function(options) {
     // options.formula = localStorage.getItem('out_' + this.id);

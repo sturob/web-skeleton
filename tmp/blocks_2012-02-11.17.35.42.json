@@ -6,13 +6,12 @@
   },
   "parameters": {
     "size": {
-      "initial": 252,
+      "initial": "252",
       "raw": 0,
       "formula": "int( coax( this._2_fader1, 1, 10 ) )",
       "value": null,
       "weight": 1,
       "history": [
-        null,
         null,
         null
       ],
@@ -20,14 +19,12 @@
       "id": "size"
     },
     "x_stretch": {
-      "initial": 0.8,
+      "initial": "0.8",
       "raw": 0,
       "formula": "coax( this._2_fader6, .1, 10 )",
       "value": null,
       "weight": 5,
       "history": [
-        null,
-        null,
         null,
         null
       ],
@@ -35,19 +32,12 @@
       "id": "x_stretch"
     },
     "y_stretch": {
-      "initial": 1.8,
+      "initial": "1.8",
       "raw": 0,
       "formula": "coax( this._2_fader7, .1, 10 )",
       "value": null,
       "weight": 5,
       "history": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
         null,
         null
       ],
@@ -55,65 +45,32 @@
       "id": "y_stretch"
     },
     "x_wriggle": {
-      "initial": 0,
+      "initial": "0",
       "raw": 0,
       "formula": "coax( this._2_fader2, 0.01, 10 )",
-      "value": null,
+      "value": "0",
       "weight": null,
-      "history": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-      ],
+      "history": [],
       "history_length": 50,
       "id": "x_wriggle"
     },
     "y_wriggle": {
-      "initial": 0,
+      "initial": "0",
       "raw": 0,
       "formula": "coax( this._2_fader3, 0.01, 10 )",
-      "value": null,
+      "value": "0",
       "weight": null,
-      "history": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-      ],
+      "history": [],
       "history_length": 50,
       "id": "y_wriggle"
     },
     "rotate_rate": {
-      "initial": 16,
+      "initial": "16",
       "raw": 0,
       "formula": "coax( this._2_fader4, 0.0001, 3 )",
       "value": null,
       "weight": 2,
       "history": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
         null,
         null
       ],
@@ -128,40 +85,18 @@
       "weight": 2,
       "history": [
         null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
         null
       ],
       "history_length": 50,
       "id": "rotate_initial"
     },
     "color_spread": {
-      "initial": 0,
+      "initial": "0",
       "raw": 0,
       "formula": "coax(this._2_fader8, 0, 1)",
       "value": null,
       "weight": 5,
       "history": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
         null,
         null
       ],
@@ -175,18 +110,6 @@
       "value": null,
       "weight": "",
       "history": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
         null,
         null
       ],
