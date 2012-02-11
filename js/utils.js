@@ -15,7 +15,7 @@ function a2o (a) {  // [ 'a', 'b', 3 ] -> { 'a': true, 'b': true, 3: true }
   return o;
 }
 
-if (! log) {
+if (! window.log) {
   window.log = function(t) {
     if (console) console.log(t);
   };
