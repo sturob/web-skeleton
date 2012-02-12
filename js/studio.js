@@ -374,44 +374,12 @@ $(function() {
     
     v = {
       inputs: J.reals,
-      points: 399,
-      smooth: false
     };
 	
     editors.initial.f.call(v); // call with this set to p
   
-   // move to browser coding?
-    v.path = new Path();
-    // v.path.strokeWidth = 0;
-    v.path.closed = false;
-
-    v.initializePath = function (points) {
-      v.center = view.center;
-      v.width  = view.size.width;
-      v.height = view.size.height / 2;
-			
-      v.path.segments = [];
-      for (var i = 0; i < points; i++) {
-        var point = new Point(v.width / points * i, view.center.y);
-        v.path.add(point);
-      }
-      v.path.fullySelected = false;
-    }
-
-    v.initializePath( v.points );
-
     window.onFrame = function(event) { // replace with your own
-
-      for (var i = 0; i < v.points; i++) {
-        var pos = editors.paperjs.f.call(v, event, i); // call with this set to p
-        if (pos) {
-          v.path.segments[i].point.y = pos.y * canvas.sizeRatio;
-          v.path.segments[i].point.x = pos.x * canvas.sizeRatio;
-        }
-      }
-
-      if (v.smooth) { v.path.smooth(); }
-      return true;
+      editors.paperjs.f.call(v, event, 0); // call with this set to p
     }
   };
 

@@ -16,8 +16,12 @@ $(function() {
   paper.install( window );
   paper.setup( canvas.el ); // Create an empty project and a view for the canvas
   canvas.resize({ }, changed); // setup
+  
+  var alt_design = window.location.hash.substr(1);
 
-  $.get( 'js/designs/blocks.json', function(design) {
+  var d = alt_design || 'blocks';
+
+  $.get( 'js/designs/' + d + '.json', function(design) {
     window.design = design;
     load_design( design )
   });
