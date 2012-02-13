@@ -72,9 +72,7 @@ Model.Var = Backbone.Model.extend({
   },
   addToHistory: function(v) {
     var h = this.get( 'history' );
-    if (h.length > this.get('history_length')) {
-	    h.shift();
-	  }
+    if (h.length > this.get('history_length')) h.shift();
 	  h.push( v );
 	  this.set({ history: h })
   }
@@ -122,17 +120,11 @@ Model.In = Model.Var.extend({
     }
   },
   value: function(v) {
-    if (typeof v == "undefined" || v == null) {
-      return this.get('value');
-    }
+    if (typeof v == "undefined" || v == null) return this.get('value');
     var raw = v;
     
-    if (v < this.min) {
-      this.min = v;
-    }
-    if (v > this.max) {
-      this.max = v;
-    }
+    if (v < this.min) this.min = v;
+    if (v > this.max) this.max = v;
 
     var diff = this.max - this.min;
     var off  = 1 - this.max / diff;
@@ -375,9 +367,7 @@ var Snorkle = Backbone.Model.extend({
   },
   recalculate: function() {
     _.each(this.attributes, function(v, k) {
-      if (v.update) {
-        v.update()
-      }
+      if (v.update) v.update();
     });
   },
   addInput: function(id, options) {
