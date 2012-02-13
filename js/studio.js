@@ -143,9 +143,7 @@ $(function() {
       }
 
   		if (! ed.error) {
-        if (error_last_time) {
-          inform_of_error(false);
-        }
+        if (error_last_time) inform_of_error(false);
         changed();
   		}
       localStorage.setItem( current_design + "_" + key, f_text ); // save
@@ -368,6 +366,22 @@ $(function() {
     };
   };
   
+
+  
+  Design.maps = function() {
+    $(canvas.el).css({ background: 'black' });
+    
+    v = {
+      inputs: J.reals,
+    };
+	
+    editors.initial.f.call(v); // call with this set to p
+  
+    window.onFrame = function(event) { // replace with your own
+      editors.paperjs.f.call(v, event, 0); // call with this set to p
+    }
+  };
+  
   
   Design.lines = function() {
     $(canvas.el).css({ background: 'black' });
@@ -421,7 +435,7 @@ $(function() {
         }
       }
 
-      if (v.smooth) { v.path.smooth(); }
+      if (v.smooth) v.path.smooth();
       return true;
     }		
   };
