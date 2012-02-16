@@ -3,6 +3,28 @@ function append_png() {
   meh.innerHTML = '<img src="'+img+'">';
 }
 
+
+
+SVGCanvas.prototype.transform = SVGCanvas.prototype.translate;
+SVGCanvas.prototype.fillText = SVGCanvas.prototype.text;
+
+paper.View.prototype.toSVG = function() {
+  var svgContext = new SVGCanvas(this.canvas.width, this.canvas.height);
+
+  var oldCtx = this._context;
+
+  this._context = svgContext;
+  this.draw(false);
+
+  this._context = oldCtx;
+
+  // Optional serialization of the SVG DOM nodes
+  var serializer = new XMLSerializer();
+  return serializer.serializeToString(svgContext.svg.htmlElement);
+};
+
+
+
 var dump_design = function(id) { 
   var the_dump = {
     functions: {}, parameters: {}
@@ -28,8 +50,6 @@ function save_a_version() {
   });
 }
 
-//setInterval(save_a_version, 180000);
-
 
 $(function() {
   // bind UI
@@ -50,6 +70,10 @@ $(function() {
        canvas.resize({ x: 4200 });
     }
   });
+  
+  $('#color').keyup(function() {
+    $('canvas#canvas').css({ backgroundColor: $(this).val() });
+  }).keyup();
   
   
   if (typeof io != "undefined") {
@@ -123,7 +147,7 @@ $(function() {
       };
 
   function code_change_for(key) { // generate a function to deal with changes to code for :key
-    return function(ev) {
+    return _.debounce(function(ev) {
       var ed = editors[key],
           f_text = ed.ace.getSession().getValue(),
           error_last_time = !! ed.error;
@@ -147,7 +171,7 @@ $(function() {
         changed();
   		}
       localStorage.setItem( current_design + "_" + key, f_text ); // save
-    }
+    }, 500);
   }
   
   // setup code editors
@@ -323,8 +347,6 @@ $(function() {
 
 
   Design.fibonacci = function() {
-    $(canvas.el).css({ background: 'black' });
-    
     v = {
       inputs: J.reals
     };
@@ -338,7 +360,6 @@ $(function() {
 
 
   Design.discs = function() {
-    $(canvas.el).css({ background: 'black' });
     
     v = {
       inputs: J.reals
@@ -353,7 +374,6 @@ $(function() {
   
   
   Design.blocks = function() {
-    $(canvas.el).css({ background: 'black' });
     
     v = {
       inputs: J.reals
@@ -369,7 +389,6 @@ $(function() {
 
   
   Design.maps = function() {
-    $(canvas.el).css({ background: 'black' });
     
     v = {
       inputs: J.reals,
@@ -383,9 +402,7 @@ $(function() {
   };
   
   
-  Design.lines = function() {
-    $(canvas.el).css({ background: 'black' });
-    
+  Design.lines = function() {    
     v = {
       inputs: J.reals,
     };
@@ -397,9 +414,7 @@ $(function() {
     }
   };
 
-  Design.breton = function() {
-    $(canvas.el).css({ background: 'white' });
-    
+  Design.breton = function() {    
     v = {
       inputs: J.reals,
       points: 800,
