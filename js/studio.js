@@ -306,9 +306,7 @@ $(function() {
   //  export window.onFrame
 
 
-
-
-  Design.mushroom = function() {
+  var ProtoDesign = function() {
     v = {
       inputs: J.reals
     };
@@ -325,109 +323,15 @@ $(function() {
     };
   };
 
-
-  Design.valentines = function() {
-    v = {
-      inputs: J.reals
-    };
-    
-    editors.initial.f.call(v); // call with this set to p
-    
-    window.onFrame = function(event) { // replace with your own
-      try {
-        editors.paperjs.f.call(v, event, 0); // call with this set to p
-      } catch(e) {
-        editors.paperjs.error = e;
-        inform_of_error(e);
-      }
-    };
-  };
-
-
-  Design.mexico68 = function() {
-    v = {
-      inputs: J.reals
-    };
-    
-    editors.initial.f.call(v); // call with this set to p
-    
-    window.onFrame = function(event) { // replace with your own
-      editors.paperjs.f.call(v, event, 0); // call with this set to p
-    };
-  };
-
-
-
-
-  Design.triangles = function() {
-    v = {
-      inputs: J.reals
-    };
-    
-    editors.initial.f.call(v); // call with this set to p
-    
-    window.onFrame = function(event) { // replace with your own
-      editors.paperjs.f.call(v, event, 0); // call with this set to p
-    };
-  };
-
-
-
-  Design.fibonacci = function() {
-    v = {
-      inputs: J.reals
-    };
-    
-    editors.initial.f.call(v); // call with this set to p
-    
-    window.onFrame = function(event) { // replace with your own
-      editors.paperjs.f.call(v, event, 0); // call with this set to p
-    };
-  };
-
-
-  Design.discs = function() {
-    
-    v = {
-      inputs: J.reals
-    };
-    
-    editors.initial.f.call(v); // call with this set to p
-    
-    window.onFrame = function(event) { // replace with your own
-      editors.paperjs.f.call(v, event, 0); // call with this set to p
-    };
-  };
+  Design.mushroom = ProtoDesign;
+  Design.valentines = ProtoDesign;
+  Design.triangles = ProtoDesign;
+  Design.joy = ProtoDesign;
   
-  
-  Design.blocks = function() {
-    
-    v = {
-      inputs: J.reals
-    };
-    
-    editors.initial.f.call(v); // call with this set to p
-    
-    window.onFrame = function(event) { // replace with your own
-      editors.paperjs.f.call(v, event, 0); // call with this set to p
-    };
-  };
-  
-
-  
-  Design.maps = function() {
-    
-    v = {
-      inputs: J.reals,
-    };
-	
-    editors.initial.f.call(v); // call with this set to p
-  
-    window.onFrame = function(event) { // replace with your own
-      editors.paperjs.f.call(v, event, 0); // call with this set to p
-    }
-  };
-  
+  Design.fibonacci = ProtoDesign;
+  Design.discs = ProtoDesign;
+  Design.blocks = ProtoDesign;  
+  Design.maps = ProtoDesign;
   
   Design.lines = function() {    
     v = {
