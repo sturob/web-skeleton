@@ -18,7 +18,7 @@ window.canvas = {
         for (var i = 0; i < n.length; i++) {
           arr[i] = n[i] * canvas.sizeRatio
         }
-        return arr;
+        return new Point( arr );
       } else {
         return n * canvas.sizeRatio
       }

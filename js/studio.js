@@ -129,6 +129,33 @@ $(function() {
   
   $('#save_a_version').click( save_a_version );
   
+  canvas.el.onmousewheel = _.throttle(function(e) {
+    var zoom = e.wheelDeltaY > 0 ? 1.25 : 0.8;
+    view.zoom *= zoom;
+    if (view.zoom <= 1) {
+      view.zoom = 1;
+      view.setCenter( [ view.size.width / 2, view.size.height / 2 ] );
+    } else {
+      hack = 1;
+      view.setCenter( ([e.x * hack,  e.y * hack]) );
+    }
+  }, 100);
+  
+  
+  canvas.el.onmousedown = function(e) { 
+    canvas.pos = [e.x, e.y];
+    canvas.dragging = true;
+  };
+
+  canvas.el.onmousemove = _.throttle(function(e) { 
+    if (canvas.dragging) {
+      view.scrollBy( new Point(canvas.pos[0] - e.x, canvas.pos[1] - e.y) );
+      canvas.pos = [e.x, e.y];
+    }
+  }, 40);
+  
+  canvas.el.onmouseup = function(e) { canvas.dragging = false };
+  
   // initialisations
   paper.install( window );
   paper.setup( canvas.el ); // Create an empty project and a view for the canvas
