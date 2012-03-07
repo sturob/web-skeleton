@@ -61,13 +61,23 @@ $(function() {
   $('#pause').bind('touchstart', toggle_pause);
   $('#pause').bind('mousedown', toggle_pause);
   
-  $('#control button').bind('click', function() {
+  $('#control button.zoomer').bind('click', function() {
     $('body')[0].className = this.id;
 
     if (this.id == "z2" || this.id == 'z1') {       
        canvas.resize({ y: $(window).innerHeight() - 20 })
     } else if (this.id == 'z3') {
        canvas.resize({ x: 4200 });
+    }
+  });
+  
+  $('#append_png').click( function() {
+    if ($('#meh:visible').length) {
+      $('#meh img').remove();
+      $('#meh').hide();
+    } else {
+      append_png();
+      $('#meh').show();  
     }
   });
   
@@ -323,15 +333,18 @@ $(function() {
     };
   };
 
+
+  Design.dotboom = ProtoDesign;
   Design.mushroom = ProtoDesign;
   Design.valentines = ProtoDesign;
   Design.triangles = ProtoDesign;
   Design.joy = ProtoDesign;
-  
   Design.fibonacci = ProtoDesign;
   Design.discs = ProtoDesign;
   Design.blocks = ProtoDesign;  
   Design.maps = ProtoDesign;
+  Design.dreamsquare = ProtoDesign;
+  
   
   Design.lines = function() {    
     v = {
