@@ -32,7 +32,7 @@ dependencies :/
   
   cleanly split into params + inputs
    - params:
-      * default 
+      * initial 
       * min
       * max
       * skew/bend
@@ -107,7 +107,7 @@ Templates.input =
 
 Model.In = Model.Var.extend({
   initialize: function (options) {
-    var initial = (typeof options.initial == "undefined" || options.initial == null) ? 0 : options.initial;    
+    var initial = (typeof options.initial == "undefined" || options.initial == null) ? 0 : options.initial; // defaults?
     this.initHistory();
     this.set({ raw: initial, value: initial });
     
@@ -156,11 +156,10 @@ View.In = View.Var.extend({
 
 Templates.param = '<button class="delete">&times;</button>' +
                   '<h2><%= id %> <input type="text" class="weight" value="<%= weight %>" placeholder="&#9878;"> </h2>' +
-                  '<input type="text" class="curve" placeholder="curve">' + 
+                  '<!--input type="text" class="curve" placeholder="curve"-->' +
                   '<span class="viz"></span> <span class="value"></span> <span class="raw"></span>' +
                   '<input class="code" type="text" value="<%= formula %>">' +
-                  '<input class="default_value" type="text" value="<%= initial %>">' + 
-                  '<span class="arrow">&rarr;</span>';
+                  '<input class="manual" type="range" min="0" max="1" step="0.01" value="<%= manual %>">';
 
 View.Param = View.Var.extend({
   tagName:   'li',
@@ -170,9 +169,9 @@ View.Param = View.Var.extend({
     // rename
     'click  button.delete':       'clear',
     'keyup  input.code':          'updateFormula',
-    'keyup  input.default_value': 'setDefault',
+    'change  input.manual':        'setManual',
     'keyup  input.weight':        'setWeight',
-    'keyup  input.curve':        'setCurve',
+    // 'keyup  input.curve':        'setCurve',
   },
   initialize: function() {
     this.initHistory();
@@ -186,8 +185,10 @@ View.Param = View.Var.extend({
     var f = $(this.el).find('input.code').val();
     this.model.calculateEntered( f ).update();
   },
-  setDefault: function() {
-    this.model.save({ initial: $(this.el).find('input.default_value').val() - 0 });
+  setManual: function() {
+    var v = $(this.el).find('input.manual').val() - 0;
+    this.model.save({ manual: v });
+    this.model.update();
   },  
   setWeight: function() {
     this.model.save({ weight: $(this.el).find('input.weight').val() - 0 });
@@ -203,7 +204,7 @@ View.Param = View.Var.extend({
 
 Model.Param = Model.Var.extend({
   defaults: {
-    initial: 0.5,  raw: 0.5,  formula: "", value: 0.5, weight: null
+    initial: 0.5,  raw: 0.5,  formula: "", value: 0.5, weight: null, manual: 0.5
   },
   initialize: function(options) {
     // options.formula = localStorage.getItem('out_' + this.id);
@@ -216,24 +217,36 @@ Model.Param = Model.Var.extend({
     this.set({ value: this.get('initial') });
     
     this.calculateEntered( this.get('formula') );
+
+    // this.coax = function(it, min, max) {
+    //   if (typeof it == "undefined" || it == null) {
+    //     it = this.get('manual');
+    //     console.log( "manual:" + it );
+    //   }
+    //   console.log( "value:" + it );
+    //   
+    //   return window.coax(it, min, max);
+    // }
+    
     return this;
   },
   calculateEntered: function(formula) {
     var f, ok = true;
 
     try { // ... to create function with the code entered
-      f = new Function(
-				"with (this) {\nreturn " + formula + "\n}"
-	 		);
-    	// f.toString = function() { return formula; } 
-			// don't return 'function() { ' or ' }'
-			// console.log(f);
+      f = new Function( 'with (this) {' +
+                        '  return ' + formula + '\n' +
+                        '}' );
+                        
+    	// f.toString = function() { return formula; } // don't return 'function() { ' or ' }'
     } catch (e) { // error if the code was garbage
       ok = false;
       this.error = e;
       console.error(e)
     };
     try { // ...to actually run the function
+      // GlobalSnorkle.reals.coax = this.coax; // mega eugh
+      GlobalSnorkle.reals.slider = this.get('manual');
       f.call( GlobalSnorkle.reals );
     } catch (e) { // error if the code is runtime bad
       this.error = e;
@@ -250,6 +263,8 @@ Model.Param = Model.Var.extend({
   },
   update: function() {
     if (typeof this.calculate == 'function') {
+      // GlobalSnorkle.reals.coax = this.coax; // mega eugh
+      GlobalSnorkle.reals.slider = this.get('manual');
       var v = this.calculate.call( GlobalSnorkle.reals );
       this.addToHistory( v );
       this.set({ value: v });

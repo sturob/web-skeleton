@@ -5,6 +5,8 @@ function append_png() {
 
 
 
+
+
 SVGCanvas.prototype.transform = SVGCanvas.prototype.translate;
 SVGCanvas.prototype.fillText = SVGCanvas.prototype.text;
 

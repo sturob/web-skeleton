@@ -1,6 +1,7 @@
 window.ev = new tickEvent(); // meh
 
 var hack,
+    slider = 0, // hack
     old_coax      = coax;
     raw_params    = {},
     coaxed_params = {},
