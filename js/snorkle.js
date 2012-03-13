@@ -185,11 +185,11 @@ View.Param = View.Var.extend({
     var f = $(this.el).find('input.code').val();
     this.model.calculateEntered( f ).update();
   },
-  setManual: function() {
+  setManual: _.throttle(function() {
     var v = $(this.el).find('input.manual').val() - 0;
     this.model.save({ manual: v });
     this.model.update();
-  },  
+  }, 50),  
   setWeight: function() {
     this.model.save({ weight: $(this.el).find('input.weight').val() - 0 });
   },

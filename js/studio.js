@@ -83,8 +83,10 @@ $(function() {
     }
   });
   
+  
   $('#color').keyup(function() {
-    $('canvas#canvas').css({ backgroundColor: $(this).val() });
+    $('canvas#canvas, #t').css({ backgroundColor: $(this).val() });
+    
   }).keyup();
   
   
