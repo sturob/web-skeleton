@@ -189,7 +189,7 @@ View.Param = View.Var.extend({
     var v = $(this.el).find('input.manual').val() - 0;
     this.model.save({ manual: v });
     this.model.update();
-  }, 50),  
+  }, 5),  
   setWeight: function() {
     this.model.save({ weight: $(this.el).find('input.weight').val() - 0 });
   },

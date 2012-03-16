@@ -83,12 +83,9 @@ $(function() {
     }
   });
   
-  
   $('#color').keyup(function() {
-    $('canvas#canvas, #t').css({ backgroundColor: $(this).val() });
-    
+    $('canvas#canvas, #t').css({ backgroundColor: $(this).val() });  
   }).keyup();
-  
   
   if (typeof io != "undefined") {
     var socket = io.connect('http://localhost:8339');
@@ -107,6 +104,9 @@ $(function() {
       J.pumpInput( face );
     });
   }
+
+
+
 
   // loads of globals that really need to be sorted out
   window.SAFE_MODE  = (window.location.hash == '#safe');
@@ -247,7 +247,10 @@ $(function() {
   
   
   // animation loop stuff
-  var update_fps = _.throttle( function() { fps.innerHTML = shorten(1 / ev.delta) }, 1000);
+  var update_fps = _.throttle( function() { 
+    frame_count.innerHTML = ev.count; 
+    fps.innerHTML = shorten(1 / ev.delta);
+  }, 1000);
   
   var drawPost = false;
   (function animloop() {
@@ -258,7 +261,7 @@ $(function() {
     }
     ev.update();      // update the event var
     update_fps();     // show frames per second
-    J.updateReals();  // 
+    J.updateReals();  //
 
     if (_.isEqual( previous, v.inputs )) return false; // && function has not changed
   	previous = _.clone( v.inputs );
@@ -320,7 +323,7 @@ $(function() {
   //  export window.onFrame
 
 
-  var ProtoDesign = function() {
+  var ProtoDesign = function(bg) {
     v = {
       inputs: J.reals
     };
@@ -338,29 +341,24 @@ $(function() {
   };
 
 
-  Design.dotboom = ProtoDesign;
-  Design.mushroom = ProtoDesign;
-  Design.valentines = ProtoDesign;
-  Design.triangles = ProtoDesign;
-  Design.joy = ProtoDesign;
-  Design.fibonacci = ProtoDesign;
-  Design.discs = ProtoDesign;
-  Design.blocks = ProtoDesign;  
-  Design.maps = ProtoDesign;
-  Design.dreamsquare = ProtoDesign;
-  
-  
-  Design.lines = function() {    
-    v = {
-      inputs: J.reals,
-    };
-	
-    editors.initial.f.call(v); // call with this set to p
-  
-    window.onFrame = function(event) { // replace with your own
-      editors.paperjs.f.call(v, event, 0); // call with this set to p
-    }
+  // backg colors !
+  var bgs = {
+    dotboom:     '#333',
+    mushroom:    '#333',
+    valentines:  '#333',
+//  triangles:   '#333',
+//  maps:        '#333',
+    joy:         '#333',
+    fibonacci:   '#333',
+    discs:       '#333',
+    blocks:      '#333',
+    dreamsquare: '#333',
+    lines:       '#333'
   };
+
+  _(bgs).each(function(bg, d) {
+    Design[d] = ProtoDesign;
+  });
 
   Design.breton = function() {    
     v = {

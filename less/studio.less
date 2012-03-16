@@ -82,9 +82,9 @@ canvas#canvas:select {
     
 body.z1 canvas#canvas {
   outline: none;
-  zoom: 0.4;
-  margin-left: 311px;
-  margin-top: 256px;
+  zoom: 0.58;
+  margin-left: 234px;
+  margin-top: 180px;
 }
     
 #t {
@@ -94,9 +94,9 @@ body.z1 canvas#canvas {
 body.z1 #t {
   display: block;
   position: absolute;
-  top: -64px;
-  left: -117px;
-  width: 700px;
+  top: 20px;
+  left: -72px;
+  width: 730px;
 }
 
 body.z3 canvas#canvas {
@@ -268,40 +268,43 @@ ul.Snorkle {
       display: none;
     }
     .value {
+      color: #333;
       right: 6px;
       top: 3px;
       position: absolute;
     }
 
     input {
-      .rounded(4px);
       font-family: Monaco;
       position: absolute;
     	border: 0;
     	background: #fff;
     	color: #222;
     	padding: 2px 4px;
-      .box_shadow_inset(0, 12px, 24px, #ddd);
       font-size: 10px;
 
       &.code {
-        left: 4px;
-        right: 132px;
-        bottom: 2px;
+        .rounded(2px);
+        left: 24px;
+        right: 4px;
+        bottom: 4px;
         font-size: 10px;
-        color: #555;
+        color: #fa5;
+        background: #333;
       }
       &.weight {
-        text-align: center;
-        color: #fff;
+        text-align: left;
+        color: #bbb;
         margin-left: 8px;
-        text-shadow: 1px 1px 6px #333,-1px -1px 6px #333;
-        font-size: 12px;
+/*        text-shadow: 1px 1px 6px #333,-1px -1px 6px #333;*/
+        font-size: 10px;
         .box_shadow_inset(0, 0, 0, #fff);
         background: #fff;
         width: 2em;
+        position: absolute;
         padding: 3px 2px 2px 3px;
-        top: 3px;
+        top: 24px;
+        left: -2px;
       }
       &.manual {
         position: absolute;
