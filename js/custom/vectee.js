@@ -1,38 +1,49 @@
-// dynamic canvas
-window.canvas = {
-  resize: function(new_size) {
-    var default_size = {  x: 620,  y: 870  },
-        ratio        = default_size.y / default_size.x;
+// Canvas
+var Canvas = Backbone.Model.extend({
+  width: 620, height: 870,
+  initialize: function() {
+    this.set({
+      width:  this.width,
+      height: this.height,
+      ratio:  this.height / this.width
+    });
     
-    if (new_size.x) {
-      new_size.y = new_size.x * ratio;
-    } else if (new_size.y) {
-      new_size.x = new_size.y / ratio;
-    } else {
-      new_size = default_size;
+    this.addElement();
+  },
+  addElement: function() {
+    $('#canvas').html('');
+    var $el = $('<canvas keepalive="true"></canvas>');
+    $el.appendTo('#canvas');
+    this.el = $el[0];
+    window.context = this.el.getContext('2d');
+  },
+  resize: function(new_size, callback) {
+    if (new_size.width) {
+      new_size.height = new_size.width * this.get('ratio');
+    } else if (new_size.height) {
+      new_size.width = new_size.height / this.get('ratio');
+    } else { // 
+      new_size = { width: this.get('width'), height: this.get('height') };
     }
-    canvas.sizeRatio = new_size.x / default_size.x;
-    window.scale = function(n) { 
-      if (_.isArray(n)) {
-        var arr = [];
-        for (var i = 0; i < n.length; i++) {
-          arr[i] = n[i] * canvas.sizeRatio
-        }
-        return new Point( arr );
-      } else {
-        return n * canvas.sizeRatio
-      }
-    };
-    canvas.el.width  = new_size.x;
-    canvas.el.height = new_size.y;
-    changed();
-  }
-};
+    
+    this.set( new_size );
+    
+    this.el.width  = new_size.width;
+    this.el.height = new_size.height;
+    
+    var r = this.get('width') / this.width;
 
-$(function() {
-  canvas.el = $('canvas')[0];
-  window.context    = canvas.el.getContext('2d');
+
+    window.adjust = function(pre) {
+      return (_.isArray( pre )) ? new Point([ pre[0] * r, pre[1] * r ]) : pre * r;
+    }
+    
+    callback && callback();
+  }
 });
+
+
+
 
 // passed into the tick
 function tickEvent() {

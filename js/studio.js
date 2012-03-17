@@ -4,9 +4,6 @@ function append_png() {
 }
 
 
-
-
-
 SVGCanvas.prototype.transform = SVGCanvas.prototype.translate;
 SVGCanvas.prototype.fillText = SVGCanvas.prototype.text;
 
@@ -25,6 +22,27 @@ paper.View.prototype.toSVG = function() {
   return serializer.serializeToString(svgContext.svg.htmlElement);
 };
 
+
+
+
+
+
+
+
+// Design:
+//  - name
+//  - description, inspired by what?
+//  - background
+
+// Version:
+//  - *design
+//  - number
+//  - parameters
+//  - functions
+
+// Creation:
+//  - *version
+//  - preset values
 
 
 var dump_design = function(id) { 
@@ -79,13 +97,46 @@ $(function() {
       $('#meh').hide();
     } else {
       append_png();
-      $('#meh').show();  
+      $('#meh').show();
     }
   });
   
   $('#color').keyup(function() {
-    $('canvas#canvas, #t').css({ backgroundColor: $(this).val() });  
+    $('#t').css({ backgroundColor: $(this).val() });
+    $('#canvas canvas').globalcss( 'background-color', $(this).val() );
   }).keyup();
+  
+  
+  // canvas mouse events
+  var $canvas = $('div#canvas');
+  
+  $canvas.on('mousewheel', _.throttle(function(e) {
+    var zoom = e.wheelDeltaY > 0 ? 1.25 : 0.8;
+    view.zoom *= zoom;
+    if (view.zoom <= 1) {
+      view.zoom = 1;
+      view.setCenter( [ view.size.width / 2, view.size.height / 2 ] );
+    } else {
+      hack = 1;
+      view.setCenter( ([e.x * hack,  e.y * hack]) );
+    }
+  }, 100) );
+
+  $canvas.on('mousedown', function(e) { 
+    canvas.pos = [e.x, e.y];
+    canvas.dragging = true;
+  });
+  
+  $canvas.on('mousemove', _.throttle(function(e) { 
+    if (canvas.dragging) {
+      view.scrollBy( new Point(canvas.pos[0] - e.x, canvas.pos[1] - e.y) );
+      canvas.pos = [e.x, e.y];
+    }
+  }, 40) );
+  
+  $canvas.on('mouseup', function(e) { canvas.dragging = false });
+  
+  
   
   if (typeof io != "undefined") {
     var socket = io.connect('http://localhost:8339');
@@ -143,39 +194,20 @@ $(function() {
   
   $('#save_a_version').click( save_a_version );
   
-  canvas.el.onmousewheel = _.throttle(function(e) {
-    var zoom = e.wheelDeltaY > 0 ? 1.25 : 0.8;
-    view.zoom *= zoom;
-    if (view.zoom <= 1) {
-      view.zoom = 1;
-      view.setCenter( [ view.size.width / 2, view.size.height / 2 ] );
-    } else {
-      hack = 1;
-      view.setCenter( ([e.x * hack,  e.y * hack]) );
-    }
-  }, 100);
   
-  
-  canvas.el.onmousedown = function(e) { 
-    canvas.pos = [e.x, e.y];
-    canvas.dragging = true;
-  };
 
-  canvas.el.onmousemove = _.throttle(function(e) { 
-    if (canvas.dragging) {
-      view.scrollBy( new Point(canvas.pos[0] - e.x, canvas.pos[1] - e.y) );
-      canvas.pos = [e.x, e.y];
-    }
-  }, 40);
-  
-  canvas.el.onmouseup = function(e) { canvas.dragging = false };
   
   // initialisations
-  paper.install( window );
-  paper.setup( canvas.el ); // Create an empty project and a view for the canvas
-  canvas.resize({ }); // setup
-  canvas.resize({ y: $(window).innerHeight() - 60 }) // size
   
+  paper.install( window );
+
+  window.canvas = new Canvas;
+  canvas.resize({ height: $(window).innerHeight() - 60 }) // size
+
+  paper.setup( canvas.el ); // Create
+  
+
+
 
   window.J = new Snorkle({}, { change: _.throttle(changed, 100) }); // TODO this empty
 
@@ -187,16 +219,17 @@ $(function() {
         'initial': { f: function() {} }
       };
 
-  function code_change_for(key) { // generate a function to deal with changes to code for :key
+  // generate a function to deal with changes to code for :key
+  function code_change_for(key) { 
     return _.debounce(function(ev) {
       var ed = editors[key],
           f_text = ed.ace.getSession().getValue(),
           error_last_time = !! ed.error;
       ed.error = false;    
       
-      if (SAFE_MODE) {
+      if (SAFE_MODE) {// save change but don't run
         console.log('safe mode');
-        localStorage.setItem( current_design + "_" + key, f_text ); // save change but don't run
+        localStorage.setItem( current_design + "_" + key, f_text );
         return;
       }
       
@@ -283,7 +316,8 @@ $(function() {
 	
   
   // below here - only code called when a design loads
-    
+
+
   window.Design = {
     load: function(id) {
       paused = true;
@@ -341,6 +375,7 @@ $(function() {
   };
 
 
+
   // backg colors !
   var bgs = {
     dotboom:     '#333',
@@ -361,30 +396,7 @@ $(function() {
   });
 
   Design.breton = function() {    
-    v = {
-      inputs: J.reals,
-      points: 800,
-      smooth: false
-    };
-	
-   // move to browser coding?
-    v.path = new Path();
-  	v.path.strokeWidth = 0;
-    v.path.closed = false;
 
-    v.initializePath = function (points) {
-      v.center = view.center;
-      v.width  = view.size.width;
-      v.height = view.size.height / 2;
-			
-      v.path.segments = [];
-      for (var i = 0; i < points; i++) {
-        var point = new Point(v.width / points * i, view.center.y);
-        v.path.add(point);
-      }
-      v.path.fullySelected = false;
-    }
-    v.initializePath(v.points);
 
     window.onFrame = function(event) { // breton
 
@@ -395,8 +407,6 @@ $(function() {
           v.path.segments[i].point.x = pos.x * canvas.sizeRatio;
         }
       }
-
-      if (v.smooth) v.path.smooth();
       return true;
     }		
   };
@@ -407,37 +417,4 @@ $(function() {
   });
   
   Design.load( localStorage.getItem( 'tudio::current_design') || 'breton' );
-
 });
-
-// var acc = {};
-//   
-// if (window.DeviceMotionEvent != undefined) {
-// 	  window.ondevicemotion = function(event) {
-//     acc.x = event.accelerationIncludingGravity.x;
-//     acc.y = event.accelerationIncludingGravity.y;
-//     acc.z = event.accelerationIncludingGravity.z;
-//   }
-//   
-//   window.addEventListener('deviceorientation', function(e) {
-//     acc.compass = e.webkitCompassHeading;
-//   });
-  // setInterval( function() {  	
-  //   	  J.get('accX').value( acc.x );
-  //   	  J.get('accY').value( acc.y );		
-  //   J.get('accZ').value( acc.z );
-  //   
-  //   // J.get('compass').value( acc.compass );
-  // }, 100);
-// }
-  
-// $(window).bind( 'mousemove', function(e) {
-//   J.get('mouse').value([ e.clientX, e.clientY ]);
-// });
-  
-// J.addInputArray( 'mouse', { initial: 0.1 } );
-// var acc_options = { min: -10, max: 10,  initial: 0 };
-// J.addInput( 'accX', acc_options );
-// J.addInput( 'accY', acc_options );
-// J.addInput( 'accZ', acc_options );
-// J.addInput( 'compass', { min: 0, max: 360, initial: 180 } );

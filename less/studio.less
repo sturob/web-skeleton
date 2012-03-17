@@ -66,7 +66,7 @@ button#pause {
   z-index: 9999;
 }
     
-canvas#canvas {
+div#canvas canvas {
   outline: 1px solid #999;
 	margin: 8px;
   position: relative;
@@ -76,11 +76,8 @@ canvas#canvas {
   zoom: 1;
 }
     
-canvas#canvas:select {
-  cursor: move;
-}
     
-body.z1 canvas#canvas {
+body.z1 #canvas canvas {
   outline: none;
   zoom: 0.58;
   margin-left: 234px;
@@ -99,7 +96,7 @@ body.z1 #t {
   width: 730px;
 }
 
-body.z3 canvas#canvas {
+body.z3 #canvas canvas {
   zoom: 0.14;
 }
     
