@@ -108,6 +108,7 @@ $(function() {
   var $canvas = $('div#canvas');
   
   $canvas.on('mousewheel', _.throttle(function(e) {
+    e = e.originalEvent;
     var zoom = e.wheelDeltaY > 0 ? 1.25 : 0.8;
     view.zoom *= zoom;
     if (view.zoom <= 1) {
@@ -119,12 +120,14 @@ $(function() {
     }
   }, 100) );
 
-  $canvas.on('mousedown', function(e) { 
+  $canvas.on('mousedown', function(e) {
+    e = e.originalEvent;
     canvas.pos = [e.x, e.y];
     canvas.dragging = true;
   });
   
-  $canvas.on('mousemove', _.throttle(function(e) { 
+  $canvas.on('mousemove', _.throttle(function(e) {
+    e = e.originalEvent;
     if (canvas.dragging) {
       view.scrollBy( new Point(canvas.pos[0] - e.x, canvas.pos[1] - e.y) );
       canvas.pos = [e.x, e.y];
