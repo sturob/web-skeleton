@@ -72,7 +72,6 @@ $(function() {
     $('#pause').text( paused ? '>' : '||' );
   }
   
-  $('#pause').bind('touchstart', toggle_pause);
   $('#pause').bind('mousedown', toggle_pause);
   
   $('#control button.zoomer').bind('click', function() {
@@ -202,11 +201,9 @@ $(function() {
   paper.install( window );
 
   window.canvas = new Canvas;
+  
   // canvas.resize({ height: $(window).innerHeight() - 60 }, changed) // size
   
-
-
-
   window.J = new Snorkle({}, { change: _.throttle(changed, 100) }); // TODO this empty
 
   window.current_design = 'breton'; // change for each design
@@ -277,16 +274,17 @@ $(function() {
   }
   
   
-  // animation loop stuff
-  var update_fps = _.throttle( function() { 
-    frame_count.innerHTML = ev.count; 
-    fps.innerHTML = shorten(1 / ev.delta);
-  }, 1000);
   
 
   var drawPost = false;
     
   var initAnimation = _.once(function() {
+    // animation loop stuff
+    var update_fps = _.throttle( function() { 
+      frame_count.innerHTML = ev.count; 
+      fps.innerHTML = shorten(1 / ev.delta);
+    }, 1000);
+    
     (function animloop() {
       requestAnimFrame( animloop );
       if (paused || unfocused) {
@@ -312,7 +310,7 @@ $(function() {
       drawPost = false;
     }
     setInterval(postCanvas, 200);
-  })
+  });
   
   
   
@@ -397,9 +395,7 @@ $(function() {
     Design[d] = ProtoDesign;
   });
 
-  Design.breton = function() {    
-
-
+  Design.breton = function() {
     window.onFrame = function(event) { // breton
 
       for (var i = 0; i < v.points; i++) {
