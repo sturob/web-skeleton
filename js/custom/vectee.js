@@ -7,32 +7,29 @@ var Canvas = Backbone.Model.extend({
       height: this.height,
       ratio:  this.height / this.width
     });
-    
-    this.addElement();
   },
   addElement: function() {
     $('#canvas').html('');
     var $el = $('<canvas keepalive="true"></canvas>');
     $el.appendTo('#canvas');
     this.el = $el[0];
-    window.context = this.el.getContext('2d');
+    this.resize();
+    return this.el;
   },
   resize: function(new_size, callback) {
-    if (new_size.width) {
+    if (new_size && new_size.width) {
       new_size.height = new_size.width * this.get('ratio');
-    } else if (new_size.height) {
+    } else if (new_size && new_size.height) {
       new_size.width = new_size.height / this.get('ratio');
-    } else { // 
+    } else { //
       new_size = { width: this.get('width'), height: this.get('height') };
     }
-    
     this.set( new_size );
     
     this.el.width  = new_size.width;
     this.el.height = new_size.height;
     
     var r = this.get('width') / this.width;
-
 
     window.adjust = function(pre) {
       return (_.isArray( pre )) ? new Point([ pre[0] * r, pre[1] * r ]) : pre * r;

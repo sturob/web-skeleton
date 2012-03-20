@@ -23,13 +23,7 @@ paper.View.prototype.toSVG = function() {
 };
 
 
-
-
-
-
-
-
-// Design:
+// Concept:
 //  - name
 //  - description, inspired by what?
 //  - background
@@ -84,10 +78,13 @@ $(function() {
   $('#control button.zoomer').bind('click', function() {
     $('body')[0].className = this.id;
 
-    if (this.id == "z2" || this.id == 'z1') {       
-       canvas.resize({ y: $(window).innerHeight() - 20 })
+    if (this.id == 'z1') {
+       canvas.resize({ height: $('img#t').height() - 220 }, changed)      
+    }
+    if (this.id == "z2") {       
+       canvas.resize({ height: $(window).innerHeight() - 20 }, changed)
     } else if (this.id == 'z3') {
-       canvas.resize({ x: 4200 });
+       canvas.resize({ width: 4200 }, changed);
     }
   });
   
@@ -202,9 +199,7 @@ $(function() {
   paper.install( window );
 
   window.canvas = new Canvas;
-  canvas.resize({ height: $(window).innerHeight() - 60 }) // size
-
-  paper.setup( canvas.el ); // Create
+  // canvas.resize({ height: $(window).innerHeight() - 60 }, changed) // size
   
 
 
@@ -285,43 +280,47 @@ $(function() {
     fps.innerHTML = shorten(1 / ev.delta);
   }, 1000);
   
+
   var drawPost = false;
-  (function animloop() {
-    requestAnimFrame( animloop );
-    if (paused || unfocused) {
-      fps.innerHTML = '0';
-      return false;
-    }
-    ev.update();      // update the event var
-    update_fps();     // show frames per second
-    J.updateReals();  //
+    
+  var initAnimation = _.once(function() {
+    (function animloop() {
+      requestAnimFrame( animloop );
+      if (paused || unfocused) {
+        fps.innerHTML = '0';
+        return false;
+      }
+      ev.update();      // update the event var
+      update_fps();     // show frames per second
+      J.updateReals();  //
 
-    if (_.isEqual( previous, v.inputs )) return false; // && function has not changed
-  	previous = _.clone( v.inputs );
-    J.recalculate();
+      if (_.isEqual( previous, v.inputs )) return false; // && function has not changed
+    	previous = _.clone( v.inputs );
+      J.recalculate();
 
-    window.onFrame( ev );
-    paper.view.draw();
-    drawPost = true; // for postCanvas... can't just run it here cos of timing issues :/
-  })();
+      window.onFrame( ev );
+      paper.view.draw();
+      drawPost = true; // for postCanvas... can't just run it here cos of timing issues :/
+    })();
   
-  function postCanvas() {
-    if (paused || unfocused) return;
-  	if (drawPost) {
-      editors.canvas.f.call(v);
-  	}
-    drawPost = false;
-  }
-  setInterval(postCanvas, 200);
-	
+    function postCanvas() {
+      if (paused || unfocused) return;
+    	if (drawPost) editors.canvas.f.call(v);
+      drawPost = false;
+    }
+    setInterval(postCanvas, 200);
+  })
+  
+  
+  
   
   // below here - only code called when a design loads
 
-
   window.Design = {
     load: function(id) {
-      paused = true;
-      paper.project.layers[0].removeChildren();
+      canvas.addElement();
+      paper.setup( canvas.el ); // Create
+      initAnimation(); // already once()d
       
       J = new Snorkle({}, { design: id, change: _.throttle(changed, 100) });
       
