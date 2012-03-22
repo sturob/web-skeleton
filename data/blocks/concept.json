@@ -1,0 +1,8 @@
+// Concept:
+//  - description, inspired by what?
+//  - backgroundColor
+
+{
+  description: 'Simple grid with variations around density, rotation and color. Referencing Vasarely and Kolomyjec',
+  defaultBackground: '#333'
+}
