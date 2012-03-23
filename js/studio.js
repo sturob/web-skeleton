@@ -7,107 +7,284 @@ window.ev         = new tickEvent();
 
 window.changed = function() {
 	window.previous = {};
-}
+};
+
+window.drawPost = false;
 
 window.onblur  = function() { unfocused = true; };
 window.onfocus = function() { unfocused = false; };
 
-
 // overridden per design
 window.v          = { inputs: {} };
 window.onFrame    = function() {}; 
+window.J          = {};
+
+window.editors = {
+      'canvas':  { f: function() {} }, // called when the canvas is at rest
+      'paperjs': { f: function() {} }, // called as onFrame
+      'initial': { f: function() {} }  // called on init
+    };
+
+
+// -------------------------------------------
+//  design = (concept > versions > creations)
+//      /concept/version/creation
+//      /blocks/10/2
+// -------------------------------------------
+
+var CONCEPTS = [  // concepts to display in studio
+  'dotboom', 'mushroom', 'valentines', 'triangles', 'maps', 'joy', 
+  'fibonacci', 'discs', 'blocks', 'dreamsquare', 'lines', 'breton'
+];
 
 
 
-
-
-
-
-
-function append_png() {
-  var img     = canvas.el.toDataURL("image/png");
-  meh.innerHTML = '<img src="'+img+'">';
-}
-
-
-SVGCanvas.prototype.transform = SVGCanvas.prototype.translate;
-SVGCanvas.prototype.fillText = SVGCanvas.prototype.text;
-
-paper.View.prototype.toSVG = function() {
-  var svgContext = new SVGCanvas(this.canvas.width, this.canvas.height);
-
-  var oldCtx = this._context;
-
-  this._context = svgContext;
-  this.draw(false);
-
-  this._context = oldCtx;
-
-  // Optional serialization of the SVG DOM nodes
-  var serializer = new XMLSerializer();
-  return serializer.serializeToString(svgContext.svg.htmlElement);
-};
-
-
-
-
-
-var Version = Backbone.Model.extend({
-  
-  
-});
-
-// Version:
-//  - *design
-//  - number
-//  - parameters
-//  - functions
-
-// Creation:
-//  - *version
-//  - preset values
-
-
-
-// overall ID = concept.versionN.creationN
-// blocks.10.2
-
+//  the current messy setup:
+//    - state is maintained in localStorage
+//    - directly for functions
+//    - thru Snorkle for parameters
 
 // savetofile.js now needs to save:
+//  - version numbers!
 
+// when do you know to increment number?
 
+var CurrentVersion = {
+  //  functions:  {},
+  //  parameters: {},
+  // id: '',
+  // number: 0,
+  
+  // methods
+  setID: function(id) {
+    CurrentVersion.id = id;
+    // do whatever else needs doing...
+  },
+  saveVersion: function() {
+    var data = CurrentVersion.asJSON( CurrentVersion.id );
+    $.ajax({
+      type: 'POST',
+      url: 'http://localhost:6969/' + CurrentVersion.id,
+      data: JSON.stringify( data ),
+      dataType: 'json'
+    });
+  }, // to disk via node.js
+  asJSON: function() {
+    var the_dump = {
+      functions: {}, parameters: {}
+    };
 
-
-
-
-var dump_design = function(id) { 
-  var the_dump = {
-    functions: {}, parameters: {}
-  };
-
-  _( localStorage.getItem(id).split(',') ).each( function(it, n) {
-    the_dump.parameters[it] = JSON.parse( localStorage.getItem(id + '-' + it) );
-  });
-  _(editors).each( function(it, editor) {
-    the_dump.functions[editor] = localStorage.getItem( id + "_" + editor );
-  });
-  return the_dump;
+    _( localStorage.getItem(CurrentVersion.id).split(',') ).each( function(it, n) {
+      the_dump.parameters[it] = JSON.parse( localStorage.getItem(CurrentVersion.id + '-' + it) );
+    });
+    _(editors).each( function(it, editor) {
+      the_dump.functions[editor] = localStorage.getItem( CurrentVersion.id + "_" + editor );
+    });
+    return the_dump;
+    
+  }, // dump
+  asSVG: function() {
+    return paper.View.prototype.toSVG();
+  },
+  asPNG: function() {
+    var img     = canvas.el.toDataURL("image/png");
+    meh.innerHTML = '<img src="'+img+'">';
+  }
 };
 
+
+
+// var Version = Backbone.Model.extend({ });
+
+paper.install( window );
+window.canvas = new Canvas;
+
+
+
+
+
+
+
+// serious stuff
+$(function() {
+
+  // generate a function to deal with changes to code for :key
+  function code_change_for(key) { 
+    return _.debounce(function(ev) {
+      var ed = editors[key],
+          f_text = ed.ace.getSession().getValue(),
+          error_last_time = !! ed.error;
+      ed.error = false;    
+      
+      if (SAFE_MODE) {// save change but don't run
+        console.log('safe mode');
+        localStorage.setItem( CurrentVersion.id + "_" + key, f_text );
+        return;
+      }
+      
+      try {
+  			ed.f = new Function('ev', 'n', 'with (v.inputs) { ' + f_text + '\n } ');
+      } catch (e) {
+  			ed.error = e;
+        inform_of_error(e);
+      }
+
+  		if (! ed.error) {
+        if (error_last_time) inform_of_error(false);
+        changed();
+  		}
+      localStorage.setItem( CurrentVersion.id + "_" + key, f_text ); // save
+    }, 500);
+  }
   
-function save_a_version() {
-  var data = dump_design( current_design );
-  $.ajax({
-    type: 'POST',
-    url: 'http://localhost:6969/' + current_design,
-    data: JSON.stringify( data ),
-    dataType: 'json'
+  // setup code editors
+  var JavaScriptMode = require("ace/mode/javascript").Mode;
+  _(editors).each(function(editor, key) {
+    editor.error = false;
+    editor.ace = ace.edit( key + "_editor" );
+    var session = editor.ace.getSession();
+    
+    // settings    
+    editor.ace.setShowPrintMargin( false );
+    editor.ace.setTheme( "ace/theme/twilight" );
+    session.setTabSize( 2 );
+    session.setUseSoftTabs( true );
+    session.setMode( new JavaScriptMode() );
+    session.setValue( '' );
+    
+    // bindings
+    console.log('loading code for ' + key)
+    editor.onChange = code_change_for( key );
+    session.on('change', editor.onChange);
   });
-}
+  
+  
+  function inform_of_error(e) {
+    if (e) {
+      $('#editor .error_message').text("line " + e.line + ": " + e.message).show();
+    } else {
+      $('#editor .error_message').text('').hide();
+    }
+  }
+  
+
+  var initAnimation = _.once(function() {
+    // animation loop stuff
+    var update_fps = _.throttle( function() { 
+      frame_count.innerHTML = ev.count; 
+      fps.innerHTML = shorten(1 / ev.delta);
+    }, 1000);
+    
+    (function animloop() {
+      requestAnimFrame( animloop );
+      if (paused || unfocused) {
+        fps.innerHTML = '0';
+        return false;
+      }
+      ev.update();      // update the event var
+      update_fps();     // show frames per second
+      J.updateReals();  //
+
+      if (_.isEqual( previous, v.inputs )) return false; // && function has not changed
+    	previous = _.clone( v.inputs );
+      J.recalculate();
+
+      window.onFrame( ev );
+      paper.view.draw();
+      drawPost = true; // for postCanvas... can't just run it here cos of timing issues :/
+    })();
+  
+    function postCanvas() {
+      if (paused || unfocused) return;
+    	if (drawPost) editors.canvas.f.call(v);
+      drawPost = false;
+    }
+    setInterval(postCanvas, 200);
+  });
+  
+  
+  
+  
+  window.Design = {
+    load: function(id) {
+      paused = true;
+      $.getJSON('/~stu/web-skeleton/data/' + id + '/concept.json', function(data) {        
+        J = new Snorkle({}, { design: id, change: _.throttle(changed, 100) });
+        
+        if (J.isEmpty()) { // TODO: attempt to load latest.json + set J from them
+          alert('couldnt load parameters');
+        }
+    
+        canvas.addElement();
+        paper.setup( canvas.el ); // Create
+        initAnimation(); // already once()d
+        changed();
+        window.ev = new tickEvent();
+      
+        CurrentVersion.setID( id ); // TODO save this var automatically in LocalStorage instead of...
+        localStorage.setItem( 'tudio::current_design', CurrentVersion.id );
+      
+        console.log('loading design: ' + id);
+        $('#design_picker option#' + id).attr({ selected: true }); // make sure
+      
+        // load code
+        _(editors).each(function(editor, key) {
+          var session = editor.ace.getSession();
+          var saved_f = localStorage.getItem( CurrentVersion.id + '_' + key ) || '';
+          session.setValue( saved_f );
+        });
+  
+        $('.tabs a:first-child').click(); // TODO remember
+    
+        if (! SAFE_MODE) Design.init( data.defaultBackground );
+        paused = false;
+      }).error(function() { alert('bad JSON in concept.json :/') });
+    },
+    init: function(bg) {
+      v = { inputs: J.reals };
+      editors.initial.f.call(v); // call with this set to p
+    
+      window.onFrame = function(event) { // replace with your own
+        try {
+          editors.paperjs.f.call(v, event, 0); // call with this set to p
+        } catch(e) {
+          editors.paperjs.error = e;
+          inform_of_error(e);
+        }
+      }
+    }
+  }; 
+
+  Design.load( localStorage.getItem( 'tudio::current_design') || 'breton' );
+});
+
 
 
 $(function() {
-  // bind UI
+  
+  $('.tabs a').click(function() {
+    var id = $(this).attr('href').substr(1)
+    $('.tabs a').removeClass('active'); $(this).addClass('active');
+    $('.editor').hide();
+    $('.editor#'+ id).show();
+    return false;
+  });
+  
+  var t = _.template('<option id="<%= id %>"><%= id %></option>');
+  _(CONCEPTS).each(function(id) {
+    $('#design_picker').append( t({ id: id }) );
+  });
+  
+  $('#design_picker').change(function(e) {
+    Design.load( $(this).find($('option:selected'))[0].id );
+  });
+  
+  $('#reload').click(function() {
+    Design.load( CurrentVersion.id );
+  })
+  
+  $('#save_a_version').click( CurrentVersion.saveVersion );
+
   function toggle_pause () {
     paused = ! paused;
     $('#pause').text( paused ? '>' : '||' );
@@ -133,7 +310,7 @@ $(function() {
       $('#meh img').remove();
       $('#meh').hide();
     } else {
-      append_png();
+      CurrentVersion.asPNG();
       $('#meh').show();
     }
   });
@@ -175,8 +352,7 @@ $(function() {
   }, 40) );
   
   $canvas.on('mouseup', function(e) { canvas.dragging = false });
-  
-  
+
   
   if (typeof io != "undefined") {
     var socket = io.connect('http://localhost:8339');
@@ -196,214 +372,24 @@ $(function() {
     });
   }
 
-
-
-
-
-
-  $('.tabs a').click(function() {
-    var id = $(this).attr('href').substr(1)
-    $('.tabs a').removeClass('active'); $(this).addClass('active');
-    $('.editor').hide();
-    $('.editor#'+ id).show();
-    return false;
-  });
-  
-  $('#design_picker').change(function(e) {
-    Design.load( $(this).find($('option:selected'))[0].id );
-  });
-  
-  $('#reload').click(function() {
-    Design.load( current_design );
-  })
-  
-  $('#save_a_version').click( save_a_version );
-  
-  
-
-  
-  // initialisations
-  
-  paper.install( window );
-
-  window.canvas = new Canvas;
-  
-  // canvas.resize({ height: $(window).innerHeight() - 60 }, changed) // size
-  
-  window.J = new Snorkle({}, { change: _.throttle(changed, 100) }); // TODO this empty
-
-  window.current_design = 'breton'; // change for each design
-  
-  window.editors = {
-        'canvas':  { f: function() {} },
-        'paperjs': { f: function() {} },
-        'initial': { f: function() {} }
-      };
-
-  // generate a function to deal with changes to code for :key
-  function code_change_for(key) { 
-    return _.debounce(function(ev) {
-      var ed = editors[key],
-          f_text = ed.ace.getSession().getValue(),
-          error_last_time = !! ed.error;
-      ed.error = false;    
-      
-      if (SAFE_MODE) {// save change but don't run
-        console.log('safe mode');
-        localStorage.setItem( current_design + "_" + key, f_text );
-        return;
-      }
-      
-      try {
-  			ed.f = new Function('ev', 'n', 'with (v.inputs) { ' + f_text + '\n } ');
-      } catch (e) {
-  			ed.error = e;
-        inform_of_error(e);
-      }
-
-  		if (! ed.error) {
-        if (error_last_time) inform_of_error(false);
-        changed();
-  		}
-      localStorage.setItem( current_design + "_" + key, f_text ); // save
-    }, 500);
-  }
-  
-  // setup code editors
-  var JavaScriptMode = require("ace/mode/javascript").Mode;
-  _(editors).each(function(editor, key) {
-    editor.error = false;
-    editor.ace = ace.edit( key + "_editor" );
-    var session = editor.ace.getSession();
-    
-    // settings    
-    editor.ace.setShowPrintMargin( false );
-    editor.ace.setTheme( "ace/theme/twilight" );
-    session.setTabSize( 2 );
-    session.setUseSoftTabs( true );
-    session.setMode( new JavaScriptMode() );
-    session.setValue( '' );
-    
-    // bindings
-    console.log('loading code for ' + key)
-    editor.onChange = code_change_for( key );
-    session.on('change', editor.onChange);
-  });
-  
-  
-  function inform_of_error(e) {
-    if (e) {
-      $('#editor .error_message').text("line " + e.line + ": " + e.message).show();
-    } else {
-      $('#editor .error_message').text('').hide();
-    }
-  }
-  
-  
-  
-
-  var drawPost = false;
-    
-  var initAnimation = _.once(function() {
-    // animation loop stuff
-    var update_fps = _.throttle( function() { 
-      frame_count.innerHTML = ev.count; 
-      fps.innerHTML = shorten(1 / ev.delta);
-    }, 1000);
-    
-    (function animloop() {
-      requestAnimFrame( animloop );
-      if (paused || unfocused) {
-        fps.innerHTML = '0';
-        return false;
-      }
-      ev.update();      // update the event var
-      update_fps();     // show frames per second
-      J.updateReals();  //
-
-      if (_.isEqual( previous, v.inputs )) return false; // && function has not changed
-    	previous = _.clone( v.inputs );
-      J.recalculate();
-
-      window.onFrame( ev );
-      paper.view.draw();
-      drawPost = true; // for postCanvas... can't just run it here cos of timing issues :/
-    })();
-  
-    function postCanvas() {
-      if (paused || unfocused) return;
-    	if (drawPost) editors.canvas.f.call(v);
-      drawPost = false;
-    }
-    setInterval(postCanvas, 200);
-  });
-  
-  
-  
-  
-  // below here - only code called when a design loads
-
-  window.Design = {
-    load: function(id) {
-      paused = true;
-      $.getJSON('/~stu/web-skeleton/data/' + id + '/concept.json', function(data) {        
-        J = new Snorkle({}, { design: id, change: _.throttle(changed, 100) });
-        
-        if (J.isEmpty()) { // TODO: attempt to load latest.json + set J from them
-          alert('couldnt load parameters');
-        }
-    
-        canvas.addElement();
-        paper.setup( canvas.el ); // Create
-        initAnimation(); // already once()d
-        changed();
-        window.ev = new tickEvent();
-      
-        current_design = id; // TODO save this var automatically in LocalStorage instead of...
-        localStorage.setItem( 'tudio::current_design', current_design );
-      
-        console.log('loading design: ' + id);
-        $('#design_picker option#' + id).attr({ selected: true }); // make sure
-      
-        // load code
-        _(editors).each(function(editor, key) {
-          var session = editor.ace.getSession();
-          var saved_f = localStorage.getItem( current_design + '_' + key ) || '';
-          session.setValue( saved_f );
-        });
-  
-        $('.tabs a:first-child').click(); // TODO remember
-    
-        if (! SAFE_MODE) Design.init( data.defaultBackground );
-        paused = false;
-      }).error(function() { alert('bad JSON in concept.json :/') });
-    },
-    init: function(bg) {
-      v = { inputs: J.reals };
-      editors.initial.f.call(v); // call with this set to p
-    
-      window.onFrame = function(event) { // replace with your own
-        try {
-          editors.paperjs.f.call(v, event, 0); // call with this set to p
-        } catch(e) {
-          editors.paperjs.error = e;
-          inform_of_error(e);
-        }
-      }
-    }
-  }; 
-
-
-  var CONCEPTS = [ 
-    'dotboom', 'mushroom', 'valentines', 'triangles', 'maps', 'joy', 
-    'fibonacci', 'discs', 'blocks', 'dreamsquare', 'lines', 'breton'
-  ];
-
-  var t = _.template('<option id="<%= id %>"><%= id %></option>');
-  
-  _(CONCEPTS).each(function(id) {
-    $('#design_picker').append( t({ id: id }) );
-  });
-  
-  Design.load( localStorage.getItem( 'tudio::current_design') || 'breton' );
 });
+
+
+
+SVGCanvas.prototype.transform = SVGCanvas.prototype.translate;
+SVGCanvas.prototype.fillText = SVGCanvas.prototype.text;
+
+paper.View.prototype.toSVG = function() {
+  var svgContext = new SVGCanvas(this.canvas.width, this.canvas.height);
+
+  var oldCtx = this._context;
+
+  this._context = svgContext;
+  this.draw(false);
+
+  this._context = oldCtx;
+
+  // Optional serialization of the SVG DOM nodes
+  var serializer = new XMLSerializer();
+  return serializer.serializeToString(svgContext.svg.htmlElement);
+};
