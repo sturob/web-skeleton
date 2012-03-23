@@ -360,7 +360,7 @@ var Snorkle = Backbone.Model.extend({
     });
     
     // setup the list of params
-    window.ParamsList = new Collection.Params;
+    window.ParamsList = new Collection.Params; // hmmm
 
     // define it's localStorage
     ParamsList.localStorage = new Store( options.design );
@@ -422,6 +422,9 @@ var Snorkle = Backbone.Model.extend({
         }
       }
     })
+  },
+  isEmpty: function() {
+    return (ParamsList.length == 0);
   }
 });
 

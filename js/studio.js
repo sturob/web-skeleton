@@ -1,3 +1,29 @@
+// loads of globals that really need to be sorted out
+window.SAFE_MODE  = (window.location.hash == '#safe');
+window.unfocused  = false; // really?
+window.paused     = SAFE_MODE;
+window.previous   = {};
+window.ev         = new tickEvent();
+
+window.changed = function() {
+	window.previous = {};
+}
+
+window.onblur  = function() { unfocused = true; };
+window.onfocus = function() { unfocused = false; };
+
+
+// overridden per design
+window.v          = { inputs: {} };
+window.onFrame    = function() {}; 
+
+
+
+
+
+
+
+
 function append_png() {
   var img     = canvas.el.toDataURL("image/png");
   meh.innerHTML = '<img src="'+img+'">';
@@ -23,10 +49,13 @@ paper.View.prototype.toSVG = function() {
 };
 
 
-// Concept:
-//  - name
-//  - description, inspired by what?
-//  - background
+
+
+
+var Version = Backbone.Model.extend({
+  
+  
+});
 
 // Version:
 //  - *design
@@ -37,6 +66,18 @@ paper.View.prototype.toSVG = function() {
 // Creation:
 //  - *version
 //  - preset values
+
+
+
+// overall ID = concept.versionN.creationN
+// blocks.10.2
+
+
+// savetofile.js now needs to save:
+
+
+
+
 
 
 var dump_design = function(id) { 
@@ -158,22 +199,7 @@ $(function() {
 
 
 
-  // loads of globals that really need to be sorted out
-  window.SAFE_MODE  = (window.location.hash == '#safe');
-  window.unfocused  = false; // really?
-  window.paused     = SAFE_MODE;
-  window.previous   = {};
-  window.ev         = new tickEvent();
-  window.v          = { inputs: {} };
-  window.onFrame    = function() {}; // gonna be overridden
 
-  window.changed = function() {
-  	window.previous = {};
-  }
-
-  // bind events
-  window.onblur  = function() { unfocused = true; };
-  window.onfocus = function() { unfocused = false; };
 
   $('.tabs a').click(function() {
     var id = $(this).attr('href').substr(1)
@@ -319,98 +345,63 @@ $(function() {
 
   window.Design = {
     load: function(id) {
-      canvas.addElement();
-      paper.setup( canvas.el ); // Create
-      initAnimation(); // already once()d
-      
-      J = new Snorkle({}, { design: id, change: _.throttle(changed, 100) });
-      
-      changed();
-      window.ev = new tickEvent();
-      current_design = id; // TODO save this var automatically in LocalStorage instead of...
-      localStorage.setItem( 'tudio::current_design', current_design );
-      
-      console.log('loading design: ' + id);
-      $('#design_picker option#' + id).attr({ selected: true }); // make sure
-      
-      // load code
-      _(editors).each(function(editor, key) {
-        var session = editor.ace.getSession();
-        var saved_f = localStorage.getItem( current_design + '_' + key ) || '';
-        session.setValue( saved_f );
-      });
-  
-      $('.tabs a:first-child').click(); // TODO remember
+      paused = true;
+      $.getJSON('/~stu/web-skeleton/data/' + id + '/concept.json', function(data) {        
+        J = new Snorkle({}, { design: id, change: _.throttle(changed, 100) });
+        
+        if (J.isEmpty()) { // TODO: attempt to load latest.json + set J from them
+          alert('couldnt load parameters');
+        }
     
-      if (! SAFE_MODE) {
-        Design[id].call();
+        canvas.addElement();
+        paper.setup( canvas.el ); // Create
+        initAnimation(); // already once()d
+        changed();
+        window.ev = new tickEvent();
+      
+        current_design = id; // TODO save this var automatically in LocalStorage instead of...
+        localStorage.setItem( 'tudio::current_design', current_design );
+      
+        console.log('loading design: ' + id);
+        $('#design_picker option#' + id).attr({ selected: true }); // make sure
+      
+        // load code
+        _(editors).each(function(editor, key) {
+          var session = editor.ace.getSession();
+          var saved_f = localStorage.getItem( current_design + '_' + key ) || '';
+          session.setValue( saved_f );
+        });
+  
+        $('.tabs a:first-child').click(); // TODO remember
+    
+        if (! SAFE_MODE) Design.init( data.defaultBackground );
+        paused = false;
+      }).error(function() { alert('bad JSON in concept.json :/') });
+    },
+    init: function(bg) {
+      v = { inputs: J.reals };
+      editors.initial.f.call(v); // call with this set to p
+    
+      window.onFrame = function(event) { // replace with your own
+        try {
+          editors.paperjs.f.call(v, event, 0); // call with this set to p
+        } catch(e) {
+          editors.paperjs.error = e;
+          inform_of_error(e);
+        }
       }
-      paused = false;
     }
   }; 
 
 
-  // below here - only design specific code
-  
-  // note:
-  //  - designs/whatever.js needs to be loadable by tshirt.html also
-  //  export window.onFrame
-
-
-  var ProtoDesign = function(bg) {
-    v = {
-      inputs: J.reals
-    };
-    
-    editors.initial.f.call(v); // call with this set to p
-    
-    window.onFrame = function(event) { // replace with your own
-      try {
-        editors.paperjs.f.call(v, event, 0); // call with this set to p
-      } catch(e) {
-        editors.paperjs.error = e;
-        inform_of_error(e);
-      }
-    };
-  };
-
-
-
-  // backg colors !
-  var bgs = {
-    dotboom:     '#333',
-    mushroom:    '#333',
-    valentines:  '#333',
-//  triangles:   '#333',
-//  maps:        '#333',
-    joy:         '#333',
-    fibonacci:   '#333',
-    discs:       '#333',
-    blocks:      '#333',
-    dreamsquare: '#333',
-    lines:       '#333'
-  };
-
-  _(bgs).each(function(bg, d) {
-    Design[d] = ProtoDesign;
-  });
-
-  Design.breton = function() {
-    window.onFrame = function(event) { // breton
-
-      for (var i = 0; i < v.points; i++) {
-        var pos = editors.paperjs.f.call(v, event, i); // call with this set to p
-        if (pos) {
-          v.path.segments[i].point.y = pos.y * canvas.sizeRatio;
-          v.path.segments[i].point.x = pos.x * canvas.sizeRatio;
-        }
-      }
-      return true;
-    }		
-  };
+  var CONCEPTS = [ 
+    'dotboom', 'mushroom', 'valentines', 'triangles', 'maps', 'joy', 
+    'fibonacci', 'discs', 'blocks', 'dreamsquare', 'lines', 'breton'
+  ];
 
   var t = _.template('<option id="<%= id %>"><%= id %></option>');
-  _(Design).each(function(d, id) {
+  
+  _(CONCEPTS).each(function(id) {
     $('#design_picker').append( t({ id: id }) );
   });
   

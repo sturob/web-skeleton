@@ -1,8 +1,4 @@
-// Concept:
-//  - description, inspired by what?
-//  - backgroundColor
-
 {
-  description: '',
-  defaultBackground: '#333'
+  "description": "",
+  "defaultBackground": "#333"
 }
