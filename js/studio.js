@@ -25,6 +25,9 @@ window.editors = {
       'initial': { f: function() {} }  // called on init
     };
 
+window.canvas = new Canvas;
+
+paper.install( window );
 
 // -------------------------------------------
 //  design = (concept > versions > creations)
@@ -50,23 +53,19 @@ var CONCEPTS = [  // concepts to display in studio
 // when do you know to increment number?
 
 var CurrentVersion = {
-  //  functions:  {},
-  //  parameters: {},
-  // id: '',
+  //  functions:  {},  //  parameters: {},  // id: '',
   // number: 0,
   
   // methods
   setID: function(id) {
     CurrentVersion.id = id;
-    // do whatever else needs doing...
+    // + do whatever else needs doing...
   },
   saveVersion: function() {
     var data = CurrentVersion.asJSON( CurrentVersion.id );
     $.ajax({
-      type: 'POST',
-      url: 'http://localhost:6969/' + CurrentVersion.id,
-      data: JSON.stringify( data ),
-      dataType: 'json'
+      type: 'POST',  url: 'http://localhost:6969/' + CurrentVersion.id,
+      data: JSON.stringify( data ),  dataType: 'json'
     });
   }, // to disk via node.js
   asJSON: function() {
@@ -92,13 +91,90 @@ var CurrentVersion = {
   }
 };
 
+  
+window.Design = {
+  load: function(id) {
+    paused = true;
+    $.getJSON('/~stu/web-skeleton/data/' + id + '/concept.json', function(data) {        
+      J = new Snorkle({}, { design: id, change: _.throttle(changed, 100) });
+        
+      if (J.isEmpty()) { // TODO: attempt to load latest.json + set J from them
+        alert('couldnt load parameters');
+      }
+    
+      canvas.addElement();
+      paper.setup( canvas.el ); // Create
+      Design.initAnimation(); // already once()d
+      changed();
+      window.ev = new tickEvent();
+      
+      CurrentVersion.setID( id ); // TODO save this var automatically in LocalStorage instead of...
+      localStorage.setItem( 'tudio::current_design', CurrentVersion.id );
+      
+      console.log('loading design: ' + id);
+      $('#design_picker option#' + id).attr({ selected: true }); // make sure
+      
+      // load code
+      _(editors).each(function(editor, key) {
+        var session = editor.ace.getSession();
+        var saved_f = localStorage.getItem( CurrentVersion.id + '_' + key ) || ''; // TODO load from latest.json if null
+        session.setValue( saved_f );
+      });
+  
+      $('.tabs a:first-child').click(); // TODO remember
+    
+      if (! SAFE_MODE) Design.init( data.defaultBackground );
+      paused = false;
+    }).error(function() { alert('bad JSON in concept.json :/') });
+  },
+  init: function(bg) {
+    v = { inputs: J.reals };
+    editors.initial.f.call(v); // call with this set to p
+    
+    setBG( bg ); // here? really?
+    
+    window.onFrame = function(event) { // replace with your own
+      try {
+        editors.paperjs.f.call(v, event, 0); // call with this set to p
+      } catch(e) {
+        editors.paperjs.error = e;
+        inform_of_error(e);
+      }
+    }
+  },
+  initAnimation: _.once(function() {
+    // animation loop stuff
+    var update_fps = _.throttle( function() { 
+      frame_count.innerHTML = ev.count; 
+      fps.innerHTML = shorten(1 / ev.delta);
+    }, 1000);
+    
+    (function animloop() {
+      requestAnimFrame( animloop );
+      if (paused || unfocused) {
+        fps.innerHTML = '0';
+        return false;
+      }
+      ev.update();      // update the event var
+      update_fps();     // show frames per second
+      J.updateReals();  //
 
+      if (_.isEqual( previous, v.inputs )) return false; // && function has not changed
+    	previous = _.clone( v.inputs );
+      J.recalculate();
 
-// var Version = Backbone.Model.extend({ });
-
-paper.install( window );
-window.canvas = new Canvas;
-
+      window.onFrame( ev );
+      paper.view.draw();
+      drawPost = true; // for postCanvas... can't just run it here cos of timing issues :/
+    })();
+  
+    setInterval(function(){ // TODO fix this getting carried away + running multiple times
+      if (paused || unfocused) return;
+    	if (drawPost) editors.canvas.f.call(v);
+      drawPost = false;
+    }, 200);
+  })
+}; 
 
 
 
@@ -167,97 +243,14 @@ $(function() {
     }
   }
   
-
-  var initAnimation = _.once(function() {
-    // animation loop stuff
-    var update_fps = _.throttle( function() { 
-      frame_count.innerHTML = ev.count; 
-      fps.innerHTML = shorten(1 / ev.delta);
-    }, 1000);
-    
-    (function animloop() {
-      requestAnimFrame( animloop );
-      if (paused || unfocused) {
-        fps.innerHTML = '0';
-        return false;
-      }
-      ev.update();      // update the event var
-      update_fps();     // show frames per second
-      J.updateReals();  //
-
-      if (_.isEqual( previous, v.inputs )) return false; // && function has not changed
-    	previous = _.clone( v.inputs );
-      J.recalculate();
-
-      window.onFrame( ev );
-      paper.view.draw();
-      drawPost = true; // for postCanvas... can't just run it here cos of timing issues :/
-    })();
-  
-    function postCanvas() {
-      if (paused || unfocused) return;
-    	if (drawPost) editors.canvas.f.call(v);
-      drawPost = false;
-    }
-    setInterval(postCanvas, 200);
-  });
-  
-  
-  
-  
-  window.Design = {
-    load: function(id) {
-      paused = true;
-      $.getJSON('/~stu/web-skeleton/data/' + id + '/concept.json', function(data) {        
-        J = new Snorkle({}, { design: id, change: _.throttle(changed, 100) });
-        
-        if (J.isEmpty()) { // TODO: attempt to load latest.json + set J from them
-          alert('couldnt load parameters');
-        }
-    
-        canvas.addElement();
-        paper.setup( canvas.el ); // Create
-        initAnimation(); // already once()d
-        changed();
-        window.ev = new tickEvent();
-      
-        CurrentVersion.setID( id ); // TODO save this var automatically in LocalStorage instead of...
-        localStorage.setItem( 'tudio::current_design', CurrentVersion.id );
-      
-        console.log('loading design: ' + id);
-        $('#design_picker option#' + id).attr({ selected: true }); // make sure
-      
-        // load code
-        _(editors).each(function(editor, key) {
-          var session = editor.ace.getSession();
-          var saved_f = localStorage.getItem( CurrentVersion.id + '_' + key ) || '';
-          session.setValue( saved_f );
-        });
-  
-        $('.tabs a:first-child').click(); // TODO remember
-    
-        if (! SAFE_MODE) Design.init( data.defaultBackground );
-        paused = false;
-      }).error(function() { alert('bad JSON in concept.json :/') });
-    },
-    init: function(bg) {
-      v = { inputs: J.reals };
-      editors.initial.f.call(v); // call with this set to p
-    
-      window.onFrame = function(event) { // replace with your own
-        try {
-          editors.paperjs.f.call(v, event, 0); // call with this set to p
-        } catch(e) {
-          editors.paperjs.error = e;
-          inform_of_error(e);
-        }
-      }
-    }
-  }; 
-
   Design.load( localStorage.getItem( 'tudio::current_design') || 'breton' );
 });
 
+
+
+// ******************
+//    UI
+// ==================
 
 
 $(function() {
@@ -316,10 +309,10 @@ $(function() {
   });
   
   $('#color').keyup(function() {
-    $('#t').css({ backgroundColor: $(this).val() });
-    $('#canvas canvas').globalcss( 'background-color', $(this).val() );
+    setBG( $(this).val() );
   }).keyup();
   
+
   
   // canvas mouse events
   var $canvas = $('div#canvas');
@@ -373,6 +366,12 @@ $(function() {
   }
 
 });
+
+
+function setBG(color) {
+  $('#t').css({ backgroundColor: color  });
+  $('#canvas canvas').globalcss( 'background-color', color );
+}
 
 
 
