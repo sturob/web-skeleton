@@ -233,15 +233,7 @@ $(function() {
     editor.onChange = code_change_for( key );
     session.on('change', editor.onChange);
   });
-  
-  
-  function inform_of_error(e) {
-    if (e) {
-      $('#editor .error_message').text("line " + e.line + ": " + e.message).show();
-    } else {
-      $('#editor .error_message').text('').hide();
-    }
-  }
+
   
   Design.load( localStorage.getItem( 'tudio::current_design') || 'breton' );
 });
@@ -366,6 +358,15 @@ $(function() {
   }
 
 });
+
+
+function inform_of_error(e) {
+  if (e) {
+    $('#editor .error_message').text("line " + e.line + ": " + e.message).show();
+  } else {
+    $('#editor .error_message').text('').hide();
+  }
+}
 
 
 function setBG(color) {
