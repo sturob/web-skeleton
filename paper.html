@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+  <title>paper.js playground</title>
+  
+  <meta name="viewport" content="width=device-width,user-scalable=no"/>
+  
+ 
+  <!-- <link rel="icon" href="favicon.ico" type="image/ico"> -->
+
+  <link id="style" rel="stylesheet" href="css/paper.css" type="text/css">
+
+  <script type="text/javascript">
+    var CONFIG = {
+      devMode: (window.location.hostname.substr(0,3) == '192' || 
+                window.location.hostname == 'localhost' || window.location.origin == "file://")
+    };
+    
+    if (CONFIG.devMode) { // switch in .less for dev
+      var l = document.getElementById('style');
+      l.rel = 'stylesheet/less';
+      l.href = 'less/paper.less';
+    }
+
+    function js (file) {
+      document.write( unescape("%3Cscript src='js/" + file + "' type='text/javascript'%3E%3C/script%3E") );
+    }
+
+    if (CONFIG.devMode) {
+      js( 'lib/less.js' );
+      js( 'dev.js' );
+    }
+    
+    js( 'lib/jquery/jquery.js' );
+    js( 'lib/underscore.js' );
+    js( 'lib/canvas/paper.js' );
+    
+    // js( 'lib/custom/dat.gui.js' );
+    
+    js( 'utils.js' );
+    // js( 'main.js');
+  </script>
+
+  <script type="text/javascript">
+  
+  var ROUNDS = 36,
+      ROUNDS_X = 25,
+      POINTS_Y = 9.5,
+      START_Y = 340,
+      ASCENT_RATE = 1.5;
+      
+      
+  var colors = {
+    'Arsenal':      'red',
+    'Aston Villa':  '#72092E',
+    'Blackburn':    'blue',
+    'Bolton':       'white',
+    'Chelsea':      '#0A33FF',
+    'Everton':      'blue',
+    'Fulham':       'white',
+    'Liverpool':    'red',
+    'Man City':     '#00B9FF',
+    'Man United':   'red',
+    'Newcastle':    'black',
+    'Norwich':      'yellow',
+    'QPR':          'white',
+    'Stoke':        'red',
+    'Sunderland':   'red',
+    'Swansea':      'white',
+    'Tottenham':    'white',
+    'West Brom':    'black',
+    'Wigan':        '#0049DB',
+    'Wolves':       '#DB7F02'
+  };
+  
+  var horizontal_color = {
+    'Aston Villa': '#00B9FF',
+    'Bolton':      '#002266',
+    'Fulham':  'black',
+
+    'Man United':  'white',
+    'Norwich':     'green',
+    'QPR':         'blue',
+    'Sunderland':  'black',
+    'Wolves':      'black'
+  }
+  var vertical_color = {
+    'Arsenal':     'white',
+    'Aston Villa': '#00B9FF',
+    'Blackburn':   'white',
+    'Newcastle':   'white',
+    'QPR':         'blue',
+    'Stoke':       'white',
+    'Sunderland':  'white',
+    'West Brom':   'white',
+    'Wigan':       'white'
+    
+  }
+  
+        
+  var matches = [],
+      teams   = {},
+      Team = function(){
+        this.goals = 0;
+        this.points = 0;
+        this.rounds = [];
+        return this;
+      },
+      targets = {        //   09   10   11
+        max              :   36 * 3,
+        min              :   0,
+        title            :   (90 + 86 + 80) / 3,
+        champions_league :   (72 + 70 + 68) / 3,
+        safety           :   (35 + 35 + 40) / 3
+      };
+      
+      
+  Team.prototype.addResult = function(scored, conceded) {
+    this.goals += scored;
+    this.points += (scored  > conceded) ? 3 :
+                   (scored == conceded) ? 1 : 0; 
+                   
+    this.rounds.push({ goals: this.goals, points: this.points });
+
+    return this;
+  }
+
+  
+  $(function() {
+    $.getJSON('data/prem.json', function(data){
+      matches = data;
+      
+      _(matches).each(function(m){
+        if (! teams[m.AwayTeam]) teams[m.AwayTeam] = new Team;
+        if (! teams[m.HomeTeam]) teams[m.HomeTeam] = new Team;
+      
+        teams[m.HomeTeam].addResult( m.FTHG - 0, m.FTAG - 0 );
+        teams[m.AwayTeam].addResult( m.FTAG - 0, m.FTHG - 0 );
+      });
+      
+      showViz();
+    });
+    
+    paper.install( window );
+    paper.setup( $('canvas')[0] ); // Create
+    
+    var p = new Path();
+    
+    var target_line = new Path();
+    _.extend( target_line, { fullySelected: 0,  strokeColor: '#000',  strokeWidth: .1, opacity: 0.5 });
+
+        
+    _(targets).each(function(target, k) {
+      var tmp = target_line.clone();
+      tmp.segments[0].setPoint( 0, START_Y )
+      var y = START_Y - (target - (ASCENT_RATE * ROUNDS) ) * POINTS_Y;
+      tmp.add( ROUNDS * ROUNDS_X, y);
+      if (k == 'max' || k == 'min') {
+        tmp.add( 0, y );
+        tmp.fillColor = '#000';
+        tmp.opacity = 1;
+      }
+    });
+    
+    _.extend( p, { fullySelected: 0,  strokeColor: '#888',  strokeWidth: 2, opacity: 0.8 });
+
+
+    function showViz() {
+      _(teams).each(function(t,k) {
+        t.viz = p.clone();
+       if (colors[k]) {
+         t.viz.strokeColor = colors[k];
+       }
+       
+       // new_p.segments[0].setPoint( adjust([ 10, i*spacing]) );
+        t.viz.segments[0].setPoint( 0, START_Y );
+      });
+    
+      var i = 0;
+      $.lazyEach(new Array(36), function(n) {
+        // for (var i = 0; i < ROUNDS; i++) {
+        _(teams).each(function(t) {
+          if (! t.rounds[i]) return;
+          t.viz.add( (1+i) * ROUNDS_X, START_Y - ( t.rounds[i].points - (ASCENT_RATE * (i+1)) ) * POINTS_Y );
+          t.viz.smooth();
+        });
+        paper.view.draw();
+        // }
+        i++;
+      }, { complete: colorTidy, partSize: 1, breathTime: 40 });
+
+      
+      function colorTidy () {
+        _(teams).each(function(t, k) {
+          if (horizontal_color[k]) {
+            t.viz_overlay = t.viz.clone();
+            t.viz_overlay.strokeWidth = 1;
+            t.viz_overlay.strokeColor = horizontal_color[k];
+            t.viz_overlay.position.y++;
+          }
+        
+          if (vertical_color[k]) {
+            t.viz_overlay = t.viz.clone();
+            t.viz_overlay.strokeColor = vertical_color[k];
+            t.viz_overlay.dashArray = [4, 10];
+          }
+        
+          paper.view.draw();
+        });
+      }
+      
+    }
+    
+    
+    
+    // (function animloop() {
+      // requestAnimFrame( animloop );
+      //       if (paused || unfocused) {
+      //         fps.innerHTML = '0';
+      //         return false;
+      //       }
+      //       ev.update();      // update the event var
+      //       update_fps();     // show frames per second
+      //       J.updateReals();  //
+      // 
+      //       if (_.isEqual( previous, v.inputs )) return false; // && function has not changed
+      // previous = _.clone( v.inputs );
+      //       J.recalculate();
+
+      // window.onFrame( ev );
+      // paper.view.draw();
+      // drawPost = true; // for postCanvas... can't just run it here cos of timing issues :/
+    // })();
+    
+  });
+  
+  
+  // function team_test() {
+  //   _(team)
+  // }
+  
+/*  
+  AwayTeam: "Man City"
+  Date: "24/03/12"
+  FTAG: "1"
+  FTHG: "1"
+  HomeTeam: "Stoke"
+*/
+  </script>
+
+</head>
+
+<body>
+
+<canvas id="canvas" width="960" height="640" style="background: #bbb">
+</canvas>
+
+</body>
+</html>
+
+<!-- <script type="text/javascript" src="http://use.typekit.com/hlx2kdo.js"></script>
+<script type="text/javascript">try{Typekit.load();}catch(e){}</script> -->
+
+<!-- <script src="http://www.google-analytics.com/urchin.js" type="text/javascript"> </script> 
+<script type="text/javascript"> 
+  _uacct = "UA-1333551-1";
+  if (! DEV) urchinTracker();
+</script> -->
