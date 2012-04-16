@@ -45,64 +45,40 @@
 
   <script type="text/javascript">
   
-  var ROUNDS = 36,
+  var TIME = 0,
+      ROUNDS = 36,
       ROUNDS_X = 25,
       POINTS_Y = 9.5,
       START_Y = 340,
       ASCENT_RATE = 1.5;
       
-      
-  var colors = {
-    'Arsenal':      'red',
-    'Aston Villa':  '#72092E',
-    'Blackburn':    'blue',
-    'Bolton':       'white',
-    'Chelsea':      '#0A33FF',
-    'Everton':      'blue',
-    'Fulham':       'white',
-    'Liverpool':    'red',
-    'Man City':     '#00B9FF',
-    'Man United':   'red',
-    'Newcastle':    'black',
-    'Norwich':      'yellow',
-    'QPR':          'white',
-    'Stoke':        'red',
-    'Sunderland':   'red',
-    'Swansea':      'white',
-    'Tottenham':    'white',
-    'West Brom':    'black',
-    'Wigan':        '#0049DB',
-    'Wolves':       '#DB7F02'
+  var Kits = {
+    "Arsenal":      { "base": "red",                       "v": "white"   },
+    "Aston Villa":  { "base": "#72092E",  "h": "#00B9FF",  "v": "#00B9FF" },
+    "Blackburn":    { "base": "blue",                      "v": "white"   },
+    "Bolton":       { "base": "white",    "h": "#002266"                },
+    "Chelsea":      { "base": "#0A33FF"                               },
+    "Everton":      { "base": "blue",     "h": "black"                  },
+    "Fulham":       { "base": "white"                                 },
+    "Liverpool":    { "base": "red"                                   },
+    "Man City":     { "base": "#00B9FF"                               },
+    "Man United":   { "base": "red",      "h": "#ffffff"                },
+    "Newcastle":    { "base": "black",                     "v": "white"   },
+    "Norwich":      { "base": "yellow",   "h": "green"                  },
+    "QPR":          { "base": "white",    "h": "blue",     "v": "white"   },
+    "Stoke":        { "base": "red",                       "v": "white"   },
+    "Sunderland":   { "base": "red",      "h": "black",    "v": "white"   },
+    "Swansea":      { "base": "white"                                 },
+    "Tottenham":    { "base": "white"                                 },
+    "West Brom":    { "base": "black",                     "v": "white"   },
+    "Wigan":        { "base": "#0049DB",                   "v": "white"   },
+    "Wolves":       { "base": "#DB7F02",  "h": "black"                  }
   };
-  
-  var horizontal_color = {
-    'Aston Villa': '#00B9FF',
-    'Bolton':      '#002266',
-    'Fulham':  'black',
-
-    'Man United':  'white',
-    'Norwich':     'green',
-    'QPR':         'blue',
-    'Sunderland':  'black',
-    'Wolves':      'black'
-  }
-  var vertical_color = {
-    'Arsenal':     'white',
-    'Aston Villa': '#00B9FF',
-    'Blackburn':   'white',
-    'Newcastle':   'white',
-    'QPR':         'blue',
-    'Stoke':       'white',
-    'Sunderland':  'white',
-    'West Brom':   'white',
-    'Wigan':       'white'
-    
-  }
   
         
   var matches = [],
       teams   = {},
-      Team = function(){
+      Team = function() {
         this.goals = 0;
         this.points = 0;
         this.rounds = [];
@@ -121,8 +97,8 @@
     this.goals += scored;
     this.points += (scored  > conceded) ? 3 :
                    (scored == conceded) ? 1 : 0; 
-                   
-    this.rounds.push({ goals: this.goals, points: this.points });
+    var ppg = this.goals / (this.rounds.length + 1);
+    this.rounds.push({ goals: this.goals, points: this.points, ppg: ppg });
 
     return this;
   }
@@ -151,48 +127,61 @@
     var target_line = new Path();
     _.extend( target_line, { fullySelected: 0,  strokeColor: '#000',  strokeWidth: .1, opacity: 0.5 });
 
-        
+     
+    var rec = new Path.Rectangle(0, 0, ROUNDS_X * ROUNDS, 640);
+    rec.fillColor = '#aaa';
+    
     _(targets).each(function(target, k) {
       var tmp = target_line.clone();
       tmp.segments[0].setPoint( 0, START_Y )
       var y = START_Y - (target - (ASCENT_RATE * ROUNDS) ) * POINTS_Y;
       tmp.add( ROUNDS * ROUNDS_X, y);
+      
       if (k == 'max' || k == 'min') {
         tmp.add( 0, y );
         tmp.fillColor = '#000';
         tmp.opacity = 1;
       }
+      
+      // if (k == 'champions_league') {
+      //   tmp.add( ROUNDS_X * ROUNDS, y );
+      // }
+      // safety   
+      
     });
     
     _.extend( p, { fullySelected: 0,  strokeColor: '#888',  strokeWidth: 2, opacity: 0.8 });
 
-
     function showViz() {
       _(teams).each(function(t,k) {
         t.viz = p.clone();
-       if (colors[k]) {
-         t.viz.strokeColor = colors[k];
-       }
+        if (Kits[k].base) {
+          t.viz.strokeColor = Kits[k].base;
+        }
        
-       // new_p.segments[0].setPoint( adjust([ 10, i*spacing]) );
         t.viz.segments[0].setPoint( 0, START_Y );
       });
-    
+
       var i = 0;
       $.lazyEach(new Array(36), function(n) {
-        // for (var i = 0; i < ROUNDS; i++) {
         _(teams).each(function(t) {
           if (! t.rounds[i]) return;
           t.viz.add( (1+i) * ROUNDS_X, START_Y - ( t.rounds[i].points - (ASCENT_RATE * (i+1)) ) * POINTS_Y );
           t.viz.smooth();
         });
         paper.view.draw();
-        // }
         i++;
       }, { complete: colorTidy, partSize: 1, breathTime: 40 });
 
       
       function colorTidy () {
+        return;
+        // for (var i = 0; i < ROUNDS; i++) {
+        //   var tmp = p.clone();
+        //   tmp.segments[0].setPoint( 620,  );
+        //   tmp.add( 640, )
+        // }
+        
         _(teams).each(function(t, k) {
           if (horizontal_color[k]) {
             t.viz_overlay = t.viz.clone();
@@ -254,7 +243,7 @@
 
 <body>
 
-<canvas id="canvas" width="960" height="640" style="background: #bbb">
+<canvas id="canvas" width="960" height="640">
 </canvas>
 
 </body>
