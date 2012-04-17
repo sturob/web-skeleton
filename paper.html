@@ -44,14 +44,7 @@
   </script>
 
   <script type="text/javascript">
-  
-  var TIME = 0,
-      ROUNDS = 36,
-      ROUNDS_X = 25,
-      POINTS_Y = 9.5,
-      START_Y = 340,
-      ASCENT_RATE = 1.5;
-      
+
   var Kits = {
     "Arsenal":      { "base": "red",                       "v": "white"   },
     "Aston Villa":  { "base": "#72092E",  "h": "#00B9FF",  "v": "#00B9FF" },
@@ -75,7 +68,17 @@
     "Wolves":       { "base": "#DB7F02",  "h": "black"                  }
   };
   
-        
+  var viz = {
+    time:          0,
+    rounds:       36,
+    rounds_x:     25,
+    points_y:    9.5,
+    start_y:     340,
+    ascent_rate: 1.5
+  };
+
+  var drawFrame = true; // set when changing any variables
+
   var matches = [],
       teams   = {},
       Team = function() {
@@ -128,14 +131,14 @@
     _.extend( target_line, { fullySelected: 0,  strokeColor: '#000',  strokeWidth: .1, opacity: 0.5 });
 
      
-    var rec = new Path.Rectangle(0, 0, ROUNDS_X * ROUNDS, 640);
+    var rec = new Path.Rectangle(0, 0, viz.rounds_x * viz.rounds, 640);
     rec.fillColor = '#aaa';
     
     _(targets).each(function(target, k) {
       var tmp = target_line.clone();
-      tmp.segments[0].setPoint( 0, START_Y )
-      var y = START_Y - (target - (ASCENT_RATE * ROUNDS) ) * POINTS_Y;
-      tmp.add( ROUNDS * ROUNDS_X, y);
+      tmp.segments[0].setPoint( 0, viz.start_y )
+      var y = viz.start_y - (target - (viz.ascent_rate * viz.rounds) ) * viz.points_y;
+      tmp.add( viz.rounds * viz.rounds_x, y);
       
       if (k == 'max' || k == 'min') {
         tmp.add( 0, y );
@@ -144,7 +147,7 @@
       }
       
       // if (k == 'champions_league') {
-      //   tmp.add( ROUNDS_X * ROUNDS, y );
+      //   tmp.add( viz.rounds_x * viz.rounds, y );
       // }
       // safety   
       
@@ -152,31 +155,51 @@
     
     _.extend( p, { fullySelected: 0,  strokeColor: '#888',  strokeWidth: 2, opacity: 0.8 });
 
+
+
+    window.group = new Group;
+    group.addChild( new Path.Rectangle(-480, 320, 960, 640) );
+    group.clipped = true;
+    // viz.rounds_x * viz.rounds
+
     function showViz() {
       _(teams).each(function(t,k) {
         t.viz = p.clone();
+        group.addChild( t.viz );
+
         if (Kits[k].base) {
           t.viz.strokeColor = Kits[k].base;
         }
        
-        t.viz.segments[0].setPoint( 0, START_Y );
+        t.viz.segments[0].setPoint( 0, viz.start_y );
       });
 
-      var i = 0;
-      $.lazyEach(new Array(36), function(n) {
+      
+      for (i=0; i < 38; i++) {
         _(teams).each(function(t) {
           if (! t.rounds[i]) return;
-          t.viz.add( (1+i) * ROUNDS_X, START_Y - ( t.rounds[i].points - (ASCENT_RATE * (i+1)) ) * POINTS_Y );
+          t.viz.add( (1+i) * viz.rounds_x, viz.start_y - ( t.rounds[i].points - (viz.ascent_rate * (i+1)) ) * viz.points_y );
           t.viz.smooth();
+          drawFrame = true;
         });
-        paper.view.draw();
         i++;
-      }, { complete: colorTidy, partSize: 1, breathTime: 40 });
+      }
 
       
+      var tmp = { left: -480 };
+
+      $(tmp).animate({ left: 480 }, {
+        duration: 12000,
+        step: function() {
+          group.firstChild.setPosition( tmp.left, 320 );      
+          drawFrame = true;
+        }
+      });
+      
+
       function colorTidy () {
         return;
-        // for (var i = 0; i < ROUNDS; i++) {
+        // for (var i = 0; i < viz.rounds; i++) {
         //   var tmp = p.clone();
         //   tmp.segments[0].setPoint( 620,  );
         //   tmp.add( 640, )
@@ -195,8 +218,6 @@
             t.viz_overlay.strokeColor = vertical_color[k];
             t.viz_overlay.dashArray = [4, 10];
           }
-        
-          paper.view.draw();
         });
       }
       
@@ -204,39 +225,17 @@
     
     
     
-    // (function animloop() {
-      // requestAnimFrame( animloop );
-      //       if (paused || unfocused) {
-      //         fps.innerHTML = '0';
-      //         return false;
-      //       }
-      //       ev.update();      // update the event var
-      //       update_fps();     // show frames per second
-      //       J.updateReals();  //
-      // 
-      //       if (_.isEqual( previous, v.inputs )) return false; // && function has not changed
-      // previous = _.clone( v.inputs );
-      //       J.recalculate();
-
-      // window.onFrame( ev );
-      // paper.view.draw();
-      // drawPost = true; // for postCanvas... can't just run it here cos of timing issues :/
-    // })();
+    (function animloop() {
+      requestAnimFrame( animloop );
+      if (! drawFrame) return;
+    
+      //window.onFrame( ev );
+      paper.view.draw();
+      drawFrame = false;
+    })();
     
   });
   
-  
-  // function team_test() {
-  //   _(team)
-  // }
-  
-/*  
-  AwayTeam: "Man City"
-  Date: "24/03/12"
-  FTAG: "1"
-  FTHG: "1"
-  HomeTeam: "Stoke"
-*/
   </script>
 
 </head>
