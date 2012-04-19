@@ -28,16 +28,21 @@
       document.write( unescape("%3Cscript src='js/" + file + "' type='text/javascript'%3E%3C/script%3E") );
     }
 
+    js( 'lib/jquery/jquery.js' );
+
     if (CONFIG.devMode) {
       js( 'lib/less.js' );
       js( 'dev.js' );
+      js( 'lib/canvas/stats.js' );
+
+      // $(function() {
+      // });
     }
-    
-    js( 'lib/jquery/jquery.js' );
+
     js( 'lib/underscore.js' );
     js( 'lib/canvas/paper.js' );
     
-    // js( 'lib/custom/dat.gui.js' );
+    js( 'lib/input/dat.gui.min.js' );
     
     js( 'utils.js' );
     // js( 'main.js');
@@ -108,6 +113,18 @@
 
   
   $(function() {
+    var stats = new Stats();
+    stats.getDomElement().style.position = 'absolute';
+    stats.getDomElement().style.right = '0px';
+    stats.getDomElement().style.top = '0px';
+    document.body.appendChild( stats.getDomElement() );
+
+    setInterval( function () {
+
+        stats.update();
+
+    }, 1000 / 60 );
+
     $.getJSON('data/prem.json', function(data){
       matches = data;
       
