@@ -323,9 +323,3 @@ a.leaflet-active {
 	}
 
 
-
-/* mine */
-
-canvas.leaflet-tile-loaded {
-	opacity: 0.7 !important;
-}
