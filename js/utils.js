@@ -211,6 +211,7 @@ function coax(val, min, max, d, e) {
 	return min + result;
 }
 
+// shameful shit
 function shorten(f) {
   if (typeof f == 'string') {
     return f
@@ -420,7 +421,12 @@ window.requestAnimFrame = (function() {
 			step();
 			return abort;
 		}
-		$.each.apply(this, arguments);
+		
+    //$.each.apply(this, arguments); // LE SIGH - breaks on iOS
+    $.each(ar, function(n, value){
+      fn.call(this, value);
+    });
+
 		opts.complete(ar);
 		return abort;
 	};
