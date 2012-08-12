@@ -1,6 +1,10 @@
-// mine
 
-
+// _.spawn( list, [value] )
+//
+// Returns an object with each list element used as an attribute key.
+//
+// Every value is set to true unless specified. value can be also be
+// a function that takes the key and returns the appropriate value.
 
 _.mixin({
   spawn: function(arr, value) {
@@ -17,26 +21,12 @@ _.mixin({
   }
 });
 
-// suspect this is not worth keeping
-function kv (k, v) { // (1, 2) -> { 1: 2 }
-  var obj = {};  obj[k] = v;
-  return obj;
-}
-
-function a2o (a) {  // [ 'a', 'b', 3 ] -> { 'a': true, 'b': true, 3: true }
-  var o = {};
-  for(var n = 0; n < a.length; n++) {
-    o[a[n]] = true;
-  }
-  return o;
-}
 
 if (! window.log) {
   window.log = function(t) {
     if (console) console.log(t);
   };
 }
-
 
 
 // quick maths + util stuff
@@ -441,17 +431,6 @@ function coax(val, min, max, d, e) {
 	return min + result;
 }
 
-// shameful shit
-function shorten(f) {
-  if (typeof f == 'string') {
-    return f
-  }
-  return Math.round(f * 10000) / 10000
-}
-
-
-
-
 function dump (obj) {
   console.log( JSON.stringify(obj, null, 2) )
 }
@@ -468,40 +447,6 @@ function ajax_dump (method, url, data) {
   })
   return 'wait for it...'
 }
-
-// adapted www.jameswiseman.com/blog/2010/08/24/manually-traverse-a-dom-tree-using-jquery/
-
-function html2less($item, pass) {  
-  var tmp = {};
-  
-  $item = $item ? $item : $('body');
-  pass = pass ? pass : { max: 50, count: 0, less: "" };
-
-  $item.each(function(n, v) {
-    var tagName   = this.tagName.toLowerCase(),
-        className = this.className ? '.' + this.className : '',
-        selector  = tagName + className,
-        indented = Array(pass.count * 2).join(" ");
-
-    if (tmp[selector]) {
-      return;
-    } else {
-      tmp[selector] = true;
-    }
-    
-    pass.count++;
-    if (pass.count > pass.max) {  
-      pass.max = pass.count;  
-    }
-
-    pass.less += indented + selector + " {\n";
-    html2less( $(this).children(), pass );
-    pass.less += indented + "}\n";
-  });  
-  pass.count--;  
-  return pass.less;  
-}  
-  
 
 
 
