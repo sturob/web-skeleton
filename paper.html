@@ -14,7 +14,8 @@
 
   <script type="text/javascript">
     var CONFIG = {
-      devMode: (window.location.hostname.substr(0,3) == '192' || 
+      devMode: (window.location.hostname.substr(-3)  == 'dev' ||
+                window.location.hostname.substr(0,3) == '192' || 
                 window.location.hostname == 'localhost' || window.location.origin == "file://")
     };
     
