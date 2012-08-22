@@ -25,7 +25,7 @@ dependencies :/
 
    [√]  separate library  -  snorkle.js
    [√]  insert HTML for parameters/outputs
-   [√]  generalise id   
+   [√]  generalise id 
    [√]  switch off / bypass prod-vs-dev
    
   ----
