@@ -1,10 +1,13 @@
-# Add to a project as a submodule:
+This is a collection of JS/CSS/HTML that I find useful enough to share across projects.
+
+## Add to a project as a submodule:
 
     git submodule add git@github.com:sturob/web-skeleton.git base
     
-    
-    
-    
-# Further reading
+## Update to latest version:
 
-http://chrisjean.com/2009/04/20/git-submodules-adding-using-removing-and-updating/
+    cd base; git update
+
+
+All code (c) it's respective authors.
+    
