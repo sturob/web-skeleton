@@ -97,7 +97,7 @@
             // Insert key, or ins
             ins: 45, insert: 45,
             // Delete key, on Mac: ⌫ (Delete)
-            del: 45, 'delete': 45,
+            del: 46, 'delete': 46,
             
             // Left Arrow Key, or ←
             '←': 37, left: 37, 'arrow-left': 37,
@@ -115,7 +115,8 @@
             '+': 107, 'plus': 107,
             // Num-Subtract, or -
             '-': 109, subtract: 109,
-            //';': 186, //???
+            // Semicolon
+            ';': 186, semicolon:186,
             // = or equals
             '=': 187, 'equals': 187,
             // Comma, or ,
@@ -379,7 +380,7 @@
                 // For each property in the jwertyCode object, compare to `event`
                 for (var p in jwertyCode[n]) {
                     // ...except for jwertyCode.jwertyCombo...
-                    if (p !== 'jwertyCombo' && event[p] !== jwertyCode[n][p]) returnValue = false;
+                    if (p !== 'jwertyCombo' && event[p] != jwertyCode[n][p]) returnValue = false;
                 }
                 // If this jwertyCode optional wasn't falsey, then we can return early.
                 if (returnValue !== false) return returnValue;
