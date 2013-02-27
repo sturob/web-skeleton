@@ -1,5 +1,4 @@
 var CONFIG = {};
-less.watchMode = false;
 CONFIG.imageRefresh = false,
 CONFIG.transitions = false;
 
@@ -51,7 +50,7 @@ window.onkeyup = function(e) {
     s.parentNode.insertBefore(liveless, s);
 
     lessjs.type = 'text/javascript';
-    lessjs.src  = 'assets/less/less-1.3.3.js';
+    lessjs.src  = '/base/js/lib/less.js';
     s.parentNode.insertBefore(lessjs, s);
   }
 })();
