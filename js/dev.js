@@ -6,24 +6,55 @@ CONFIG.transitions = false;
 // setInterval(function() { if (less.watchMode) less.refresh() }, 1000); // why, i do not know
 
 window.onkeyup = function(e) {
-  if (e.keyCode == 0) { // §
-    less.watchMode = ! less.watchMode;
-    if (less.watchMode) less.watch();
-    window.status = 'less refresh = ' + less.watchMode;
-  }
+  // if (e.keyCode == 0) { // §
+  //   less.watchMode = ! less.watchMode;
+  //   if (less.watchMode) less.watch();
+  //   window.status = 'less refresh = ' + less.watchMode;
+  // }
 
-  if (e.keyCode == 58) {
-    IMG_REFRESH = ! IMG_REFRESH;
-    console.log('image refresh = ' + IMG_REFRESH);
-  }
+  // if (e.keyCode == 58) {
+  //   IMG_REFRESH = ! IMG_REFRESH;
+  //   console.log('image refresh = ' + IMG_REFRESH);
+  // }
 
-  if (e.keyCode == 51) {
-    CONFIG.transitions = ! CONFIG.transitions;
-    $('body').toggleClass('no_transitions', CONFIG.transitions)
-    window.status = 'css transitions = ' + CONFIG.transitions;
-  }
+  // if (e.keyCode == 51) {
+  //   CONFIG.transitions = ! CONFIG.transitions;
+  //   $('body').toggleClass('no_transitions', CONFIG.transitions)
+  //   window.status = 'css transitions = ' + CONFIG.transitions;
+  // }
 };
 
+
+(function() {
+  var hn  = window.location.hostname;
+  window.devMode = hn == 'localhost' || hn.substr(-3) == 'dev' || hn.substr(-6) == 'xip.io';
+
+  if (devMode) { // delete stylesheets + add less
+    var sheet = document.styleSheets[0]; // .ownerNode.id == 'styles'
+    var rules = sheet.cssRules ? sheet.cssRules : sheet.rules; // IE meh
+    var i = rules.length;
+    if (i != 0) {
+      while (i--) {
+        sheet.deleteRule ? sheet.deleteRule(i) : sheet.removeRule(i); // IE meh
+      }
+    }
+
+    var s = document.getElementsByTagName('link')[0];
+    var liveless = document.createElement('link');
+    var lessjs   = document.createElement('script');
+
+    if (! s) return;
+
+    liveless.id   = "live_styles";
+    liveless.href = s.href.replace(/css/g, 'less'); // "assets/less/f.less"
+    liveless.rel  = "stylesheet/less";
+    s.parentNode.insertBefore(liveless, s);
+
+    lessjs.type = 'text/javascript';
+    lessjs.src  = 'assets/less/less-1.3.3.js';
+    s.parentNode.insertBefore(lessjs, s);
+  }
+})();
 
 
 
