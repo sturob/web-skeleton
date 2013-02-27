@@ -5,11 +5,12 @@ This is a collection of JS/CSS/HTML that I find useful enough to share across pr
     git submodule add git://github.com/sturob/web-skeleton.git base
     
     
-Note: using the @ syntax (git@github.com:sturob/web-skeleton.git) will break github pages.
+Note: using the @ syntax (git@github.com:sturob/web-skeleton.git) will break github pages and you will waste 
+hours of your life figuring out why.
     
 ## Update to latest version:
 
-    cd base; git update
+    cd base; git submodule update
 
 
 All code (c) it's respective authors.
