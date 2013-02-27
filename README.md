@@ -10,7 +10,9 @@ hours of your life figuring out why.
     
 ## Update to latest version:
 
-    cd base; git submodule update
+    cd base
+    git submodule update
+    git pull
 
 
 All code (c) it's respective authors.
