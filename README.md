@@ -12,9 +12,9 @@ hours of your life figuring out why.
 
     cd base
     git pull
+    cd ..
+    git add base && git commit -m "update web-skeleton" 
+    git push
 
 
 All code (c) it's respective authors.
-    
-
-? git submodule update
